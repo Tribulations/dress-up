@@ -7,18 +7,19 @@ diary, rate and review your garments, put them in lists and see statistics about
 inspiration from **Letterboxd**: what Letterboxd does for the films you watch, dress-up does for the clothes in
 your wardrobe.
 
-> **Current state (2026-11-18): planning.** No code yet. Main decisions made (ARCHITECTURE.md §2, §5): Android
-> only, category required and colour optional, built-in plus own categories, star rating and like, diary of
-> single garments, photos taken in the app.
+> **Current state (2026-11-18): v0.1.0 released** (milestone M1, the wardrobe). Download the APK from
+> [GitHub releases](https://github.com/Tribulations/dress-up/releases). Tested on the emulator; not yet on the
+> phone (STATUS.md). Next: the diary and backup (M2).
 
 ## Features
 
 | Feature | State |
 |---|---|
-| Add a garment: take a photo in the app, pick a category (required) and a colour (optional) | 📝 Planned (M1) |
-| Categories: built-in list (pants, shirt, …) plus your own | 📝 Planned (M1) |
-| Wardrobe grid: photo tiles, filter and sort (Letterboxd poster-grid style) | 📝 Planned (M1) |
-| Garment page: big photo, details, star rating (with halves) and a like, wear history | 📝 Planned (M1) |
+| Add a garment: take a photo from inside the app (or pick one from the gallery), pick a category (required) and a colour (optional) | 🧪 Built in v0.1.0, tested on the emulator |
+| Categories: built-in list (pants, shirt, …) plus your own; hide, rename, delete | 🧪 Built in v0.1.0, tested on the emulator |
+| Wardrobe grid: photo tiles, filter (liked, category, colour) and sort | 🧪 Built in v0.1.0, tested on the emulator |
+| Garment page: big photo, details, star rating (with halves) and a like, edit, delete | 🧪 Built in v0.1.0, tested on the emulator |
+| Wear history on the garment page | 📝 Planned (M2) |
 | Diary: log which garments you wore on a date, with an optional note | 📝 Planned (M2) |
 | Statistics: most and least worn, cost per wear, year in review | 📝 Planned (M3) |
 | Lists (e.g. "Summer", "Work", "To donate") and a wishlist | 📝 Planned (M3) |
@@ -30,18 +31,25 @@ Legend: 📝 Planned · 🚧 In progress · 🧪 Implemented, untested · ✅ Do
 
 ## Tech stack
 
-An **Android** app in **Kotlin** with **Jetpack Compose** (decided 2026-11-18), offline first, with **Room**
-for data and an in-app camera (CameraX) for photos stored in app storage (ARCHITECTURE.md §2).
+An **Android** app in **Kotlin** with **Jetpack Compose**, offline first, with **Room** for data, the phone's camera
+app opened from inside dress-up for photos, and **Coil** to show them (ARCHITECTURE.md §2). No permissions, no network.
 
 ## Requirements
 
-- Phone: Samsung Galaxy S20 (Android 13).
+- Android 10 or later. Built for a Samsung Galaxy S20 (Android 13).
 - Personal use only.
+- To build: JDK 21 and the Android SDK (`sdk.dir` in `local.properties`).
 
 ## Building
 
-Nothing to build yet. This will be filled in once the project skeleton exists (see STATUS.md and
-ARCHITECTURE.md §4).
+```bash
+./gradlew assembleDebug          # app/build/outputs/apk/debug/dress-up-<version>-debug.apk (id com.dressup.app.debug)
+./gradlew testDebugUnitTest      # unit tests
+./gradlew assembleRelease        # signed release APK, needs the signing.* lines in local.properties (AGENTS.md)
+scripts/run-on-device.sh         # build, boot the emulator if needed, install and launch (debug)
+```
+
+The debug build has its own app id, so it can be installed next to the release.
 
 ## Documentation
 

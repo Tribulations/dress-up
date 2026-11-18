@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wardrobe_title">Wardrobe</string>
+    <string name="wardrobe_add_garment">Add garment</string>
+    <string name="wardrobe_manage_categories">Categories</string>
+    <string name="wardrobe_empty">Your wardrobe is empty.\nTap + to photograph your first garment.</string>
+    <string name="wardrobe_no_match">No garments match these filters.</string>
+    <string name="wardrobe_clear_filters">Clear filters</string>
+    <string name="wardrobe_filter_liked">Liked</string>
+    <string name="wardrobe_liked">Liked</string>
+    <string name="wardrobe_sort">Sort</string>
+    <string name="wardrobe_sort_newest">Newest first</string>
+    <string name="wardrobe_sort_oldest">Oldest first</string>
+    <string name="wardrobe_sort_rating">Highest rated</string>
+    <string name="wardrobe_sort_category">By category</string>
+</resources>

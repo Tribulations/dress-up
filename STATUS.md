@@ -14,30 +14,39 @@ _Last updated: 2026-11-18_
 
 ## 🚧 Currently working on
 
-- **Project planning (2026-11-18):** initial docs written (README, AGENTS/CLAUDE, GUIDELINES, ARCHITECTURE,
-  BRAINSTORMING, STATUS, CHANGELOG), modelled on the user's other projects (`../noty`, `../d-player`,
-  `../svensk-statistik-app`). No code yet.
-- **Main decisions made (2026-11-18)**, the user's answers to BRAINSTORMING.md "Open questions", now in
-  ARCHITECTURE.md §2, §5, §7.1: Android only; category required, colour optional; built-in plus own categories;
-  star rating with halves plus a like; the diary logs single garments; photos taken with the in-app camera.
+_Nothing. v0.1.0 (M1) is released; M2 is next._
 
 ## 🧪 Implemented, not yet tested
 
-_Nothing yet._
+- **Everything in v0.1.0 on the user's phone (Galaxy S20).** Only tested on the emulator so far (below). Things worth
+  checking on the real phone: the Samsung camera app returns the photo, portrait photos are upright, the grid with
+  real photos.
 
 ## ✅ Done & tested
 
-_Nothing yet._
+- **v0.1.0 – M1 wardrobe (2026-11-18).** Unit tests: 24 JVM tests pass (`./gradlew testDebugUnitTest`). Manual tests on
+  the emulator (Medium_Phone_API_36, Android 16), debug build, with `scripts/emulator-ui.sh`:
+  - Add a garment: **Take photo** opens the camera app, the photo comes back into the editor and is saved downscaled
+    (22 KB) in `files/photos/`; category required (Save disabled until one is chosen), colour optional.
+  - **From gallery** with the system photo picker (made-up test image).
+  - **New category** from the editor ("Rain gear"), selected at once.
+  - **Camera trip with the app killed** (`am kill` while the camera was open): the editor came back with the category
+    and the new photo, and saved.
+  - Unsaved photo from a cancelled editor removed on the next fresh start (4 files → 3).
+  - Garment page: 3.5 stars by tapping, like, edit (added a colour), delete with confirmation (photo file removed).
+  - Wardrobe grid: Liked filter, category chip, oldest-first sort.
+  - Categories: deleting an in-use category is refused with a message; hiding a built-in one removes it from the
+    editor.
+  - **Release build** (R8, release key) installed on the emulator: categories seeded, camera → save → garment page →
+    grid → categories, no crashes in logcat.
 
 ## 📝 Next up (roadmap)
 
 Each completed milestone gets a minor version tag (AGENTS.md). The milestones are a draft (BRAINSTORMING.md).
 
-- **Still open** (BRAINSTORMING.md "Open questions"): the visual identity (name, colours, icon); can be decided
-  during M1.
-- **M1 – wardrobe:** project skeleton, in-app camera, add/edit/delete a garment (photo, category, optional
-  colour), built-in and own categories, wardrobe grid with filters, garment page with rating and like.
-- **M2 – diary and backup:** log wears by date, diary view, wear history per garment, export/import of the
-  whole wardrobe (data + photos).
-- **M3 – lists and statistics:** lists, wishlist, ratings, most/least worn, cost per wear, year in review.
+- **Still open** (BRAINSTORMING.md "Open questions"): final name, colours and icon; optional price for cost per wear;
+  a photo per diary entry.
+- **M2 – diary and backup:** log wears by date, diary view, wear history per garment, export/import of the whole
+  wardrobe (data + photos).
+- **M3 – lists and statistics:** lists, wishlist, most/least worn, cost per wear, year in review.
 - **Later:** outfits, background removal / AI tagging, sync between devices (BRAINSTORMING.md).

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="categories_title">Categories</string>
+    <string name="categories_back">Back</string>
+    <string name="categories_add">New category</string>
+    <string name="categories_rename">Rename</string>
+    <string name="categories_delete">Delete</string>
+    <string name="categories_cancel">Cancel</string>
+    <string name="categories_delete_title">Delete “%1$s”?</string>
+    <string name="categories_own">Your categories</string>
+    <string name="categories_own_empty">None yet. Tap + to add one.</string>
+    <string name="categories_built_in">Built-in (switch off to hide when adding garments)</string>
+    <string name="categories_hidden">Hidden when adding garments</string>
+    <string name="categories_in_use">Garments still use this category. Move them to another category first.</string>
+    <string name="categories_name_blank">Enter a name.</string>
+    <string name="categories_name_duplicate">That category already exists.</string>
+</resources>

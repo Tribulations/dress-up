@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_ui_not_rated">Not rated</string>
+    <string name="core_ui_rating_description">Rated %1$s of 5 stars</string>
+    <string name="core_ui_liked">Liked</string>
+    <string name="core_ui_not_liked">Not liked</string>
+    <string name="core_ui_save">Save</string>
+    <string name="core_ui_cancel">Cancel</string>
+
+    <string name="core_ui_colour_black">Black</string>
+    <string name="core_ui_colour_white">White</string>
+    <string name="core_ui_colour_grey">Grey</string>
+    <string name="core_ui_colour_beige">Beige</string>
+    <string name="core_ui_colour_brown">Brown</string>
+    <string name="core_ui_colour_red">Red</string>
+    <string name="core_ui_colour_pink">Pink</string>
+    <string name="core_ui_colour_orange">Orange</string>
+    <string name="core_ui_colour_yellow">Yellow</string>
+    <string name="core_ui_colour_green">Green</string>
+    <string name="core_ui_colour_blue">Blue</string>
+    <string name="core_ui_colour_navy">Navy</string>
+    <string name="core_ui_colour_purple">Purple</string>
+    <string name="core_ui_colour_multi">Multicolour</string>
+</resources>

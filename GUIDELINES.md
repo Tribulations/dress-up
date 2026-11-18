@@ -4,8 +4,8 @@ The rules for how code in this project is written and organised. They apply to a
 If a change has to break a rule, write down why in the commit message, and update this file if the rule itself
 should change.
 
-**This describes the target setup, not what exists.** There is no code in this repo yet. Commands and tooling
-mentioned below are what should be true once the project skeleton is built.
+The modules and rules below are in place since v0.1.0. Not set up yet: ktlint/detekt (§3) and Compose UI tests
+(§5).
 
 The technical structure these rules produce is described in [ARCHITECTURE.md](ARCHITECTURE.md).
 

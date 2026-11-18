@@ -78,6 +78,8 @@ milestone split is still a draft:
 - **Cost per wear** (M3 statistics) needs a price. Add an optional price field then, or drop that statistic?
 - Should a **diary entry** be able to have its own photo too (e.g. a photo of the day's outfit), or only the
   garment?
+- **Camera:** v0.1.0 opens the phone's own camera app from inside dress-up (ARCHITECTURE.md §2). Is that good
+  enough, or should the viewfinder be built into the app (CameraX), e.g. with a garment-shaped guide frame?
 
 ## Idea log
 
