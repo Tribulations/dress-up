@@ -16,11 +16,11 @@ made. Sections marked **TBD** are still open; open questions are in BRAINSTORMIN
 
 | Layer | Choice | Status |
 |---|---|---|
-| Platform | Android | Assumed (same as the user's other projects) |
-| Language / UI | Kotlin, Jetpack Compose, Material 3 with an own theme | Assumed |
+| Platform | **Android only** | Decided 2026-11-18 |
+| Language / UI | Kotlin, Jetpack Compose, Material 3 with an own theme | Decided 2026-11-18 |
 | Database | Room | Assumed |
 | Settings | DataStore | Assumed |
-| Photos | CameraX or the system photo picker; files in app-private storage; Coil for loading | Assumed |
+| Photos | **Taken in the app with the camera** (CameraX) and attached to the garment; picking an existing photo from the gallery as an alternative. Files in app-private storage; Coil for loading | Decided 2026-11-18 (in-app camera); library assumed |
 | DI | Hilt (or manual DI), as in the user's other projects | TBD |
 | Build | Gradle with a version catalog and convention plugins (`build-logic/`) | Assumed |
 
@@ -34,12 +34,19 @@ made. Sections marked **TBD** are still open; open questions are in BRAINSTORMIN
 
 ## 5. Data model
 
-**TBD.** First sketch (not decided):
+Decided 2026-11-18 (the user's answers in BRAINSTORMING.md "Open questions"):
 
-- **Garment:** id, name, category, colours, brand, size, purchase date and price, photo(s), rating, notes,
-  status (owned / wishlist / given away).
-- **WearEntry:** id, garment id (or outfit id later), date, note.
-- **List:** id, name, ordered garment ids.
+- **Garment:** id, **category (required)**, **colour (optional)**, **photo** (taken with the camera, §2), rating
+  (optional), liked (optional), created date. Nothing else is required. More optional fields (name, brand, size,
+  price, material, notes) can be added later when a feature needs them.
+- **Category:** a **built-in default list** (e.g. pants, shirt, t-shirt, sweater, jacket, dress, skirt, shoes,
+  accessories) **plus categories the user creates**. Built-in ones can be hidden but not deleted while in use.
+- **Rating:** **both** a star rating (½ to 5 stars, in half steps, like Letterboxd) **and** a separate like
+  (heart). Each is optional and independent.
+- **WearEntry:** id, garment id, date, optional note. The diary logs **single garments**, one entry per garment
+  worn (outfits are a later idea, BRAINSTORMING.md).
+
+Not decided yet: **List:** id, name, ordered garment ids (M3).
 
 ## 6. Settings
 
@@ -47,8 +54,12 @@ made. Sections marked **TBD** are still open; open questions are in BRAINSTORMIN
 
 ## 7. Key flows
 
-**TBD.** First candidates: add a garment (photo → details → save), log a wear from the garment page or the diary,
-export/import.
+### 7.1 Add a garment (decided 2026-11-18, details TBD)
+
+Open the camera in the app → take a photo of the garment → choose a category (required) and optionally a colour
+→ save. The photo is linked to that garment. A garment can also be saved without a photo and get one later.
+
+**TBD:** log a wear from the garment page or the diary, export/import.
 
 ## 8. Navigation & screens
 

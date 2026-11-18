@@ -7,17 +7,19 @@ diary, rate and review your garments, put them in lists and see statistics about
 inspiration from **Letterboxd**: what Letterboxd does for the films you watch, dress-up does for the clothes in
 your wardrobe.
 
-> **Current state (2026-11-18): planning.** No code yet. The platform (Android, Kotlin, Jetpack Compose) is
-> assumed from the user's other projects and not yet confirmed (BRAINSTORMING.md "Open questions").
+> **Current state (2026-11-18): planning.** No code yet. Main decisions made (ARCHITECTURE.md §2, §5): Android
+> only, category required and colour optional, built-in plus own categories, star rating and like, diary of
+> single garments, photos taken in the app.
 
 ## Features
 
 | Feature | State |
 |---|---|
-| Add a garment: photo, name, category, colour, brand, size, notes | 📝 Planned (M1) |
+| Add a garment: take a photo in the app, pick a category (required) and a colour (optional) | 📝 Planned (M1) |
+| Categories: built-in list (pants, shirt, …) plus your own | 📝 Planned (M1) |
 | Wardrobe grid: photo tiles, filter and sort (Letterboxd poster-grid style) | 📝 Planned (M1) |
-| Garment page: big photo, details, rating, your notes, wear history | 📝 Planned (M1) |
-| Diary: log what you wore on a date, with an optional note | 📝 Planned (M2) |
+| Garment page: big photo, details, star rating (with halves) and a like, wear history | 📝 Planned (M1) |
+| Diary: log which garments you wore on a date, with an optional note | 📝 Planned (M2) |
 | Statistics: most and least worn, cost per wear, year in review | 📝 Planned (M3) |
 | Lists (e.g. "Summer", "Work", "To donate") and a wishlist | 📝 Planned (M3) |
 | Export and backup of the whole wardrobe | 📝 Planned (M2) |
@@ -28,8 +30,8 @@ Legend: 📝 Planned · 🚧 In progress · 🧪 Implemented, untested · ✅ Do
 
 ## Tech stack
 
-Assumed, not yet confirmed (ARCHITECTURE.md §2): an **Android** app in **Kotlin** with **Jetpack Compose**,
-offline first, with **Room** for data and photos stored in app storage.
+An **Android** app in **Kotlin** with **Jetpack Compose** (decided 2026-11-18), offline first, with **Room**
+for data and an in-app camera (CameraX) for photos stored in app storage (ARCHITECTURE.md §2).
 
 ## Requirements
 

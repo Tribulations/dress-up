@@ -16,8 +16,10 @@ _Last updated: 2026-11-18_
 
 - **Project planning (2026-11-18):** initial docs written (README, AGENTS/CLAUDE, GUIDELINES, ARCHITECTURE,
   BRAINSTORMING, STATUS, CHANGELOG), modelled on the user's other projects (`../noty`, `../d-player`,
-  `../svensk-statistik-app`). No code yet. Platform and MVP scope still to be confirmed by the user
-  (BRAINSTORMING.md "Open questions").
+  `../svensk-statistik-app`). No code yet.
+- **Main decisions made (2026-11-18)**, the user's answers to BRAINSTORMING.md "Open questions", now in
+  ARCHITECTURE.md §2, §5, §7.1: Android only; category required, colour optional; built-in plus own categories;
+  star rating with halves plus a like; the diary logs single garments; photos taken with the in-app camera.
 
 ## 🧪 Implemented, not yet tested
 
@@ -31,10 +33,10 @@ _Nothing yet._
 
 Each completed milestone gets a minor version tag (AGENTS.md). The milestones are a draft (BRAINSTORMING.md).
 
-- **Decide before M1** (BRAINSTORMING.md "Open questions"): platform, which garment fields the MVP needs, the
-  category list, the visual identity (name, colours).
-- **M1 – wardrobe:** project skeleton, add/edit/delete a garment with a photo, wardrobe grid with filters,
-  garment page.
+- **Still open** (BRAINSTORMING.md "Open questions"): the visual identity (name, colours, icon); can be decided
+  during M1.
+- **M1 – wardrobe:** project skeleton, in-app camera, add/edit/delete a garment (photo, category, optional
+  colour), built-in and own categories, wardrobe grid with filters, garment page with rating and like.
 - **M2 – diary and backup:** log wears by date, diary view, wear history per garment, export/import of the
   whole wardrobe (data + photos).
 - **M3 – lists and statistics:** lists, wishlist, ratings, most/least worn, cost per wear, year in review.

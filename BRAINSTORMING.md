@@ -36,10 +36,11 @@ as pleasant as logging films on Letterboxd: visual, quick, personal, and rewardi
 
 ## Core features (MVP)
 
-Draft, to be confirmed by the user:
+Draft. The garment fields, categories, ratings and diary unit are decided (ARCHITECTURE.md §5); the rest of the
+milestone split is still a draft:
 
-- **M1:** add, edit and delete garments with a photo; wardrobe grid with filter (category, colour) and sort;
-  garment page.
+- **M1:** add, edit and delete garments (photo taken in the app, category, optional colour); wardrobe grid with
+  filter (category, colour) and sort; garment page.
 - **M2:** diary (log wears), wear history per garment, export/import.
 - **M3:** lists, wishlist, ratings, statistics.
 
@@ -62,16 +63,30 @@ Draft, to be confirmed by the user:
 
 ## Open questions
 
-- **Platform:** Android only (Kotlin/Compose, like the user's other apps), or something else?
-- **Garment fields for the MVP:** which are needed from day one (price? size? brand? material?)
-- **Categories:** a fixed list (tops, bottoms, outerwear, shoes, accessories, …), user-defined, or both?
-- **Rating:** stars (with halves, like Letterboxd), a simple like, or both?
-- **Diary unit:** log single garments first, or outfits from the start?
+### Answered 2026-11-18 (now in ARCHITECTURE.md §2, §5, §7.1)
+
+- ~~**Platform**~~: **Android only.**
+- ~~**Garment fields for the MVP**~~: only **category is required** (pants, shirt, …); **colour is optional**.
+- ~~**Categories**~~: **both** a built-in list and the user's own.
+- ~~**Rating**~~: **both** stars (with halves) and a like.
+- ~~**Diary unit**~~: **single garments** first.
+- Added by the user: **take a picture of the garment in the app**, linked to its entry.
+
+### Still open
+
 - **Visual identity:** final name, colours and icon.
+- **Cost per wear** (M3 statistics) needs a price. Add an optional price field then, or drop that statistic?
+- Should a **diary entry** be able to have its own photo too (e.g. a photo of the day's outfit), or only the
+  garment?
 
 ## Idea log
 
 Newest first. Each entry is dated.
+
+### 2026-11-18 – Take the photo in the app
+
+The user wants to take a picture of the garment with the camera directly in the app, and have it linked to the
+garment's entry. Decided, see ARCHITECTURE.md §2 and §7.1.
 
 ### 2026-11-18 – The original idea
 
