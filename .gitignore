@@ -1,0 +1,31 @@
+# Secrets and local config (never commit)
+local.properties
+*.keystore
+!debug.keystore
+.env
+
+# Personal data: real wardrobe photos and exports stay out of the repo
+/data/
+*.dressup-backup
+*.jpg
+*.jpeg
+*.png
+*.webp
+!**/res/**
+!**/test-fixtures/**
+!**/docs/**
+
+# Android / Gradle
+*.iml
+.gradle/
+.idea/
+.kotlin/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+
+# OS
+.DS_Store
