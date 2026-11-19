@@ -126,7 +126,7 @@ private fun OutfitGrid(outfits: List<OutfitCard>, onOpen: (Long) -> Unit) {
     ) {
         items(outfits, key = { it.outfit.id }) { card ->
             Column(Modifier.clickable { onOpen(card.outfit.id) }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutfitBoard(card.pieces, Modifier.fillMaxWidth())
+                OutfitBoard(card.pieces, Modifier.fillMaxWidth(), background = card.background)
                 Text(
                     outfitName(card.outfit),
                     style = MaterialTheme.typography.titleSmall,

@@ -165,7 +165,7 @@ private fun DiaryRowItem(row: DiaryRow, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        OutfitBoard(row.worn.pieces, Modifier.width(54.dp))
+        OutfitBoard(row.worn.pieces, Modifier.width(54.dp), background = row.worn.background)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(wornTitle(row.worn), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             entry.occasion?.let {

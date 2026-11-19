@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-19
+
+### Added
+- **Turn garments** on the outfit board: twist with two fingers, or use the new **Turn** slider (with Straighten).
+- **Outfit backgrounds:** a colour from a palette, or your own picture from the camera or the gallery. Shown wherever
+  the outfit is, and included in exports.
+- **Sort by Most worn and Least worn** in the wardrobe (counted from the diary; never-worn garments count as least).
+- **Import a profile on the first start**, next to "What's your name?": a new phone can start with the wardrobe from
+  an export.
+
+### Changed
+- Cut-out garments are zoomed in to fill their frames (grid, garment page, pickers), whole but with almost no margin.
+- Database version 4 (added by itself on update).
+
+### Fixed
+- After changing the sort or a filter, the wardrobe grid stayed scrolled to where the old first garment was.
+
 ## [0.2.0] - 2026-11-19
 
 M2: the diary, outfit ratings, and export and import.

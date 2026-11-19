@@ -34,4 +34,12 @@ class OutfitEditingTest {
         assertEquals(shoes, picked[0])
         assertEquals(OutfitItem.DEFAULT_SCALE, picked[1].scale)
     }
+
+    @Test
+    fun `turning adds up and stays within half a turn either way`() {
+        val board = listOf(OutfitItem(1, 0.5f, 0.5f, 0.4f, rotation = 170f), OutfitItem(2, 0.5f, 0.5f, 0.4f))
+        assertEquals(-170f, board.transformed(1, 0f, 0f, 1f, rotation = 20f)[0].rotation, 0.001f)
+        assertEquals(0f, board.transformed(1, 0f, 0f, 1f, rotation = 20f)[1].rotation, 0.001f)
+        assertEquals(90f, board.rotated(2, 450f)[1].rotation, 0.001f)
+    }
 }

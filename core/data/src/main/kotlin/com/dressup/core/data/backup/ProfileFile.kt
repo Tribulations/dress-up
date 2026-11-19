@@ -68,13 +68,20 @@ internal data class OutfitFile(
     val review: String? = null,
     val liked: Boolean = false,
     val created: String? = null,
+    /** A board colour's key (white, sage, …), or null. */
+    val backgroundColour: String? = null,
+    /** The board's own background image, a path in the zip (`images/<file>`), or null. */
+    val backgroundImage: String? = null,
     /** Bottom to top on the board. */
     val items: List<OutfitItemFile> = emptyList(),
 )
 
-/** A garment on an outfit's board: its centre ([x], [y]) and width ([scale]) as fractions of the board. */
+/**
+ * A garment on an outfit's board: its centre ([x], [y]) and width ([scale]) as fractions of the board, and its
+ * [rotation] in degrees clockwise.
+ */
 @Serializable
-internal data class OutfitItemFile(val garment: Long, val x: Float, val y: Float, val scale: Float)
+internal data class OutfitItemFile(val garment: Long, val x: Float, val y: Float, val scale: Float, val rotation: Float = 0f)
 
 @Serializable
 internal data class DiaryFile(

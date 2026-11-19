@@ -165,6 +165,7 @@ private fun OutfitDetails(state: OutfitDetailUiState.Loaded, onAction: (OutfitDe
         OutfitBoard(
             pieces = state.pieces,
             onPieceClick = { onAction(OutfitDetailAction.OpenGarment(it)) },
+            background = state.background,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         )
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -212,7 +213,7 @@ internal fun GarmentStrip(garments: List<GalleryTile>, onOpen: (Long) -> Unit) {
                     placeholder = tile.title,
                     contentDescription = tile.title,
                     isCutout = tile.isCutout,
-                    cutoutPadding = 4.dp,
+                    cutoutPadding = 2.dp,
                     modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f).clip(RoundedCornerShape(6.dp)),
                 )
                 Text(tile.title, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)

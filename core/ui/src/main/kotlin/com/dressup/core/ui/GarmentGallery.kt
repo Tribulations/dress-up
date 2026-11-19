@@ -112,7 +112,7 @@ private fun GalleryItem(tile: GalleryTile, picked: Boolean, onClick: () -> Unit)
             placeholder = tile.title,
             contentDescription = tile.title,
             isCutout = tile.isCutout,
-            cutoutPadding = 6.dp,
+            cutoutPadding = 3.dp,
             modifier = Modifier.fillMaxSize(),
         )
         if (picked) {

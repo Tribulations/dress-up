@@ -187,7 +187,7 @@ private fun WornSection(state: DiaryEditorUiState, onOpenPicker: (WornPicker) ->
         Text(stringResource(R.string.diary_nothing_picked), style = MaterialTheme.typography.bodyLarge)
     } else {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutfitBoard(worn.pieces, Modifier.width(96.dp))
+            OutfitBoard(worn.pieces, Modifier.width(96.dp), background = worn.background)
             Text(wornTitle(worn), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
         }
     }
@@ -291,7 +291,7 @@ private fun OutfitPicker(outfits: List<OutfitChoice>, onPick: (Long) -> Unit, on
         ) {
             items(outfits, key = { it.id }) { outfit ->
                 Column(Modifier.clickable { onPick(outfit.id) }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    OutfitBoard(outfit.pieces, Modifier.fillMaxWidth())
+                    OutfitBoard(outfit.pieces, Modifier.fillMaxWidth(), background = outfit.background)
                     Text(
                         outfit.name ?: stringResource(R.string.diary_outfit),
                         style = MaterialTheme.typography.titleSmall,

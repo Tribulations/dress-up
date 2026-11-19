@@ -6,6 +6,8 @@ import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.Rating
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import com.dressup.core.model.WearSummary
+import java.time.LocalDate
 
 class WardrobeFilterTest {
     private val pants = Category(id = 1, name = "Pants", builtIn = true, hidden = false)
@@ -83,5 +85,16 @@ class WardrobeFilterTest {
     @Test
     fun `oldest first`() {
         assertEquals(listOf(1L, 2L, 3L), ids(WardrobeFilter(sort = WardrobeSort.OLDEST)))
+    }
+
+    @Test
+    fun `most and least worn, ties broken by the last wear, never worn counts as least`() {
+        val wears = mapOf(
+            1L to WearSummary(3, LocalDate.of(2026, 11, 1)),
+            3L to WearSummary(3, LocalDate.of(2026, 11, 18)),
+        )
+        fun sorted(sort: WardrobeSort) = applyFilter(all, categories, WardrobeFilter(sort = sort), wears).map { it.id }
+        assertEquals(listOf(3L, 1L, 2L), sorted(WardrobeSort.MOST_WORN))
+        assertEquals(listOf(2L, 3L, 1L), sorted(WardrobeSort.LEAST_WORN))
     }
 }

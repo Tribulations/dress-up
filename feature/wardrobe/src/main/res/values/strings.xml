@@ -13,4 +13,6 @@
     <string name="wardrobe_sort_oldest">Oldest first</string>
     <string name="wardrobe_sort_rating">Highest rated</string>
     <string name="wardrobe_sort_category">By category</string>
+    <string name="wardrobe_sort_most_worn">Most worn</string>
+    <string name="wardrobe_sort_least_worn">Least worn</string>
 </resources>

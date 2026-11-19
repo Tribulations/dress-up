@@ -90,6 +90,19 @@ milestone split is still a draft:
 
 Newest first. Each entry is dated.
 
+### 2026-11-19 – Fill with the cut-out, rotate and backgrounds on outfits, sort by wear, import on first start (built in v0.2.1)
+
+From the user:
+
+1. After removing the background, zoom the picture in so the garment fills its frame.
+2. Rotate garments on the outfit board, and give an outfit a background: an image or a colour.
+3. Sort the wardrobe by most and least worn.
+4. Offer the import on a new install, where the app asks for the user's name.
+
+Agreed: the cut-out is scaled to fit (whole, almost no margin) rather than cropped to fill; backgrounds are a fixed
+palette of colours or the user's own picture (a free colour picker maybe later). See ARCHITECTURE.md §5.2, §7.3, §7.6,
+§7.8.
+
 ### 2026-11-19 – Outfit ratings, occasions, diary, calendar, export and import (built in v0.2.0)
 
 From the user:

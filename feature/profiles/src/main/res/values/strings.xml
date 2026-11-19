@@ -5,6 +5,12 @@
     <string name="welcome_question">What’s your name?</string>
     <string name="welcome_name_label">Your name</string>
     <string name="welcome_start">Get started</string>
+    <string name="welcome_import_hint">New phone? Bring your wardrobe along from an export file.</string>
+    <string name="welcome_import">Import a profile</string>
+    <string name="welcome_importing">Importing…</string>
+    <string name="welcome_import_not_an_export">That file isn\'t a dress-up export.</string>
+    <string name="welcome_import_too_new">That file was made by a newer version of dress-up. Update the app, then import it.</string>
+    <string name="welcome_import_failed">The file couldn\'t be imported. Try again, or enter your name to start fresh.</string>
     <string name="welcome_test_user_hint">Want to look around first? Settings → Profiles has a test user with a prefilled wardrobe.</string>
 
     <string name="profiles_title">Profiles</string>

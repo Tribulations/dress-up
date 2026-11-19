@@ -14,17 +14,19 @@ _Last updated: 2026-11-19_
 
 ## 🚧 Currently working on
 
-_Nothing. v0.2.0 (M2: outfit ratings, the diary with occasions and wear counts, export and import) is released; M3 is next._
+_Nothing. v0.2.1 (cut-outs that fill, turning and backgrounds on outfits, sorting by wear, import on the first start) is released; M3 is next._
 
 ## 🧪 Implemented, not yet tested
 
-- **Everything in v0.1.0–v0.2.0 on the user's phone (Galaxy S20).** Only tested on the emulator so far (below). Things
+- **Everything in v0.1.0–v0.2.1 on the user's phone (Galaxy S20).** Only tested on the emulator so far (below). Things
   worth checking on the real phone: the Samsung camera app returns the photo, portrait photos are upright, the grid
   with real photos, **Remove background on real photos** (the emulator only had flat, made-up pictures, and its model
   download is the first one on that phone), pinching on the outfit board with real fingers, **export to and import
   from Google Drive** (the emulator only had Downloads), and an export of a large real wardrobe (time and size).
-- **The outfit board's pinch-to-resize** was not tested (the emulator's scripted input can't pinch); dragging and the
-  Size slider were.
+- **The outfit board's pinch-to-resize and two-finger turn** were not tested (the emulator's scripted input can't use
+  two fingers); dragging and the Size and Turn sliders were.
+- **A background photo taken with the camera** (only one from the gallery was tested), and the first-start import's
+  error message (unit-tested only).
 - **Leaving the Profiles screen while the test user is being reset or created** now lets the fill finish
   (`NonCancellable`, the same for an import). Found on the emulator (pressing Back cancelled a reset half-way, an old
   bug); the fix is built and the normal reset was tested again, but leaving mid-way was not repeated.
@@ -33,6 +35,22 @@ _Nothing. v0.2.0 (M2: outfit ratings, the diary with occasions and wear counts, 
 
 ## ✅ Done & tested
 
+- **v0.2.1 – fill, turn, backgrounds, sort by wear, import on the first start (2026-11-19).** Unit tests: 93 JVM tests
+  pass, 10 of them new (rotation normalising and adding up, the editor's turn and background in its saved state and
+  draft, keeping an outfit's background when editing, wear counts for the whole wardrobe, the two wear sorts, the
+  first-start import and its errors). Manual tests on the emulator (Medium_Phone_API_36, Android 16), **release
+  build** (R8, release key):
+  - **Update from v0.2.0** with data: auto-migration 3 → 4, all outfits there. No crash.
+  - Test user **Reset**: Sunday walk on sage with the scarf turned, Midsummer on sky, in the grid and the diary.
+  - Cut-outs fill their tiles in the grid (compared with screenshots of v0.2.0).
+  - **Most worn** (white sneakers 7, jeans 6, …) and **Least worn** (never-worn first, newest first). Found: the grid
+    kept the old first garment in view after re-sorting, so a new sort looked wrong; fixed (scrolls to the top on a
+    change) and checked that coming back from a garment page keeps the place.
+  - Outfit editor: select the shirt → **Turn** slider (≈33°) → **Background** → **From gallery** (a made-up gradient)
+    → Save: the outfit page shows the turned shirt on the picture.
+  - Export with the picture and turns in it (`backgroundImage: images/….jpg`, `rotation: 32.9`), then **cleared the
+    app's data** (emulator) → the first start showed **Import a profile** → imported → straight into the wardrobe;
+    outfits and diary with the picture, colours and turns.
 - **v0.2.0 – M2: outfit ratings, the diary, export and import (2026-11-19).** Unit tests: 82 JVM tests pass, 24 of
   them new (diary order and wear counts, the diary editor ViewModel, the diary's month grouping and compact collage, the
   `profile.yaml` round trip, tolerance of unknown keys, star rounding, safe file names and unique import names, the

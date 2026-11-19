@@ -12,6 +12,7 @@ import com.dressup.core.model.Outfit
 import com.dressup.core.model.OutfitAspect
 import com.dressup.core.model.Rating
 import com.dressup.core.model.wearsOfOutfit
+import com.dressup.core.ui.BoardBackground
 import com.dressup.core.ui.BoardPiece
 import com.dressup.core.ui.GalleryTile
 import com.dressup.core.ui.PieceFactory
@@ -28,6 +29,7 @@ sealed interface OutfitDetailUiState {
     data class Loaded(
         val outfit: Outfit,
         val pieces: List<BoardPiece>,
+        val background: BoardBackground?,
         /** Its garments, in board order, to open one. */
         val garments: List<GalleryTile>,
         /** The diary entries it was worn in, newest first. */
@@ -55,6 +57,7 @@ class OutfitDetailViewModel(
                 OutfitDetailUiState.Loaded(
                     outfit = outfit,
                     pieces = pieces.of(outfit.items),
+                    background = pieces.background(outfit.background),
                     garments = outfit.items.mapNotNull { pieces.tile(it.garmentId) },
                     wears = entries.wearsOfOutfit(outfitId),
                 )

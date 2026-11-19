@@ -19,10 +19,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         DiaryEntryEntity::class,
         DiaryEntryGarmentEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
-    // v0.1.2 → v0.2.0 only adds tables and columns (outfit ratings, the diary), which Room can migrate by itself.
-    autoMigrations = [AutoMigration(from = 2, to = 3)],
+    // v0.1.2 → v0.2.0 (outfit ratings, the diary) and v0.2.0 → v0.2.1 (outfit backgrounds, rotation) only add tables
+    // and columns, which Room can migrate by itself.
+    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
 )
 internal abstract class DressUpDatabase : RoomDatabase() {
     abstract fun garmentDao(): GarmentDao

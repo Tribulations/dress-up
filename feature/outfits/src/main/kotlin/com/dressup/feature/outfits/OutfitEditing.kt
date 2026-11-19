@@ -2,9 +2,13 @@ package com.dressup.feature.outfits
 
 import com.dressup.core.model.OutfitItem
 import com.dressup.core.model.defaultOutfitLayout
+import com.dressup.core.model.normalizedRotation
 
-/** Moves garment [garmentId] by a fraction of the board ([dx], [dy]) and resizes it by [zoom], kept on the board. */
-internal fun List<OutfitItem>.transformed(garmentId: Long, dx: Float, dy: Float, zoom: Float): List<OutfitItem> = map { item ->
+/**
+ * Moves garment [garmentId] by a fraction of the board ([dx], [dy]), resizes it by [zoom] and turns it by [rotation]
+ * degrees, kept on the board.
+ */
+internal fun List<OutfitItem>.transformed(garmentId: Long, dx: Float, dy: Float, zoom: Float, rotation: Float = 0f): List<OutfitItem> = map { item ->
     if (item.garmentId != garmentId) {
         item
     } else {
@@ -12,12 +16,17 @@ internal fun List<OutfitItem>.transformed(garmentId: Long, dx: Float, dy: Float,
             x = (item.x + dx).coerceIn(0f, 1f),
             y = (item.y + dy).coerceIn(0f, 1f),
             scale = (item.scale * zoom).coerceIn(OutfitItem.MIN_SCALE, OutfitItem.MAX_SCALE),
+            rotation = normalizedRotation(item.rotation + rotation),
         )
     }
 }
 
 internal fun List<OutfitItem>.resized(garmentId: Long, scale: Float): List<OutfitItem> = map { item ->
     if (item.garmentId == garmentId) item.copy(scale = scale.coerceIn(OutfitItem.MIN_SCALE, OutfitItem.MAX_SCALE)) else item
+}
+
+internal fun List<OutfitItem>.rotated(garmentId: Long, degrees: Float): List<OutfitItem> = map { item ->
+    if (item.garmentId == garmentId) item.copy(rotation = normalizedRotation(degrees)) else item
 }
 
 /** Draws [garmentId] last, i.e. on top of the others. */

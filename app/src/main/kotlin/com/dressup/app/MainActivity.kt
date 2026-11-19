@@ -35,7 +35,7 @@ private fun DressUpApp(profiles: DressUpProfiles, appVersion: String, freshStart
 
     ProfileScope(active?.id ?: NO_PROFILE) {
         if (active == null) {
-            WelcomeRoute(profiles)
+            WelcomeRoute(profiles, backup = profiles)
         } else {
             val data = profiles.data(active.id)
             // Only when no editor can hold an unsaved photo: on a fresh start, or just after switching profile. Not when

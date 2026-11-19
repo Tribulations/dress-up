@@ -1,5 +1,6 @@
 package com.dressup.feature.outfits
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,7 +8,9 @@ import com.dressup.core.data.CategoryRepository
 import com.dressup.core.data.GarmentRepository
 import com.dressup.core.data.OutfitRepository
 import com.dressup.core.data.photo.PhotoStorage
+import com.dressup.core.model.BoardColour
 import com.dressup.core.model.MAX_OUTFIT_NAME_LENGTH
+import com.dressup.core.model.OutfitBackground
 import com.dressup.core.model.OutfitDraft
 import com.dressup.core.model.OutfitItem
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +21,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.dressup.core.ui.BoardBackground
 import com.dressup.core.ui.BoardPiece
 import com.dressup.core.ui.GalleryTile
 import com.dressup.core.ui.PieceFactory
@@ -36,6 +40,11 @@ data class OutfitEditorUiState(
     /** The saved outfit's id once [done] after a save; null after a delete. */
     val savedId: Long? = null,
     val saveFailed: Boolean,
+    /** The outfit's background, as chosen, and as the board draws it. */
+    val background: OutfitBackground? = null,
+    val boardBackground: BoardBackground? = null,
+    val importingBackground: Boolean = false,
+    val backgroundFailed: Boolean = false,
 ) {
     val canSave: Boolean get() = loaded && pieces.isNotEmpty() && !saving
     val selectedPiece: BoardPiece? get() = pieces.firstOrNull { it.item.garmentId == selectedGarmentId }
@@ -47,6 +56,9 @@ private data class OutfitFields(
     val name: String = "",
     val items: List<OutfitItem> = emptyList(),
     val galleryOpen: Boolean = false,
+    val background: OutfitBackground? = null,
+    /** The background image the outfit had when the editor opened: only the repository may delete that one. */
+    val savedBackgroundFile: String? = null,
 )
 
 private data class OutfitStatus(
@@ -55,6 +67,8 @@ private data class OutfitStatus(
     val done: Boolean = false,
     val savedId: Long? = null,
     val saveFailed: Boolean = false,
+    val importingBackground: Boolean = false,
+    val backgroundFailed: Boolean = false,
 )
 
 /** Makes a new outfit when [outfitId] is null, otherwise edits it. */
@@ -64,7 +78,7 @@ class OutfitEditorViewModel(
     private val outfits: OutfitRepository,
     garments: GarmentRepository,
     categories: CategoryRepository,
-    photos: PhotoStorage,
+    private val photos: PhotoStorage,
 ) : ViewModel() {
     private val fields = MutableStateFlow(restoreFields())
     private val status = MutableStateFlow(OutfitStatus())
@@ -84,6 +98,10 @@ class OutfitEditorViewModel(
                 done = s.done,
                 savedId = s.savedId,
                 saveFailed = s.saveFailed,
+                background = f.background,
+                boardBackground = pieces.background(f.background),
+                importingBackground = s.importingBackground,
+                backgroundFailed = s.backgroundFailed,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), initialState())
 
@@ -98,7 +116,15 @@ class OutfitEditorViewModel(
         }
         viewModelScope.launch {
             val outfit = outfits.outfit(outfitId).first()
-            setFields { OutfitFields(loaded = true, name = outfit?.name.orEmpty(), items = outfit?.items.orEmpty()) }
+            setFields {
+                OutfitFields(
+                    loaded = true,
+                    name = outfit?.name.orEmpty(),
+                    items = outfit?.items.orEmpty(),
+                    background = outfit?.background,
+                    savedBackgroundFile = (outfit?.background as? OutfitBackground.Image)?.fileName,
+                )
+            }
         }
     }
 
@@ -122,8 +148,38 @@ class OutfitEditorViewModel(
         status.update { it.copy(selectedGarmentId = garmentId) }
     }
 
-    fun transform(garmentId: Long, dx: Float, dy: Float, zoom: Float) =
-        setFields { it.copy(items = it.items.transformed(garmentId, dx, dy, zoom)) }
+    fun transform(garmentId: Long, dx: Float, dy: Float, zoom: Float, rotation: Float = 0f) =
+        setFields { it.copy(items = it.items.transformed(garmentId, dx, dy, zoom, rotation)) }
+
+    /** The rotation slider: turns the garment to [degrees]. */
+    fun rotate(garmentId: Long, degrees: Float) = setFields { it.copy(items = it.items.rotated(garmentId, degrees)) }
+
+    /** A palette colour, or null for no background. */
+    fun setBackgroundColour(colour: BoardColour?) = replaceBackground(colour?.let(OutfitBackground::Colour))
+
+    /** The user's own image from the camera or the gallery, imported (downscaled) like a garment photo. */
+    fun importBackground(source: Uri) {
+        status.update { it.copy(importingBackground = true, backgroundFailed = false) }
+        viewModelScope.launch {
+            photos.import(source)
+                .onSuccess { fileName ->
+                    replaceBackground(OutfitBackground.Image(fileName))
+                    status.update { it.copy(importingBackground = false) }
+                }
+                .onFailure { status.update { it.copy(importingBackground = false, backgroundFailed = true) } }
+        }
+    }
+
+    fun backgroundFailedShown() = status.update { it.copy(backgroundFailed = false) }
+
+    /** An image picked in this editor and then replaced was never saved, so its file goes at once. */
+    private fun replaceBackground(background: OutfitBackground?) {
+        val previous = (fields.value.background as? OutfitBackground.Image)?.fileName
+        setFields { it.copy(background = background) }
+        if (previous != null && previous != fields.value.savedBackgroundFile && previous != (background as? OutfitBackground.Image)?.fileName) {
+            viewModelScope.launch { photos.delete(previous) }
+        }
+    }
 
     fun resize(garmentId: Long, scale: Float) = setFields { it.copy(items = it.items.resized(garmentId, scale)) }
 
@@ -138,7 +194,7 @@ class OutfitEditorViewModel(
         if (current.items.isEmpty()) return
         status.update { it.copy(saving = true, saveFailed = false) }
         viewModelScope.launch {
-            runCatching { outfits.save(OutfitDraft(outfitId, current.name, current.items)) }
+            runCatching { outfits.save(OutfitDraft(outfitId, current.name, current.items, current.background)) }
                 .onSuccess { id -> status.update { it.copy(saving = false, done = true, savedId = id) } }
                 .onFailure { status.update { it.copy(saving = false, saveFailed = true) } }
         }
@@ -164,6 +220,10 @@ class OutfitEditorViewModel(
         savedState[KEY_XS] = updated.items.map { it.x }.toFloatArray()
         savedState[KEY_YS] = updated.items.map { it.y }.toFloatArray()
         savedState[KEY_SCALES] = updated.items.map { it.scale }.toFloatArray()
+        savedState[KEY_ROTATIONS] = updated.items.map { it.rotation }.toFloatArray()
+        savedState[KEY_BG_COLOUR] = (updated.background as? OutfitBackground.Colour)?.colour?.key
+        savedState[KEY_BG_IMAGE] = (updated.background as? OutfitBackground.Image)?.fileName
+        savedState[KEY_BG_SAVED] = updated.savedBackgroundFile
     }
 
     private fun restoreFields(): OutfitFields {
@@ -171,12 +231,17 @@ class OutfitEditorViewModel(
         val xs = savedState.get<FloatArray>(KEY_XS) ?: FloatArray(0)
         val ys = savedState.get<FloatArray>(KEY_YS) ?: FloatArray(0)
         val scales = savedState.get<FloatArray>(KEY_SCALES) ?: FloatArray(0)
+        val rotations = savedState.get<FloatArray>(KEY_ROTATIONS) ?: FloatArray(0)
         val count = minOf(ids.size, xs.size, ys.size, scales.size)
+        val image = savedState.get<String>(KEY_BG_IMAGE)?.let(OutfitBackground::Image)
+        val colour = BoardColour.fromKeyOrNull(savedState.get<String>(KEY_BG_COLOUR))?.let(OutfitBackground::Colour)
         return OutfitFields(
             loaded = savedState[KEY_LOADED] ?: false,
             name = savedState[KEY_NAME] ?: "",
-            items = (0 until count).map { OutfitItem(ids[it], xs[it], ys[it], scales[it]) },
+            items = (0 until count).map { OutfitItem(ids[it], xs[it], ys[it], scales[it], rotations.getOrElse(it) { 0f }) },
             galleryOpen = savedState[KEY_GALLERY] ?: false,
+            background = image ?: colour,
+            savedBackgroundFile = savedState[KEY_BG_SAVED],
         )
     }
 
@@ -202,5 +267,9 @@ class OutfitEditorViewModel(
         const val KEY_XS = "xs"
         const val KEY_YS = "ys"
         const val KEY_SCALES = "scales"
+        const val KEY_ROTATIONS = "rotations"
+        const val KEY_BG_COLOUR = "backgroundColour"
+        const val KEY_BG_IMAGE = "backgroundImage"
+        const val KEY_BG_SAVED = "savedBackgroundImage"
     }
 }

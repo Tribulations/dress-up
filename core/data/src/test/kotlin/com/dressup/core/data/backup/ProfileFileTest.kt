@@ -26,7 +26,10 @@ class ProfileFileTest {
             ),
             GarmentFile(id = 4, name = "true", description = "42", review = "null", categories = listOf(1)),
         ),
-        outfits = listOf(OutfitFile(id = 2, name = "Office", rating = 3.0, items = listOf(OutfitItemFile(3, 0.5f, 0.25f, 0.45f)))),
+        outfits = listOf(
+            OutfitFile(id = 2, name = "Office", rating = 3.0, backgroundColour = "sage", items = listOf(OutfitItemFile(3, 0.5f, 0.25f, 0.45f, rotation = -15f))),
+            OutfitFile(id = 5, backgroundImage = "images/bg.jpg", items = listOf(OutfitItemFile(4, 0.5f, 0.5f, 0.45f))),
+        ),
         diary = listOf(DiaryFile(date = "2025-12-24", outfit = 2, garments = listOf(3, 4), occasion = "Christmas Eve", note = "Too warm # by the fire")),
     )
 

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +36,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,7 +71,7 @@ fun WardrobeRoute(
     bottomBar: @Composable () -> Unit = {},
 ) {
     val viewModel: WardrobeViewModel = viewModel(
-        factory = viewModelFactory { initializer { WardrobeViewModel(data.garments, data.categories, data.photos) } },
+        factory = viewModelFactory { initializer { WardrobeViewModel(data.garments, data.categories, data.photos, data.diary) } },
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     WardrobeScreen(
@@ -166,7 +170,7 @@ private fun LoadedWardrobe(state: WardrobeUiState.Loaded, onAction: (WardrobeAct
                 }
             }
         } else {
-            GarmentGrid(state.tiles) { onAction(WardrobeAction.Open(it)) }
+            GarmentGrid(state.tiles, state.filter) { onAction(WardrobeAction.Open(it)) }
         }
     }
 }
@@ -206,8 +210,19 @@ private fun FilterRow(state: WardrobeUiState.Loaded, onAction: (WardrobeAction) 
 }
 
 @Composable
-private fun GarmentGrid(tiles: List<WardrobeTile>, onOpen: (Long) -> Unit) {
+private fun GarmentGrid(tiles: List<WardrobeTile>, filter: WardrobeFilter, onOpen: (Long) -> Unit) {
+    val gridState = rememberLazyGridState()
+    // A new sort or filter starts at the top; otherwise the grid would keep the old first garment in view. Only on a
+    // change: coming back from a garment's page keeps the place in the grid.
+    var shownFilter by rememberSaveable { mutableIntStateOf(filter.hashCode()) }
+    LaunchedEffect(filter) {
+        if (filter.hashCode() != shownFilter) {
+            shownFilter = filter.hashCode()
+            gridState.scrollToItem(0)
+        }
+    }
     LazyVerticalGrid(
+        state = gridState,
         columns = GridCells.Adaptive(minSize = 104.dp),
         contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 88.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -274,6 +289,8 @@ private val WardrobeSort.labelRes: Int
         WardrobeSort.OLDEST -> R.string.wardrobe_sort_oldest
         WardrobeSort.RATING -> R.string.wardrobe_sort_rating
         WardrobeSort.CATEGORY -> R.string.wardrobe_sort_category
+        WardrobeSort.MOST_WORN -> R.string.wardrobe_sort_most_worn
+        WardrobeSort.LEAST_WORN -> R.string.wardrobe_sort_least_worn
     }
 
 @Composable

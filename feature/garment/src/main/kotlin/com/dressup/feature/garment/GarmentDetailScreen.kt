@@ -182,7 +182,7 @@ private fun GarmentDetails(state: GarmentDetailUiState.Loaded, onAction: (Detail
                 placeholder = stringResource(R.string.garment_no_photo),
                 contentDescription = state.title,
                 isCutout = state.isCutout,
-                cutoutPadding = 32.dp,
+                cutoutPadding = 12.dp,
                 modifier = Modifier.fillMaxSize(),
             )
             if (state.cuttingOut) CircularProgressIndicator(Modifier.align(Alignment.Center))

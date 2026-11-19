@@ -162,6 +162,7 @@ private fun EntryDetails(state: DiaryEntryUiState.Loaded, onOpenOutfit: (Long) -
         OutfitBoard(
             pieces = state.worn.pieces,
             onPieceClick = onOpenGarment,
+            background = state.worn.background,
             modifier = Modifier.fillMaxWidth(BOARD_WIDTH).align(Alignment.CenterHorizontally),
         )
         GarmentRow(state.garments, onOpenGarment)
@@ -203,7 +204,7 @@ private fun GarmentRow(garments: List<GalleryTile>, onOpen: (Long) -> Unit) {
                     placeholder = tile.title,
                     contentDescription = tile.title,
                     isCutout = tile.isCutout,
-                    cutoutPadding = 4.dp,
+                    cutoutPadding = 2.dp,
                     modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f).clip(RoundedCornerShape(6.dp)),
                 )
                 Text(tile.title, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)

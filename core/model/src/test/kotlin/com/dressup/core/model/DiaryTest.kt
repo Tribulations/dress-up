@@ -31,4 +31,13 @@ class DiaryTest {
         assertEquals(WearSummary(2, LocalDate.parse("2026-11-18")), diary.wearsOfOutfit(5).summary())
         assertEquals(WearSummary.NEVER, diary.wearsOfGarment(99).summary())
     }
+
+    @Test
+    fun `garment wears are counted for the whole wardrobe at once`() {
+        val wears = diary.garmentWears()
+        assertEquals(WearSummary(2, LocalDate.parse("2026-11-18")), wears[10])
+        assertEquals(WearSummary(2, LocalDate.parse("2026-11-18")), wears[11])
+        assertEquals(WearSummary(1, LocalDate.parse("2026-11-18")), wears[12])
+        assertEquals(null, wears[99])
+    }
 }

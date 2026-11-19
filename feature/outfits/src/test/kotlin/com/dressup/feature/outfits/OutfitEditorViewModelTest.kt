@@ -14,7 +14,10 @@ import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.GarmentDraft
 import com.dressup.core.model.Outfit
+import com.dressup.core.model.BoardColour
 import com.dressup.core.model.OutfitAspect
+import com.dressup.core.model.OutfitBackground
+import com.dressup.core.ui.BoardBackground
 import com.dressup.core.model.OutfitDraft
 import com.dressup.core.model.OutfitItem
 import com.dressup.core.model.Rating
@@ -118,6 +121,39 @@ class OutfitEditorViewModelTest {
         outfits.items.value = listOf(Outfit(7, null, listOf(OutfitItem(1, 0.5f, 0.3f, 0.4f), OutfitItem(99, 0.5f, 0.8f, 0.3f)), createdAtMillis = 0))
         val vm = editor(id = 7)
         assertEquals(listOf(1L), vm.uiState.value.pieces.map { it.item.garmentId })
+    }
+
+    @Test
+    fun `turning and a background colour are saved, and survive the app being stopped`() = runTest {
+        val saved = SavedStateHandle()
+        val vm = editor(saved = saved)
+        vm.pickGarments(listOf(1L, 3L))
+        vm.transform(1, dx = 0f, dy = 0f, zoom = 1f, rotation = 200f) // a two-finger twist past half a turn
+        vm.rotate(3, -15f)
+        vm.setBackgroundColour(BoardColour.SAGE)
+        assertEquals(BoardBackground.Colour(BoardColour.SAGE.argb), vm.uiState.value.boardBackground)
+
+        val restored = editor(saved = saved)
+        assertEquals(listOf(-160f, -15f), restored.uiState.value.pieces.map { it.item.rotation })
+        assertEquals(OutfitBackground.Colour(BoardColour.SAGE), restored.uiState.value.background)
+
+        restored.save()
+        val draft = outfits.saved.single()
+        assertEquals(OutfitBackground.Colour(BoardColour.SAGE), draft.background)
+        assertEquals(listOf(-160f, -15f), draft.items.map { it.rotation })
+    }
+
+    @Test
+    fun `editing keeps the outfit's background until it is changed`() = runTest {
+        outfits.items.value = listOf(
+            Outfit(7, "Office", listOf(OutfitItem(1, 0.5f, 0.3f, 0.4f, rotation = 10f)), background = OutfitBackground.Image("bg.jpg"), createdAtMillis = 0),
+        )
+        val vm = editor(id = 7)
+        assertEquals(BoardBackground.Image(File("bg.jpg")), vm.uiState.value.boardBackground)
+        vm.setBackgroundColour(null)
+        vm.save()
+        assertNull(outfits.saved.single().background)
+        assertEquals(10f, outfits.saved.single().items.single().rotation)
     }
 
     private companion object {

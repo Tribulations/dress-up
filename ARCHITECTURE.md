@@ -69,7 +69,8 @@ Convention plugins: `dressup.android.application`, `dressup.android.library`, `d
 Decided 2026-11-18 (the user's answers in BRAINSTORMING.md "Open questions"); built in v0.1.0. Room schema version 2
 since v0.1.2 (`MIGRATION_1_2`: the old garments table is renamed, copied into the new one and dropped only after every
 row and its category link are in the new tables), version 3 since v0.2.0 (a Room auto-migration: it only adds outfit
-rating columns and the outfit-aspect and diary tables).
+rating columns and the outfit-aspect and diary tables), version 4 since v0.2.1 (auto-migration: outfit backgrounds and
+garment rotation on the board).
 
 - **Garment** (`garments`): id, **name (optional**, e.g. "Coola favvis tröjan", at most 40 characters),
   **description (optional**, 500), colourKey (optional), photoFileName (optional), **cutoutFileName** (optional, the
@@ -120,9 +121,15 @@ rating columns and the outfit-aspect and diary tables).
 - **Outfit aspect ratings** (`outfit_aspect_ratings`: outfitId, aspectKey, halfStars): a fixed list of its own
   (`OutfitAspect`: comfort, style, fit, **for the occasion**), chosen 2026-11-19 because "easy care" and "quality"
   belong to single garments.
-- **Outfit item** (`outfit_items`: outfitId, garmentId, position, x, y, scale): one garment on the outfit's collage
-  board. x and y are the centre of its picture as fractions of the 3:4 board (0..1), scale its width as a fraction of
-  the board's width (0.15–1.2), position the drawing order (last on top). Fractions keep the collage the same at any
+- **Outfit item** (`outfit_items`: outfitId, garmentId, position, x, y, scale, rotation): one garment on the outfit's
+  collage board. x and y are the centre of its picture as fractions of the 3:4 board (0..1), scale its width as a
+  fraction of the board's width (0.15–1.2), rotation its turn in degrees clockwise (-180..180, since v0.2.1), position
+  the drawing order (last on top).
+- **Outfit background** (v0.2.1, on `outfits`): backgroundColourKey (one of a fixed palette, `BoardColour`: white,
+  cream, sand, blush, sage, sky, mustard, terracotta, slate, plum, charcoal, black; keys never change) or
+  backgroundFileName (the user's own picture from the camera or gallery, imported like a garment photo into the
+  profile's photo folder). Neither: the app's own soft backdrop. A replaced or deleted outfit's background file is
+  deleted after the database stops pointing at it, and the unused-photo cleanup keeps every file an outfit uses. Fractions keep the collage the same at any
   size (the small cards in the list, the big editor board).
 - Deleting an outfit leaves its garments alone; deleting a garment removes it from every outfit (CASCADE), and the
   garment's delete dialog says so.
@@ -183,8 +190,11 @@ is a separate toggle. Under **Rate the details**, each aspect (§5) has its own 
 A grid of 2:3 photo tiles (adaptive, about three columns on a phone), newest first. Filter chips: **Liked**, then
 each category in use, then each colour in use (only chips that give a result). Several chips of one kind mean "any of
 them"; different kinds combine. A garment with several categories matches the chip of any of them. Sort: newest, oldest, highest rated (unrated
-last), by (main) category. A tile shows the cut-out when there is one (whole, on the app's own soft backdrop),
-otherwise the photo cropped to fill.
+last), by (main) category, **most worn** and **least worn** (v0.2.1; counted from the diary, never-worn garments
+count as least worn; on equal counts the more recently worn first). A new sort or filter scrolls the grid to the top;
+coming back from a garment keeps the place. A tile shows the cut-out when there is one (whole, on the app's own soft backdrop),
+otherwise the photo cropped to fill. Since v0.2.1 a cut-out is zoomed to **fill** its frame: scaled to fit (never
+cropped, so no sleeve or toe is cut off) with only a few dp around it, and new cut-outs keep a 1 % margin (was 4 %).
 
 ### 7.4 Switch profile (built 2026-11-19)
 
@@ -221,7 +231,10 @@ keeps its classes.
    pick or unpick, then **Done**.
 2. The picked garments land on the **board** in two columns, fully visible. Drag a garment to move it, pinch to resize
    it; tapping one selects it (outlined) and brings it to the front. The selected garment gets a **Size** slider (for
-   resizing without pinching) and **Remove**. **Pick garments** reopens the gallery: still-picked garments keep their
+   resizing without pinching) and **Remove**. Since v0.2.1 a garment can also be **turned**: twist it with two
+   fingers, or use the **Turn** slider (-180..180°) with **Straighten**. **Background** opens a dialog: none, a palette
+   colour, or your own picture (**Take photo** / **From gallery**). The board looks the same everywhere it's shown
+   (outfit list, outfit page, diary). **Pick garments** reopens the gallery: still-picked garments keep their
    place, new ones are laid out, unpicked ones leave.
 3. Optional name, then **Save**: a new outfit opens its **page**. The editor's state is in `SavedStateHandle`, so it
    survives Android stopping the app.
@@ -254,7 +267,9 @@ chooses the place (Downloads, Google Drive, …) and the app needs no permission
   - `profile.yaml`: `format: dress-up-profile`, `version: 1`, the app version, the profile's name, then all
     categories (built-in ones by key, with their hidden flag), garments (names, categories, colour, picture paths,
     stars as 0.5–5, aspects, review, like, date added), outfits (ratings, aspects, review, board items) and the diary
-    (date, outfit, garments worn, occasion, note). Empty fields are left out; ids only link things within the file.
+    (date, outfit, garments worn, occasion, note). Since v0.2.1 an outfit can have `backgroundColour` (a palette key)
+    or `backgroundImage` (`images/<file>`), and a board item `rotation`. Empty fields are left out; ids only link
+    things within the file.
   - `images/`: every photo and cut-out, under the names the YAML gives (`photo: images/<file>.jpg`).
 - **Import** always adds a **new profile** (never touches an existing one) named after the file's profile, with " (2)"
   etc. if the name is taken, and offers **Switch to it**. Everything gets new ids. The zip is untrusted input: only
@@ -263,6 +278,9 @@ chooses the place (Downloads, Google Drive, …) and the app needs no permission
   a higher `version` is refused with a message; bad values (an unknown category or colour, a rating out of range) are
   dropped or clamped. The profile is added to the list only once it's complete, so a failed import leaves nothing.
 - Editing the YAML by hand and importing it is supported, e.g. to fix many garments at once.
+- **On the first start** (v0.2.1) the "What's your name?" screen also offers **Import a profile**: the same import,
+  after which the imported profile becomes the active one, so a new phone starts with the old wardrobe. A failed
+  import stays on the screen with its reason.
 
 
 ## 8. Navigation & screens

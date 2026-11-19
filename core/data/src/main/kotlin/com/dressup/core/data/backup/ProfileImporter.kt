@@ -12,6 +12,7 @@ import com.dressup.core.data.db.GarmentEntity
 import com.dressup.core.data.db.OutfitAspectRatingEntity
 import com.dressup.core.data.db.OutfitEntity
 import com.dressup.core.data.db.OutfitItemEntity
+import com.dressup.core.model.BoardColour
 import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.MAX_DESCRIPTION_LENGTH
@@ -24,6 +25,7 @@ import com.dressup.core.model.OutfitAspect
 import com.dressup.core.model.OutfitItem
 import com.dressup.core.model.Rating
 import com.dressup.core.model.cleanText
+import com.dressup.core.model.normalizedRotation
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.time.Instant
@@ -119,13 +121,15 @@ internal object ProfileImporter {
                         ratingHalfStars = halfStars(o.rating),
                         review = cleanText(o.review, MAX_REVIEW_LENGTH),
                         liked = o.liked,
+                        backgroundColourKey = BoardColour.fromKeyOrNull(o.backgroundColour)?.key,
+                        backgroundFileName = o.backgroundImage?.let { pictures[picturePath(it)] },
                     ),
                 )
                 if (o.id !in outfitIds) outfitIds[o.id] = id
                 val items = o.items.mapNotNull { item -> garmentIds[item.garment]?.let { item to it } }.distinctBy { it.second }
                 outfitDao.insertItems(
                     items.mapIndexed { position, (item, garmentId) ->
-                        OutfitItemEntity(id, garmentId, position, fraction(item.x), fraction(item.y), scale(item.scale))
+                        OutfitItemEntity(id, garmentId, position, fraction(item.x), fraction(item.y), scale(item.scale), normalizedRotation(item.rotation))
                     },
                 )
                 outfitDao.upsertAspectRatings(

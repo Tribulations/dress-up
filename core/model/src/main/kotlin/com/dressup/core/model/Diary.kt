@@ -45,6 +45,18 @@ fun List<DiaryEntry>.wearsOfGarment(garmentId: Long): List<DiaryEntry> = filter 
 /** The entries in which outfit [outfitId] was worn. */
 fun List<DiaryEntry>.wearsOfOutfit(outfitId: Long): List<DiaryEntry> = filter { it.outfitId == outfitId }
 
+/** How often and when last each garment was worn, in one pass over the diary. Never-worn garments are missing. */
+fun List<DiaryEntry>.garmentWears(): Map<Long, WearSummary> {
+    val wears = HashMap<Long, WearSummary>()
+    forEach { entry ->
+        entry.garmentIds.distinct().forEach { id ->
+            val before = wears[id] ?: WearSummary.NEVER
+            wears[id] = WearSummary(before.count + 1, before.lastWorn?.let { maxOf(it, entry.date) } ?: entry.date)
+        }
+    }
+    return wears
+}
+
 fun List<DiaryEntry>.summary(): WearSummary = WearSummary(size, maxOfOrNull { it.date })
 
 /** Newest first: by date, then the most recently logged first. */

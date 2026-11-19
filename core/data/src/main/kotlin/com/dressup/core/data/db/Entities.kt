@@ -77,6 +77,10 @@ internal data class OutfitEntity(
     val ratingHalfStars: Int? = null,
     val review: String? = null,
     @ColumnInfo(defaultValue = "0") val liked: Boolean = false,
+    /** [com.dressup.core.model.BoardColour.key], or null. At most one of the two backgrounds is set. */
+    val backgroundColourKey: String? = null,
+    /** The board's own background image in the photo folder, or null. */
+    val backgroundFileName: String? = null,
 )
 
 /** One aspect rating of an outfit ([com.dressup.core.model.OutfitAspect]). No row means "not rated". */
@@ -146,6 +150,8 @@ internal data class OutfitItemEntity(
     val x: Float,
     val y: Float,
     val scale: Float,
+    /** Degrees clockwise, -180..180. */
+    @ColumnInfo(defaultValue = "0") val rotation: Float = 0f,
 )
 
 internal data class GarmentWithDetails(

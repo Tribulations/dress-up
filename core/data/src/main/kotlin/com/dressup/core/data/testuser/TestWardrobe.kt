@@ -18,6 +18,7 @@ import android.graphics.Bitmap
 import com.dressup.core.data.db.DiaryEntryEntity
 import com.dressup.core.data.db.DiaryEntryGarmentEntity
 import com.dressup.core.data.db.OutfitAspectRatingEntity
+import com.dressup.core.model.BoardColour
 import com.dressup.core.model.OutfitAspect
 import java.time.LocalDate
 import java.time.MonthDay
@@ -101,6 +102,7 @@ internal data class TestOutfit(
     val liked: Boolean = false,
     val review: String? = null,
     val aspects: Map<OutfitAspect, Int> = emptyMap(),
+    val background: BoardColour? = null,
 )
 
 /**
@@ -123,7 +125,7 @@ internal data class TestDiaryEntry(
     }
 }
 
-internal data class TestOutfitItem(val key: String, val x: Float, val y: Float, val scale: Float)
+internal data class TestOutfitItem(val key: String, val x: Float, val y: Float, val scale: Float, val rotation: Float = 0f)
 
 /**
  * The test user's prefilled wardrobe (ARCHITECTURE.md §5.1): made-up garments with drawn pictures, a mix of rated
@@ -245,13 +247,14 @@ internal object TestWardrobe {
             listOf(
                 TestOutfitItem("camel-coat", 0.32f, 0.32f, 0.55f),
                 TestOutfitItem("favourite-sweater", 0.68f, 0.26f, 0.45f),
-                TestOutfitItem("scarf", 0.72f, 0.55f, 0.3f),
+                TestOutfitItem("scarf", 0.72f, 0.55f, 0.3f, rotation = -18f),
                 TestOutfitItem("jeans", 0.35f, 0.72f, 0.42f),
                 TestOutfitItem("boots", 0.72f, 0.85f, 0.36f),
             ),
             halfStars = 9, liked = true,
             review = "Warm, cosy and it all goes together. The scarf makes it.",
             aspects = mapOf(OutfitAspect.COMFORT to 10, OutfitAspect.STYLE to 9, OutfitAspect.OCCASION to 9),
+            background = BoardColour.SAGE,
         ),
         TestOutfit(
             "Office", daysAgo = 9,
@@ -271,6 +274,7 @@ internal object TestWardrobe {
                 TestOutfitItem("white-sneakers", 0.72f, 0.85f, 0.3f),
             ),
             halfStars = 8, liked = true,
+            background = BoardColour.SKY,
         ),
     )
 
@@ -322,12 +326,13 @@ internal object TestWardrobe {
                     ratingHalfStars = outfit.halfStars,
                     review = outfit.review,
                     liked = outfit.liked,
+                    backgroundColourKey = outfit.background?.key,
                 ),
             )
             outfitIds[outfit.name] = id
             outfitDao.insertItems(
                 outfit.garments.mapIndexed { position, item ->
-                    OutfitItemEntity(id, garmentIds.getValue(item.key), position, item.x, item.y, item.scale)
+                    OutfitItemEntity(id, garmentIds.getValue(item.key), position, item.x, item.y, item.scale, item.rotation)
                 },
             )
             outfitDao.upsertAspectRatings(outfit.aspects.map { (aspect, halfStars) -> OutfitAspectRatingEntity(id, aspect.key, halfStars) })

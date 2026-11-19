@@ -12,6 +12,7 @@ import com.dressup.core.model.DiaryDraft
 import com.dressup.core.model.DiaryEntry
 import com.dressup.core.model.MAX_NOTE_LENGTH
 import com.dressup.core.model.MAX_OCCASION_LENGTH
+import com.dressup.core.ui.BoardBackground
 import com.dressup.core.ui.BoardPiece
 import com.dressup.core.ui.GalleryTile
 import com.dressup.core.ui.PieceFactory
@@ -29,7 +30,7 @@ import java.time.LocalDate
 enum class WornPicker { NONE, OUTFIT, GARMENTS }
 
 /** An outfit to pick in the editor's outfit picker. */
-data class OutfitChoice(val id: Long, val name: String?, val pieces: List<BoardPiece>)
+data class OutfitChoice(val id: Long, val name: String?, val pieces: List<BoardPiece>, val background: BoardBackground?)
 
 data class DiaryEditorUiState(
     val isNew: Boolean,
@@ -109,7 +110,7 @@ class DiaryEditorViewModel(
             worn = worn,
             suggestions = suggestions(w.occasions, f.occasion),
             picker = f.picker,
-            outfits = w.outfits.map { OutfitChoice(it.id, it.name, w.pieces.of(it.items)) },
+            outfits = w.outfits.map { OutfitChoice(it.id, it.name, w.pieces.of(it.items), w.pieces.background(it.background)) },
             gallery = w.garmentIds.mapNotNull(w.pieces::tile),
             saving = s.saving,
             done = s.done,

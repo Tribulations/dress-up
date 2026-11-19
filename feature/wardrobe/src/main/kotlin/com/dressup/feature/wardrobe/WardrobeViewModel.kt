@@ -3,11 +3,14 @@ package com.dressup.feature.wardrobe
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dressup.core.data.CategoryRepository
+import com.dressup.core.data.DiaryRepository
 import com.dressup.core.data.GarmentRepository
 import com.dressup.core.data.photo.PhotoStorage
 import com.dressup.core.model.Category
 import com.dressup.core.model.Garment
+import com.dressup.core.model.DiaryEntry
 import com.dressup.core.model.GarmentColour
+import com.dressup.core.model.garmentWears
 import com.dressup.core.ui.garmentTitle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -39,20 +42,21 @@ class WardrobeViewModel(
     garments: GarmentRepository,
     categories: CategoryRepository,
     private val photos: PhotoStorage,
+    diary: DiaryRepository,
 ) : ViewModel() {
     private val filter = MutableStateFlow(WardrobeFilter())
 
     val uiState: StateFlow<WardrobeUiState> =
-        combine(garments.garments, categories.categories, filter) { allGarments, allCategories, currentFilter ->
-            buildState(allGarments, allCategories, currentFilter)
+        combine(garments.garments, categories.categories, filter, diary.entries) { allGarments, allCategories, currentFilter, entries ->
+            buildState(allGarments, allCategories, currentFilter, entries)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), WardrobeUiState.Loading)
 
-    private fun buildState(garments: List<Garment>, categories: List<Category>, filter: WardrobeFilter): WardrobeUiState {
+    private fun buildState(garments: List<Garment>, categories: List<Category>, filter: WardrobeFilter, entries: List<DiaryEntry>): WardrobeUiState {
         val byId = categories.associateBy { it.id }
         val usedCategoryIds = garments.flatMap { it.categoryIds }.toSet()
         val usedColours = garments.mapNotNull { it.colour }.toSet()
         return WardrobeUiState.Loaded(
-            tiles = applyFilter(garments, categories, filter).map { garment ->
+            tiles = applyFilter(garments, categories, filter, entries.garmentWears()).map { garment ->
                 WardrobeTile(garment, garmentTitle(garment, byId), garment.pictureFileName?.let(photos::file))
             },
             totalCount = garments.size,

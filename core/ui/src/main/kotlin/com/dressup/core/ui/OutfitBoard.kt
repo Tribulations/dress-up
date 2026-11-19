@@ -19,18 +19,29 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.dressup.core.model.Category
 import com.dressup.core.model.Garment
+import com.dressup.core.model.OutfitBackground
 import com.dressup.core.model.OutfitItem
 import java.io.File
 import kotlin.math.roundToInt
 
 /** One garment as the board draws it: where it sits, and its cut-out or photo. */
 data class BoardPiece(val item: OutfitItem, val title: String, val picture: File?, val isCutout: Boolean)
+
+/** What the board draws behind the garments: a colour, or an image (cropped to fill). Null: the app's own soft backdrop. */
+sealed interface BoardBackground {
+    data class Colour(val argb: Long) : BoardBackground
+    data class Image(val file: File) : BoardBackground
+}
 
 /** Turns board positions into [BoardPiece]s with each garment's picture ([pictureFile]) and title. */
 class PieceFactory(garments: List<Garment>, categories: List<Category>, private val pictureFile: (String) -> File) {
@@ -49,6 +60,12 @@ class PieceFactory(garments: List<Garment>, categories: List<Category>, private 
         GalleryTile(garment.id, title(garment), garment.pictureFileName?.let(pictureFile), garment.cutoutFileName != null)
 
     fun tile(garmentId: Long): GalleryTile? = garmentsById[garmentId]?.let(::tile)
+
+    fun background(background: OutfitBackground?): BoardBackground? = when (background) {
+        null -> null
+        is OutfitBackground.Colour -> BoardBackground.Colour(background.colour.argb)
+        is OutfitBackground.Image -> BoardBackground.Image(pictureFile(background.fileName))
+    }
 }
 
 /** The board's shape: a 3:4 portrait, like a full outfit laid out on the floor. */
@@ -57,8 +74,9 @@ const val BOARD_ASPECT_RATIO = 3f / 4f
 /**
  * An outfit as a collage: each garment's picture placed on a 3:4 board, the last piece on top.
  *
- * Read-only unless [onTransform] is given: then a piece can be dragged and pinched, and tapping one selects it
- * ([onSelect]). Positions are fractions of the board, so the same outfit looks the same at any size.
+ * Read-only unless [onTransform] is given: then a piece can be dragged, pinched and twisted with two fingers, and
+ * tapping one selects it ([onSelect]). Positions are fractions of the board, so the same outfit looks the same at any
+ * size. [background] goes behind everything.
  */
 @Composable
 fun OutfitBoard(
@@ -66,19 +84,27 @@ fun OutfitBoard(
     modifier: Modifier = Modifier,
     selectedGarmentId: Long? = null,
     onSelect: ((Long?) -> Unit)? = null,
-    onTransform: ((garmentId: Long, dx: Float, dy: Float, zoom: Float) -> Unit)? = null,
+    onTransform: ((garmentId: Long, dx: Float, dy: Float, zoom: Float, rotation: Float) -> Unit)? = null,
     /** On a read-only board: tapping a piece, e.g. to open that garment. */
     onPieceClick: ((Long) -> Unit)? = null,
+    background: BoardBackground? = null,
 ) {
     val colours = MaterialTheme.colorScheme
     val tapToDeselect = if (onSelect == null) Modifier else Modifier.pointerInput(Unit) { detectTapGestures { onSelect(null) } }
+    val fill = when (background) {
+        is BoardBackground.Colour -> Modifier.background(Color(background.argb))
+        else -> Modifier.background(Brush.verticalGradient(listOf(colours.surfaceVariant, colours.surfaceContainerHighest)))
+    }
     BoxWithConstraints(
         modifier
             .aspectRatio(BOARD_ASPECT_RATIO)
             .clip(RoundedCornerShape(8.dp))
-            .background(Brush.verticalGradient(listOf(colours.surfaceVariant, colours.surfaceContainerHighest)))
+            .then(fill)
             .then(tapToDeselect),
     ) {
+        if (background is BoardBackground.Image) {
+            AsyncImage(model = background.file, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
+        }
         val boardWidth = constraints.maxWidth.toFloat()
         val boardHeight = constraints.maxHeight.toFloat()
         pieces.forEach { piece ->
@@ -104,7 +130,7 @@ private fun Piece(
     boardHeight: Float,
     selected: Boolean,
     onSelect: ((Long?) -> Unit)?,
-    onTransform: ((Long, Float, Float, Float) -> Unit)?,
+    onTransform: ((Long, Float, Float, Float, Float) -> Unit)?,
     onClick: ((Long) -> Unit)?,
 ) {
     val id = piece.item.garmentId
@@ -118,9 +144,9 @@ private fun Piece(
     } else {
         Modifier
             .pointerInput(id) {
-                detectTransformGestures { _, pan, zoom, _ ->
+                detectTransformGestures { _, pan, zoom, rotation ->
                     currentSelect?.invoke(id)
-                    currentTransform?.invoke(id, pan.x / boardWidth, pan.y / boardHeight, zoom)
+                    currentTransform?.invoke(id, pan.x / boardWidth, pan.y / boardHeight, zoom, rotation)
                 }
             }
             .pointerInput(id) { detectTapGestures { currentSelect?.invoke(id) } }
@@ -131,6 +157,7 @@ private fun Piece(
         Modifier
             .offset { IntOffset(left.roundToInt(), top.roundToInt()) }
             .size(with(density) { sidePx.toDp() })
+            .graphicsLayer { rotationZ = piece.item.rotation }
             .then(outline)
             .then(gestures),
     ) {
@@ -139,7 +166,7 @@ private fun Piece(
             placeholder = piece.title,
             contentDescription = piece.title,
             isCutout = piece.isCutout,
-            cutoutPadding = 2.dp,
+            cutoutPadding = 0.dp,
             cutoutBackdrop = false, // a cut-out floats on the board; a plain photo stays a picture with corners
             modifier = Modifier.matchParentSize().clip(RoundedCornerShape(6.dp)),
         )

@@ -16,7 +16,8 @@ internal object ProfileExporter {
 
     suspend fun export(data: DressUpData, profileName: String, appVersion: String?, out: OutputStream, now: Instant): ExportResult.Done {
         val file = read(data, profileName, appVersion, now)
-        val pictures = file.garments.flatMap { listOfNotNull(it.photo, it.cutout) }.distinct() // paths in the zip
+        val pictures = (file.garments.flatMap { listOfNotNull(it.photo, it.cutout) } + file.outfits.mapNotNull { it.backgroundImage })
+            .distinct() // paths in the zip
         var written = 0
         val zip = ZipOutputStream(out)
         zip.putNextEntry(ZipEntry(YAML_ENTRY))
@@ -77,7 +78,9 @@ internal object ProfileExporter {
                         review = o.review,
                         liked = o.liked,
                         created = Instant.ofEpochMilli(o.createdAtMillis).toString(),
-                        items = row.items.sortedBy { it.position }.map { OutfitItemFile(it.garmentId, it.x, it.y, it.scale) },
+                        backgroundColour = o.backgroundColourKey.takeIf { o.backgroundFileName == null },
+                        backgroundImage = o.backgroundFileName?.let { IMAGES_DIR + it },
+                        items = row.items.sortedBy { it.position }.map { OutfitItemFile(it.garmentId, it.x, it.y, it.scale, it.rotation) },
                     )
                 },
                 diary = diary.map { row ->

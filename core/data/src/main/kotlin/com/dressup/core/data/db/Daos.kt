@@ -44,10 +44,11 @@ internal interface GarmentDao {
     @Query("DELETE FROM garments WHERE id = :id")
     suspend fun delete(id: Long)
 
-    /** Every photo and cut-out file some garment points at. */
+    /** Every picture file in use: garment photos and cut-outs, and outfit background images. */
     @Query(
         "SELECT photoFileName FROM garments WHERE photoFileName IS NOT NULL " +
-            "UNION SELECT cutoutFileName FROM garments WHERE cutoutFileName IS NOT NULL",
+            "UNION SELECT cutoutFileName FROM garments WHERE cutoutFileName IS NOT NULL " +
+            "UNION SELECT backgroundFileName FROM outfits WHERE backgroundFileName IS NOT NULL",
     )
     suspend fun pictureFileNames(): List<String>
 
@@ -124,8 +125,14 @@ internal interface OutfitDao {
     @Insert
     suspend fun insert(outfit: OutfitEntity): Long
 
-    @Query("UPDATE outfits SET name = :name WHERE id = :id")
-    suspend fun rename(id: Long, name: String?)
+    @Query(
+        "UPDATE outfits SET name = :name, backgroundColourKey = :backgroundColourKey, " +
+            "backgroundFileName = :backgroundFileName WHERE id = :id",
+    )
+    suspend fun updateDetails(id: Long, name: String?, backgroundColourKey: String?, backgroundFileName: String?)
+
+    @Query("SELECT * FROM outfits WHERE id = :id")
+    suspend fun get(id: Long): OutfitEntity?
 
     @Query("DELETE FROM outfit_items WHERE outfitId = :outfitId")
     suspend fun deleteItems(outfitId: Long)

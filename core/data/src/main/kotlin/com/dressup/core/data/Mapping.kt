@@ -4,6 +4,8 @@ import com.dressup.core.data.db.CategoryEntity
 import com.dressup.core.data.db.DiaryEntryWithGarments
 import com.dressup.core.data.db.GarmentWithDetails
 import com.dressup.core.data.db.OutfitWithItems
+import com.dressup.core.data.db.OutfitEntity
+import com.dressup.core.model.BoardColour
 import com.dressup.core.model.Category
 import com.dressup.core.model.DiaryEntry
 import com.dressup.core.model.Garment
@@ -11,6 +13,7 @@ import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.Outfit
 import com.dressup.core.model.OutfitAspect
+import com.dressup.core.model.OutfitBackground
 import com.dressup.core.model.OutfitItem
 import com.dressup.core.model.Rating
 import java.time.LocalDate
@@ -37,7 +40,7 @@ internal fun GarmentWithDetails.toModel() = Garment(
 internal fun OutfitWithItems.toModel() = Outfit(
     id = outfit.id,
     name = outfit.name,
-    items = items.sortedBy { it.position }.map { OutfitItem(it.garmentId, it.x, it.y, it.scale) },
+    items = items.sortedBy { it.position }.map { OutfitItem(it.garmentId, it.x, it.y, it.scale, it.rotation) },
     rating = Rating.fromHalfStarsOrNull(outfit.ratingHalfStars),
     aspectRatings = aspectRatings.mapNotNull { row ->
         val aspect = OutfitAspect.fromKeyOrNull(row.aspectKey) ?: return@mapNotNull null
@@ -46,8 +49,13 @@ internal fun OutfitWithItems.toModel() = Outfit(
     }.toMap(),
     review = outfit.review,
     liked = outfit.liked,
+    background = outfit.background(),
     createdAtMillis = outfit.createdAtMillis,
 )
+
+internal fun OutfitEntity.background(): OutfitBackground? =
+    backgroundFileName?.let(OutfitBackground::Image)
+        ?: BoardColour.fromKeyOrNull(backgroundColourKey)?.let(OutfitBackground::Colour)
 
 internal fun DiaryEntryWithGarments.toModel() = DiaryEntry(
     id = entry.id,

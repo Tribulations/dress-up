@@ -7,6 +7,7 @@ import com.dressup.core.model.Outfit
 import com.dressup.core.model.OutfitItem
 import com.dressup.core.model.Rating
 import com.dressup.core.model.defaultOutfitLayout
+import com.dressup.core.ui.BoardBackground
 import com.dressup.core.ui.BoardPiece
 import com.dressup.core.ui.PieceFactory
 import java.io.File
@@ -24,6 +25,8 @@ data class WornThing(
     /** The outfit's rating, or a single garment's. */
     val rating: Rating?,
     val liked: Boolean,
+    /** The outfit's background; single garments have none. */
+    val background: BoardBackground? = null,
 )
 
 data class DiaryRow(val entry: DiaryEntry, val worn: WornThing)
@@ -42,7 +45,7 @@ internal class WornThings(garments: List<Garment>, categories: List<Category>, o
         if (outfit != null) {
             // The outfit's board as it is now, but only with what was actually worn that day.
             val board = outfit.items.filter { it.garmentId in entry.garmentIds }
-            return WornThing(outfit.name, isOutfit = true, emptyList(), pieces.of(board), outfit.rating, outfit.liked)
+            return WornThing(outfit.name, isOutfit = true, emptyList(), pieces.of(board), outfit.rating, outfit.liked, pieces.background(outfit.background))
         }
         val worn = entry.garmentIds.mapNotNull(garmentsById::get)
         val single = worn.singleOrNull()

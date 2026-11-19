@@ -3,3 +3,7 @@ plugins {
 }
 
 // The first start's "What's your name?" and the Profiles screen, including the test user (ARCHITECTURE.md §5.1, §7.4).
+
+dependencies {
+    implementation(libs.androidx.activity.compose) // the system's file picker for an import on the first start
+}

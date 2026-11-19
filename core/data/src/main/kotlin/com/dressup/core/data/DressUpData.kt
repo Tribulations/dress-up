@@ -22,7 +22,7 @@ class DressUpData internal constructor(
     val photos: PhotoStorage = photoFiles
     val garments: GarmentRepository = RoomGarmentRepository(database, photoFiles, backgroundRemover)
     val categories: CategoryRepository = RoomCategoryRepository(database.categoryDao())
-    val outfits: OutfitRepository = RoomOutfitRepository(database)
+    val outfits: OutfitRepository = RoomOutfitRepository(database, photoFiles)
     val diary: DiaryRepository = RoomDiaryRepository(database)
 
     /** Run when nothing can be open in an editor (a fresh start, or just after switching profile). */

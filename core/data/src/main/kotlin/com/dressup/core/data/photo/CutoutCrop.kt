@@ -11,12 +11,12 @@ internal data class PixelBounds(val left: Int, val top: Int, val right: Int, val
 }
 
 /**
- * The part of a cut-out worth keeping: the box around every pixel that isn't (almost) transparent, plus a small margin,
- * so the garment fills its tile and the outfit board. Null when nothing is left, i.e. no garment was found.
+ * The part of a cut-out worth keeping: the box around every pixel that isn't (almost) transparent, plus a hair of
+ * margin (1 %, so anti-aliased edges aren't clipped), so the garment fills its tile and the outfit board. Null when nothing is left, i.e. no garment was found.
  *
  * [argb] is the cut-out's pixels row by row, as `Bitmap.getPixels` gives them.
  */
-internal fun opaqueBounds(argb: IntArray, width: Int, height: Int, marginFraction: Float = 0.04f): PixelBounds? {
+internal fun opaqueBounds(argb: IntArray, width: Int, height: Int, marginFraction: Float = 0.01f): PixelBounds? {
     var left = width
     var top = height
     var right = -1
