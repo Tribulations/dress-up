@@ -59,6 +59,10 @@ dependencies {
     implementation(project(":feature:wardrobe"))
     implementation(project(":feature:garment"))
     implementation(project(":feature:categories"))
+    implementation(project(":feature:settings"))
+    implementation(project(":feature:profiles"))
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

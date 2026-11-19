@@ -60,9 +60,10 @@ import com.dressup.core.ui.label
 @Composable
 fun WardrobeRoute(
     data: DressUpData,
+    profileName: String,
     onOpenGarment: (Long) -> Unit,
     onAddGarment: () -> Unit,
-    onManageCategories: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     val viewModel: WardrobeViewModel = viewModel(
         factory = viewModelFactory { initializer { WardrobeViewModel(data.garments, data.categories, data.photos) } },
@@ -70,11 +71,12 @@ fun WardrobeRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     WardrobeScreen(
         state = state,
+        profileName = profileName,
         onAction = { action ->
             when (action) {
                 is WardrobeAction.Open -> onOpenGarment(action.garmentId)
                 WardrobeAction.Add -> onAddGarment()
-                WardrobeAction.ManageCategories -> onManageCategories()
+                WardrobeAction.OpenSettings -> onOpenSettings()
                 is WardrobeAction.ToggleCategory -> viewModel.toggleCategory(action.categoryId)
                 is WardrobeAction.ToggleColour -> viewModel.toggleColour(action.colour)
                 WardrobeAction.ToggleLikedOnly -> viewModel.toggleLikedOnly()
@@ -88,7 +90,7 @@ fun WardrobeRoute(
 sealed interface WardrobeAction {
     data class Open(val garmentId: Long) : WardrobeAction
     data object Add : WardrobeAction
-    data object ManageCategories : WardrobeAction
+    data object OpenSettings : WardrobeAction
     data class ToggleCategory(val categoryId: Long) : WardrobeAction
     data class ToggleColour(val colour: GarmentColour) : WardrobeAction
     data object ToggleLikedOnly : WardrobeAction
@@ -98,17 +100,26 @@ sealed interface WardrobeAction {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WardrobeScreen(state: WardrobeUiState, onAction: (WardrobeAction) -> Unit) {
+fun WardrobeScreen(state: WardrobeUiState, profileName: String, onAction: (WardrobeAction) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.wardrobe_title)) },
+                title = {
+                    Column {
+                        Text(stringResource(R.string.wardrobe_title))
+                        Text(
+                            profileName,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
                 actions = {
                     if (state is WardrobeUiState.Loaded) {
                         SortMenu(state.filter.sort) { onAction(WardrobeAction.Sort(it)) }
                     }
-                    IconButton(onClick = { onAction(WardrobeAction.ManageCategories) }) {
-                        Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.wardrobe_manage_categories))
+                    IconButton(onClick = { onAction(WardrobeAction.OpenSettings) }) {
+                        Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.wardrobe_settings))
                     }
                 },
             )

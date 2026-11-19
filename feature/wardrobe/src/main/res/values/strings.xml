@@ -2,7 +2,7 @@
 <resources>
     <string name="wardrobe_title">Wardrobe</string>
     <string name="wardrobe_add_garment">Add garment</string>
-    <string name="wardrobe_manage_categories">Categories</string>
+    <string name="wardrobe_settings">Settings</string>
     <string name="wardrobe_empty">Your wardrobe is empty.\nTap + to photograph your first garment.</string>
     <string name="wardrobe_no_match">No garments match these filters.</string>
     <string name="wardrobe_clear_filters">Clear filters</string>

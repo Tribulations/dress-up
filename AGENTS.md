@@ -91,8 +91,10 @@ emulator.
 - `source scripts/emulator-ui.sh`: `open_app`, `texts`, `tap_text "…"`, `shot name` for agent-driven UI checks. Set
   `SHOTS` to the scratchpad, not `/tmp`.
 - The emulator's camera app shows a virtual scene; press the shutter at the bottom centre, then **Done**. For the
-  gallery, push a **made-up** image to `/sdcard/Pictures/` and send a media-scanner broadcast. A seed script for test
-  garments doesn't exist yet.
+  gallery, push a **made-up** image to `/sdcard/Pictures/` and send a media-scanner broadcast.
+- **Test data:** Settings → Profiles → **Test user** fills a separate profile with 32 made-up garments with drawn
+  pictures (`core:data` `testuser/`). Use it rather than adding garments by hand; **Reset** restores it. It never
+  touches the user's own profiles.
 
 - **Default device:** a local emulator, booted headless if it isn't running. **Always shut it down when you're
   done** (`adb -s emulator-5554 emu kill`, then confirm no `qemu-system` process is left).

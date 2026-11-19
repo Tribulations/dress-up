@@ -4,20 +4,24 @@ import android.content.Context
 import com.dressup.core.data.db.DressUpDatabase
 import com.dressup.core.data.photo.FilePhotoStorage
 import com.dressup.core.data.photo.PhotoStorage
+import com.dressup.core.data.profile.ProfilePaths
 
 /**
- * The app's data layer in one place (manual dependency injection, ARCHITECTURE.md §2). The app creates one instance
- * and hands the repositories to the feature screens.
+ * One profile's wardrobe: its database, photos and repositories (manual dependency injection, ARCHITECTURE.md §2).
+ * Made by [com.dressup.core.data.profile.DressUpProfiles], which the app asks for the active profile's instance.
  */
-class DressUpData(context: Context) {
-    private val database = DressUpDatabase.create(context.applicationContext)
+class DressUpData internal constructor(context: Context, paths: ProfilePaths) {
+    internal val database = DressUpDatabase.create(context.applicationContext, paths.databaseName)
+    internal val photoFiles = FilePhotoStorage(context.applicationContext, paths.photoDir)
 
-    val photos: PhotoStorage = FilePhotoStorage(context.applicationContext)
+    val photos: PhotoStorage = photoFiles
     val garments: GarmentRepository = RoomGarmentRepository(database.garmentDao(), photos)
     val categories: CategoryRepository = RoomCategoryRepository(database.categoryDao())
 
-    /** Run once at app start, before any editor can be open: removes photos no garment uses. */
+    /** Run when nothing can be open in an editor (a fresh start, or just after switching profile). */
     suspend fun cleanUpUnusedPhotos() {
         photos.deleteAllExcept(database.garmentDao().photoFileNames().toSet())
     }
+
+    internal fun close() = database.close()
 }

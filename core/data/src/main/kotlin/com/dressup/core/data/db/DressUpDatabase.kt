@@ -12,8 +12,9 @@ internal abstract class DressUpDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
 
     companion object {
-        fun create(context: Context): DressUpDatabase =
-            Room.databaseBuilder(context, DressUpDatabase::class.java, "dress-up.db")
+        /** [name] is the profile's database file (ProfilePaths). */
+        fun create(context: Context, name: String): DressUpDatabase =
+            Room.databaseBuilder(context, DressUpDatabase::class.java, name)
                 .addCallback(SeedBuiltInCategories)
                 .build()
     }

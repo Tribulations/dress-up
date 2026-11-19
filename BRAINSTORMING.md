@@ -85,6 +85,13 @@ milestone split is still a draft:
 
 Newest first. Each entry is dated.
 
+### 2026-11-19 – Profiles and a test user
+
+The user wants a test user to switch to in the app, with a prefilled wardrobe (clothes, pictures and so on), to see
+where the app is good and where it isn't. As profiles in the settings: a new install asks for the user's name and uses
+it as the profile name. Decided and built, see ARCHITECTURE.md §5.1 and §7.4. Possible later: real (licence-free)
+photos in the test wardrobe instead of drawn ones, and wear diary entries once M2 exists.
+
 ### 2026-11-18 – Take the photo in the app
 
 The user wants to take a picture of the garment with the camera directly in the app, and have it linked to the

@@ -19,6 +19,8 @@ your wardrobe.
 | Categories: built-in list (pants, shirt, …) plus your own; hide, rename, delete | 🧪 Built in v0.1.0, tested on the emulator |
 | Wardrobe grid: photo tiles, filter (liked, category, colour) and sort | 🧪 Built in v0.1.0, tested on the emulator |
 | Garment page: big photo, details, star rating (with halves) and a like, edit, delete | 🧪 Built in v0.1.0, tested on the emulator |
+| Profiles: your name on the first start; add, rename, switch and delete profiles in Settings | 🧪 Built (unreleased), tested on the emulator |
+| Test user: a prefilled, made-up wardrobe to try the app with, can be reset | 🧪 Built (unreleased), tested on the emulator |
 | Wear history on the garment page | 📝 Planned (M2) |
 | Diary: log which garments you wore on a date, with an optional note | 📝 Planned (M2) |
 | Statistics: most and least worn, cost per wear, year in review | 📝 Planned (M3) |

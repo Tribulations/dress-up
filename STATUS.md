@@ -8,13 +8,13 @@ Update this file whenever work starts, finishes or is verified.
 An item only counts as **tested** when it has been verified through automated tests,
 on a real device, or both. Record how it was tested.
 
-_Last updated: 2026-11-18_
+_Last updated: 2026-11-19_
 
 ---
 
 ## 🚧 Currently working on
 
-_Nothing. v0.1.0 (M1) is released; M2 is next._
+_Nothing. Profiles and the test user are done (not released yet); M2 is next._
 
 ## 🧪 Implemented, not yet tested
 
@@ -23,6 +23,20 @@ _Nothing. v0.1.0 (M1) is released; M2 is next._
   real photos.
 
 ## ✅ Done & tested
+
+- **Profiles and the test user (2026-11-19, unreleased).** Unit tests: 37 JVM tests pass, 13 of them new (profile
+  rules and paths, the test wardrobe's contents, `ProfilesViewModel`). Manual tests on the emulator
+  (Medium_Phone_API_36, Android 16), debug build:
+  - **Update from v0.1.0** with garments already saved: the app asked "What's your name?" (a blank name shows an
+    error), and the existing garments were all there in the new profile.
+  - Settings (gear) → Profiles → **Test user**: the prefilled wardrobe (32 garments, 30 drawn pictures) is made in
+    well under a second and shown; the wardrobe's title shows whose wardrobe it is. Garment page of a test garment.
+  - **Reset** of the test wardrobe (with confirmation): refilled, old pictures removed.
+  - Switching between profiles; a **new profile** starts empty; a duplicate name is refused; **deleting** a profile
+    (with confirmation) removes its database and its folder; the last profile of your own can't be deleted (no delete
+    button; the rule is also enforced in the data layer); deleting the test user and creating it again.
+  - Rotation on the Profiles screen keeps the active profile and the screen stack.
+  - **Release build** (R8) from a fresh install: name → Settings → Profiles → Test user → garment page, no crashes.
 
 - **v0.1.0 – M1 wardrobe (2026-11-18).** Unit tests: 24 JVM tests pass (`./gradlew testDebugUnitTest`). Manual tests on
   the emulator (Medium_Phone_API_36, Android 16), debug build, with `scripts/emulator-ui.sh`:

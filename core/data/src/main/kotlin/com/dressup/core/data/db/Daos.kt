@@ -33,6 +33,10 @@ internal interface GarmentDao {
 
     @Query("SELECT photoFileName FROM garments WHERE photoFileName IS NOT NULL")
     suspend fun photoFileNames(): List<String>
+
+    /** Only for refilling the test user's wardrobe ([com.dressup.core.data.testuser.TestWardrobe]). */
+    @Query("DELETE FROM garments")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -61,4 +65,14 @@ internal interface CategoryDao {
 
     @Query("SELECT COUNT(*) FROM garments WHERE categoryId = :id")
     suspend fun garmentCount(id: Long): Int
+
+    @Query("SELECT * FROM categories")
+    suspend fun getAll(): List<CategoryEntity>
+
+    /** Only for refilling the test user's wardrobe: removes the user's own categories (garments must be gone). */
+    @Query("DELETE FROM categories WHERE builtInKey IS NULL")
+    suspend fun deleteOwn()
+
+    @Query("UPDATE categories SET hidden = 0")
+    suspend fun showAll()
 }

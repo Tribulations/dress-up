@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Profiles.** On the first start the app asks for your name and makes your profile. More profiles can be added,
+  renamed, switched between and deleted in **Settings → Profiles**. Each profile has its own garments, categories and
+  photos. An update from 0.1.0 keeps everything in your first profile.
+- **Test user:** a profile with a prefilled, made-up wardrobe (32 garments with drawn pictures, ratings, likes, own
+  categories, garments without photo or colour) to try the app with. It can be reset to its original state at any
+  time.
+- **Settings** menu behind the gear on the wardrobe: Profiles, Categories and the app version. The wardrobe's title
+  shows whose wardrobe it is.
+
+### Development
+- New modules `feature:settings` and `feature:profiles`; `DressUpProfiles` in `core:data` gives each profile its own
+  `DressUpData`. 37 unit tests.
+
 ## [0.1.0] - 2026-11-18
 
 The first version (milestone M1, the wardrobe).

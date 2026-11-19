@@ -6,6 +6,7 @@
     <string name="core_ui_not_liked">Not liked</string>
     <string name="core_ui_save">Save</string>
     <string name="core_ui_cancel">Cancel</string>
+    <string name="core_ui_test_user">Test user</string>
 
     <string name="core_ui_colour_black">Black</string>
     <string name="core_ui_colour_white">White</string>

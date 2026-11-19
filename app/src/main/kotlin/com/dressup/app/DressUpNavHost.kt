@@ -7,9 +7,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.dressup.core.data.DressUpData
+import com.dressup.core.data.profile.ProfileRepository
+import com.dressup.core.model.Profile
+import com.dressup.core.ui.displayName
 import com.dressup.feature.categories.CategoriesRoute
 import com.dressup.feature.garment.GarmentDetailRoute
 import com.dressup.feature.garment.GarmentEditorRoute
+import com.dressup.feature.profiles.ProfilesRoute
+import com.dressup.feature.settings.SettingsScreen
 import com.dressup.feature.wardrobe.WardrobeRoute
 
 private object Routes {
@@ -17,23 +22,29 @@ private object Routes {
     const val GARMENT = "garment/{id}"
     const val EDITOR = "editor?id={id}"
     const val CATEGORIES = "categories"
+    const val SETTINGS = "settings"
+    const val PROFILES = "profiles"
     const val NO_ID = -1L
 
     fun garment(id: Long) = "garment/$id"
     fun editor(id: Long?) = "editor?id=${id ?: NO_ID}"
 }
 
-/** Navigation between the features, which never know about each other (GUIDELINES.md §2.2). */
+/**
+ * Navigation between the features, which never know about each other (GUIDELINES.md §2.2). Built for one [profile]:
+ * switching profile rebuilds it ([ProfileScope]).
+ */
 @Composable
-fun DressUpNavHost(data: DressUpData) {
+fun DressUpNavHost(profiles: ProfileRepository, data: DressUpData, profile: Profile, appVersion: String) {
     val nav = rememberNavController()
     NavHost(navController = nav, startDestination = Routes.WARDROBE) {
         composable(Routes.WARDROBE) {
             WardrobeRoute(
                 data = data,
+                profileName = profile.displayName(),
                 onOpenGarment = { nav.navigate(Routes.garment(it)) },
                 onAddGarment = { nav.navigate(Routes.editor(null)) },
-                onManageCategories = { nav.navigate(Routes.CATEGORIES) },
+                onOpenSettings = { nav.navigate(Routes.SETTINGS) },
             )
         }
         composable(Routes.GARMENT, arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
@@ -63,6 +74,18 @@ fun DressUpNavHost(data: DressUpData) {
         }
         composable(Routes.CATEGORIES) {
             CategoriesRoute(data = data, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                profileName = profile.displayName(),
+                appVersion = appVersion,
+                onProfiles = { nav.navigate(Routes.PROFILES) },
+                onCategories = { nav.navigate(Routes.CATEGORIES) },
+                onBack = { nav.popBackStack() },
+            )
+        }
+        composable(Routes.PROFILES) {
+            ProfilesRoute(profiles = profiles, onBack = { nav.popBackStack() })
         }
     }
 }

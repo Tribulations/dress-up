@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_app_name">dress-up</string>
+    <string name="welcome_tagline">Keep track of the clothes you own.</string>
+    <string name="welcome_question">What’s your name?</string>
+    <string name="welcome_name_label">Your name</string>
+    <string name="welcome_start">Get started</string>
+    <string name="welcome_test_user_hint">Want to look around first? Settings → Profiles has a test user with a prefilled wardrobe.</string>
+
+    <string name="profiles_title">Profiles</string>
+    <string name="profiles_back">Back</string>
+    <string name="profiles_own">Your profiles</string>
+    <string name="profiles_test_section">For testing</string>
+    <string name="profiles_active">In use</string>
+    <string name="profiles_tap_to_switch">Tap to switch</string>
+    <string name="profiles_test_user_summary">A prefilled, made-up wardrobe to try the app with</string>
+    <string name="profiles_test_user_create">Tap to create it and switch to it</string>
+    <string name="profiles_add">New profile</string>
+    <string name="profiles_rename">Rename</string>
+    <string name="profiles_delete">Delete</string>
+    <string name="profiles_reset">Reset</string>
+    <string name="profiles_cancel">Cancel</string>
+    <string name="profiles_delete_title">Delete “%1$s”?</string>
+    <string name="profiles_delete_text">All garments, categories and photos in this profile are deleted for good.</string>
+    <string name="profiles_delete_test_text">Its wardrobe is deleted. You can create the test user again at any time.</string>
+    <string name="profiles_reset_title">Reset the test wardrobe?</string>
+    <string name="profiles_reset_text">Every change made as the test user is thrown away and the prefilled wardrobe comes back.</string>
+    <string name="profiles_preparing">Preparing the test wardrobe…</string>
+    <string name="profiles_resetting">Resetting the test wardrobe…</string>
+    <string name="profiles_reset_done">The test wardrobe is reset.</string>
+    <string name="profiles_test_user_failed">Couldn’t prepare the test wardrobe. Is the phone’s storage full?</string>
+    <string name="profiles_cant_delete_active">Switch to another profile before deleting this one.</string>
+    <string name="profiles_cant_delete_last">You need at least one profile of your own.</string>
+    <string name="profiles_name_blank">Enter a name.</string>
+    <string name="profiles_name_duplicate">There is already a profile with that name.</string>
+</resources>

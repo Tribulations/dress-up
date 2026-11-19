@@ -33,8 +33,9 @@ interface PhotoStorage {
     suspend fun deleteAllExcept(keep: Set<String>)
 }
 
-internal class FilePhotoStorage(private val context: Context) : PhotoStorage {
-    private val photoDir get() = File(context.filesDir, "photos").apply { mkdirs() }
+/** [relativeDir] is the profile's photo folder inside `filesDir` (ProfilePaths). */
+internal class FilePhotoStorage(private val context: Context, private val relativeDir: String) : PhotoStorage {
+    private val photoDir get() = File(context.filesDir, relativeDir).apply { mkdirs() }
     private val captureDir get() = File(context.cacheDir, "captures").apply { mkdirs() }
 
     override fun newCaptureUri(): Uri {
@@ -46,14 +47,17 @@ internal class FilePhotoStorage(private val context: Context) : PhotoStorage {
     override suspend fun import(source: Uri): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val bitmap = decodeDownscaled(source)
-            val name = "${UUID.randomUUID()}.jpg"
-            val target = File(photoDir, name)
-            target.outputStream().use { out ->
-                if (!bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, out)) throw IOException("JPEG encoding failed")
-            }
-            bitmap.recycle()
-            name
+            save(bitmap).also { bitmap.recycle() }
         }.onFailure { Log.w(TAG, "Photo import failed", it) }
+    }
+
+    /** Writes [bitmap] as a new JPEG in the photo folder and returns its file name. Blocking: call off the main thread. */
+    fun save(bitmap: Bitmap): String {
+        val name = "${UUID.randomUUID()}.jpg"
+        File(photoDir, name).outputStream().use { out ->
+            if (!bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, out)) throw IOException("JPEG encoding failed")
+        }
+        return name
     }
 
     /** ImageDecoder applies the EXIF rotation, so photos taken in portrait stay upright. */
