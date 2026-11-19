@@ -93,7 +93,8 @@ emulator.
 - The emulator's camera app shows a virtual scene; press the shutter at the bottom centre, then **Done**. For the
   gallery, push a **made-up** image to `/sdcard/Pictures/` and send a media-scanner broadcast.
 - **Test data:** Settings → Profiles → **Test user** fills a separate profile with 32 made-up garments with drawn
-  pictures and cut-outs, names, reviews and three outfits (`core:data` `testuser/`). Use it rather than adding garments by hand; **Reset** restores it. It never
+  pictures and cut-outs, names, reviews, three rated outfits and a diary of 13 wears (`core:data` `testuser/`). Wait
+  for "The test wardrobe is reset." before leaving the screen. Use it rather than adding garments by hand; **Reset** restores it. It never
   touches the user's own profiles.
 
 - **Default device:** a local emulator, booted headless if it isn't running. **Always shut it down when you're
@@ -108,4 +109,6 @@ emulator.
   (`adapter/cutout-mlkit/consumer-rules.pro`).
 - **Memory:** the machine has 16 GB and runs earlyoom. A Gradle build while the emulator runs can get the emulator
   killed. Build first, or `./gradlew --stop` before heavy builds.
+- **Export & import:** export the **test user** (never the user's own profile) to the emulator's Downloads, pull it
+  to the scratchpad to read `profile.yaml`, and delete the zips from `/sdcard/Download/` afterwards.
 - In STATUS.md, record which device was used for a test (phone or emulator, and the Android version).

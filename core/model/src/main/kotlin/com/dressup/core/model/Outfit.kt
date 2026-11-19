@@ -8,6 +8,10 @@ data class Outfit(
     val id: Long,
     val name: String?,
     val items: List<OutfitItem>,
+    val rating: Rating? = null,
+    val aspectRatings: Map<OutfitAspect, Rating> = emptyMap(),
+    val review: String? = null,
+    val liked: Boolean = false,
     val createdAtMillis: Long,
 )
 

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diary_title">Diary</string>
+    <string name="diary_settings">Settings</string>
+    <string name="diary_log_wear">Log wear</string>
+    <string name="diary_empty">Nothing logged yet.\nTap + to log what you wore, or use Log wear on a garment or outfit.</string>
+    <string name="diary_no_garments">Add some garments to your wardrobe first, then log here what you wear.</string>
+    <string name="diary_outfit">Outfit</string>
+    <string name="diary_nothing_left">Garments since deleted</string>
+    <string name="diary_garments_more">%1$s + %2$d more</string>
+    <string name="diary_has_note">Has a note</string>
+
+    <string name="diary_back">Back</string>
+    <string name="diary_edit">Edit</string>
+    <string name="diary_delete">Delete</string>
+    <string name="diary_delete_title">Delete this diary entry?</string>
+    <string name="diary_delete_message">Only this entry is deleted. The garments and outfit stay.</string>
+    <string name="diary_cancel">Cancel</string>
+    <string name="diary_open_outfit">Open outfit</string>
+    <string name="diary_worn">What you wore</string>
+    <string name="diary_note">Note</string>
+    <string name="diary_logged_on">Logged %1$s</string>
+
+    <string name="diary_new_title">Log wear</string>
+    <string name="diary_edit_title">Edit entry</string>
+    <string name="diary_save">Save</string>
+    <string name="diary_choose_outfit">Choose outfit</string>
+    <string name="diary_choose_garments">Choose garments</string>
+    <string name="diary_change_outfit">Other outfit</string>
+    <string name="diary_change_garments">Other garments</string>
+    <string name="diary_nothing_picked">Pick the outfit you wore, or single garments.</string>
+    <string name="diary_date">Date</string>
+    <string name="diary_today">Today</string>
+    <string name="diary_yesterday">Yesterday</string>
+    <string name="diary_pick_date">Pick a date</string>
+    <string name="diary_ok">OK</string>
+    <string name="diary_occasion_optional">Occasion (optional)</string>
+    <string name="diary_occasion_hint">e.g. Christmas Eve</string>
+    <string name="diary_note_optional">Note (optional)</string>
+    <string name="diary_note_hint">How did it go? Anything to remember?</string>
+    <string name="diary_save_failed">The entry couldn\'t be saved. Try again.</string>
+    <string name="diary_pick_outfit_title">Pick an outfit</string>
+    <string name="diary_no_outfits">No outfits yet. Make one in the Outfits tab, or pick single garments.</string>
+</resources>

@@ -1,12 +1,19 @@
 package com.dressup.core.data.profile
 
 import android.content.Context
+import android.util.Log
 import com.dressup.core.data.DressUpData
+import com.dressup.core.data.backup.ExportResult
+import com.dressup.core.data.backup.ImportResult
+import com.dressup.core.data.backup.ProfileBackup
+import com.dressup.core.data.backup.ProfileExporter
+import com.dressup.core.data.backup.ProfileImporter
 import com.dressup.core.data.photo.BackgroundRemover
 import com.dressup.core.data.testuser.TestWardrobe
 import com.dressup.core.model.Profile
 import com.dressup.core.model.ProfilesState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +22,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -24,7 +34,9 @@ import java.util.UUID
 class DressUpProfiles(
     context: Context,
     private val backgroundRemover: BackgroundRemover = BackgroundRemover.None,
-) : ProfileRepository {
+    /** Written into exports, so a file says which version made it. */
+    private val appVersion: String? = null,
+) : ProfileRepository, ProfileBackup {
     private val appContext = context.applicationContext
     private val store = ProfileStore(appContext)
     private val mutableState = MutableStateFlow(store.load())
@@ -80,9 +92,10 @@ class DressUpProfiles(
         return DeleteProfileResult.DELETED
     }
 
+    // NonCancellable: leaving the screen while the wardrobe is being filled must not stop it half-way.
     override suspend fun openTestUser() = testUserLock.withLock {
         if (state.value.testUser == null) {
-            withContext(Dispatchers.IO) { TestWardrobe.fill(data(TEST_USER_PROFILE_ID)) }
+            withContext(Dispatchers.IO + NonCancellable) { TestWardrobe.fill(data(TEST_USER_PROFILE_ID)) }
             // Added only once it is full, so an interrupted fill is simply done again next time.
             update { it.copy(profiles = it.profiles + Profile(TEST_USER_PROFILE_ID, name = "", isTestUser = true)) }
         }
@@ -90,7 +103,52 @@ class DressUpProfiles(
     }
 
     override suspend fun resetTestUser() = testUserLock.withLock {
-        withContext(Dispatchers.IO) { TestWardrobe.fill(data(TEST_USER_PROFILE_ID)) }
+        withContext(Dispatchers.IO + NonCancellable) { TestWardrobe.fill(data(TEST_USER_PROFILE_ID)) }
+    }
+
+    override suspend fun export(profileId: String, profileName: String, out: OutputStream): ExportResult =
+        withContext(Dispatchers.IO) {
+            try {
+                ProfileExporter.export(data(profileId), profileName, appVersion, out, Instant.now())
+            } catch (e: Exception) {
+                Log.w(TAG, "Export failed", e)
+                ExportResult.Failed
+            }
+        }
+
+    override suspend fun import(input: InputStream): ImportResult = withContext(Dispatchers.IO) {
+        val id = newId()
+        val outcome = try {
+            withContext(NonCancellable) { ProfileImporter.import(input, data(id), System.currentTimeMillis()) }
+        } catch (e: Exception) {
+            Log.w(TAG, "Import failed", e)
+            null
+        }
+        if (outcome !is ProfileImporter.Outcome.Read) {
+            discard(id)
+            return@withContext when (outcome) {
+                ProfileImporter.Outcome.NotAnExport -> ImportResult.NotAnExport
+                ProfileImporter.Outcome.TooNew -> ImportResult.TooNew
+                else -> ImportResult.Failed
+            }
+        }
+        // Added to the list only once it is complete, like the test user: a failed import leaves no half profile.
+        var profile: Profile? = null
+        update { state ->
+            Profile(id, state.uniqueName(outcome.profileName, fallback = IMPORTED_NAME), isTestUser = false).let {
+                profile = it
+                state.copy(profiles = state.profiles + it)
+            }
+        }
+        ImportResult.Imported(profile!!, outcome.garments, outcome.outfits, outcome.diaryEntries)
+    }
+
+    /** Removes a profile's files that never made it onto the list. */
+    private fun discard(id: String) {
+        synchronized(openData) { openData.remove(id) }?.close()
+        val paths = ProfilePaths.of(id)
+        appContext.deleteDatabase(paths.databaseName)
+        File(appContext.filesDir, paths.ownDir).deleteRecursively()
     }
 
     private fun update(change: (ProfilesState) -> ProfilesState) {
@@ -104,5 +162,7 @@ class DressUpProfiles(
 
     private companion object {
         const val ID_LENGTH = 12
+        const val TAG = "DressUpProfiles"
+        const val IMPORTED_NAME = "Imported"
     }
 }

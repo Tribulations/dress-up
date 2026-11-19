@@ -48,10 +48,15 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.dressup.core.data.DressUpData
 import com.dressup.core.model.OutfitItem
+import com.dressup.core.ui.GarmentGallery
+import com.dressup.core.ui.OutfitBoard
 
-/** Makes a new outfit when [outfitId] is null, otherwise edits it. [onDone]: saved, deleted or cancelled. */
+/**
+ * Makes a new outfit when [outfitId] is null, otherwise edits it. [onDone]: saved (with the outfit's id), or deleted or
+ * cancelled (null).
+ */
 @Composable
-fun OutfitEditorRoute(data: DressUpData, outfitId: Long?, onDone: () -> Unit) {
+fun OutfitEditorRoute(data: DressUpData, outfitId: Long?, onDone: (savedOutfitId: Long?) -> Unit) {
     val viewModel: OutfitEditorViewModel = viewModel(
         key = "outfit-${outfitId ?: "new"}",
         factory = viewModelFactory {
@@ -61,7 +66,7 @@ fun OutfitEditorRoute(data: DressUpData, outfitId: Long?, onDone: () -> Unit) {
         },
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    LaunchedEffect(state.done) { if (state.done) onDone() }
+    LaunchedEffect(state.done) { if (state.done) onDone(state.savedId) }
 
     if (state.galleryOpen) {
         GarmentGallery(
@@ -69,7 +74,7 @@ fun OutfitEditorRoute(data: DressUpData, outfitId: Long?, onDone: () -> Unit) {
             initiallyPicked = state.pieces.map { it.item.garmentId },
             onDone = viewModel::pickGarments,
             // Closing the gallery of a brand-new, still empty outfit means it isn't wanted after all.
-            onCancel = { if (state.isNew && state.pieces.isEmpty()) onDone() else viewModel.closeGallery() },
+            onCancel = { if (state.isNew && state.pieces.isEmpty()) onDone(null) else viewModel.closeGallery() },
         )
         return
     }
@@ -77,7 +82,7 @@ fun OutfitEditorRoute(data: DressUpData, outfitId: Long?, onDone: () -> Unit) {
         state = state,
         onAction = { action ->
             when (action) {
-                OutfitEditorAction.Cancel -> onDone()
+                OutfitEditorAction.Cancel -> onDone(null)
                 OutfitEditorAction.Save -> viewModel.save()
                 OutfitEditorAction.Delete -> viewModel.delete()
                 OutfitEditorAction.OpenGallery -> viewModel.openGallery()

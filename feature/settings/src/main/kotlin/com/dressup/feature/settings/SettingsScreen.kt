@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +29,7 @@ fun SettingsScreen(
     appVersion: String,
     onProfiles: () -> Unit,
     onCategories: () -> Unit,
+    onBackup: () -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -54,6 +56,12 @@ fun SettingsScreen(
                 title = stringResource(R.string.settings_categories),
                 summary = stringResource(R.string.settings_categories_summary),
                 onClick = onCategories,
+            )
+            SettingsRow(
+                icon = Icons.Filled.Share,
+                title = stringResource(R.string.settings_backup),
+                summary = stringResource(R.string.settings_backup_summary),
+                onClick = onBackup,
             )
             SettingsRow(
                 icon = Icons.Filled.Info,

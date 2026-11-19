@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.dressup.android.library)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 room {
@@ -16,6 +17,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.core)
     ksp(libs.androidx.room.compiler)
+    implementation(libs.kotlinx.serialization.core)
+    implementation(libs.kaml)
 
     testImplementation(libs.kotlinx.coroutines.test)
 }

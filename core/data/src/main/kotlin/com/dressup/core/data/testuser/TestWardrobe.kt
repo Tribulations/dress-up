@@ -15,6 +15,13 @@ import com.dressup.core.model.GarmentAspect.FIT
 import com.dressup.core.model.GarmentAspect.QUALITY
 import com.dressup.core.model.GarmentAspect.STYLE
 import android.graphics.Bitmap
+import com.dressup.core.data.db.DiaryEntryEntity
+import com.dressup.core.data.db.DiaryEntryGarmentEntity
+import com.dressup.core.data.db.OutfitAspectRatingEntity
+import com.dressup.core.model.OutfitAspect
+import java.time.LocalDate
+import java.time.MonthDay
+import java.time.ZoneId
 import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.GarmentColour.BEIGE
 import com.dressup.core.model.GarmentColour.BLACK
@@ -86,7 +93,35 @@ internal data class TestGarment(
 }
 
 /** A made-up outfit: the [garments] by [TestGarment.key], top to bottom of the board. */
-internal data class TestOutfit(val name: String, val daysAgo: Int, val garments: List<TestOutfitItem>)
+internal data class TestOutfit(
+    val name: String,
+    val daysAgo: Int,
+    val garments: List<TestOutfitItem>,
+    val halfStars: Int? = null,
+    val liked: Boolean = false,
+    val review: String? = null,
+    val aspects: Map<OutfitAspect, Int> = emptyMap(),
+)
+
+/**
+ * A made-up diary entry: an [outfit] by name and/or [garments] by key. It was worn [daysAgo], or on the most recent
+ * [monthDay] (e.g. Christmas Eve) when that is set.
+ */
+internal data class TestDiaryEntry(
+    val daysAgo: Int = 0,
+    val outfit: String? = null,
+    val garments: List<String> = emptyList(),
+    val occasion: String? = null,
+    val note: String? = null,
+    val monthDay: MonthDay? = null,
+) {
+    /** The date it was worn, seen from [today]. */
+    fun date(today: LocalDate): LocalDate {
+        val fixed = monthDay ?: return today.minusDays(daysAgo.toLong())
+        val thisYear = fixed.atYear(today.year)
+        return if (thisYear.isAfter(today)) fixed.atYear(today.year - 1) else thisYear
+    }
+}
 
 internal data class TestOutfitItem(val key: String, val x: Float, val y: Float, val scale: Float)
 
@@ -214,6 +249,9 @@ internal object TestWardrobe {
                 TestOutfitItem("jeans", 0.35f, 0.72f, 0.42f),
                 TestOutfitItem("boots", 0.72f, 0.85f, 0.36f),
             ),
+            halfStars = 9, liked = true,
+            review = "Warm, cosy and it all goes together. The scarf makes it.",
+            aspects = mapOf(OutfitAspect.COMFORT to 10, OutfitAspect.STYLE to 9, OutfitAspect.OCCASION to 9),
         ),
         TestOutfit(
             "Office", daysAgo = 9,
@@ -222,6 +260,8 @@ internal object TestWardrobe {
                 TestOutfitItem("chinos", 0.42f, 0.68f, 0.42f),
                 TestOutfitItem("white-sneakers", 0.75f, 0.86f, 0.32f),
             ),
+            halfStars = 7,
+            aspects = mapOf(OutfitAspect.COMFORT to 7, OutfitAspect.FIT to 8, OutfitAspect.OCCASION to 6),
         ),
         TestOutfit(
             "Midsummer", daysAgo = 30,
@@ -230,7 +270,25 @@ internal object TestWardrobe {
                 TestOutfitItem("denim-jacket", 0.78f, 0.25f, 0.4f),
                 TestOutfitItem("white-sneakers", 0.72f, 0.85f, 0.3f),
             ),
+            halfStars = 8, liked = true,
         ),
+    )
+
+    /** A diary over the past months: outfits, single garments, occasions, notes, and some days with neither. */
+    val diary: List<TestDiaryEntry> = listOf(
+        TestDiaryEntry(daysAgo = 0, garments = listOf("white-tee", "jeans", "white-sneakers")),
+        TestDiaryEntry(daysAgo = 1, outfit = "Office", note = "Big presentation. Felt sharp."),
+        TestDiaryEntry(daysAgo = 2, outfit = "Sunday walk", occasion = "Walk by the lake"),
+        TestDiaryEntry(daysAgo = 4, garments = listOf("favourite-sweater", "black-pants", "boots"), occasion = "Dinner with Sam"),
+        TestDiaryEntry(daysAgo = 6, outfit = "Office"),
+        TestDiaryEntry(daysAgo = 9, garments = listOf("grey-hoodie"), note = "Lazy Sunday at home."),
+        TestDiaryEntry(daysAgo = 13, outfit = "Sunday walk", occasion = "Sam's birthday", note = "Got compliments on the scarf."),
+        TestDiaryEntry(daysAgo = 16, outfit = "Office"),
+        TestDiaryEntry(daysAgo = 21, garments = listOf("breton", "chinos", "white-sneakers"), occasion = "Museum day"),
+        TestDiaryEntry(daysAgo = 27, garments = listOf("favourite-sweater", "jeans")),
+        TestDiaryEntry(daysAgo = 34, outfit = "Midsummer", occasion = "Garden party"),
+        TestDiaryEntry(daysAgo = 48, garments = listOf("flannel", "jeans", "boots", "beanie"), occasion = "Cabin weekend"),
+        TestDiaryEntry(monthDay = MonthDay.of(12, 24), outfit = "Sunday walk", occasion = "Christmas Eve", note = "Too warm by the fire, but worth it."),
     )
 
     /** Replaces everything in [data] with the test wardrobe. Blocking: call off the main thread. */
@@ -238,6 +296,8 @@ internal object TestWardrobe {
         val garmentDao = data.database.garmentDao()
         val categoryDao = data.database.categoryDao()
         val outfitDao = data.database.outfitDao()
+        val diaryDao = data.database.diaryDao()
+        diaryDao.deleteAll()
         outfitDao.deleteAll()
         garmentDao.deleteAll()
         categoryDao.deleteOwn()
@@ -253,13 +313,38 @@ internal object TestWardrobe {
             val id = insertGarment(data, garment, categoryIds, now)
             garment.key?.let { garmentIds[it] = id }
         }
+        val outfitIds = HashMap<String, Long>()
         outfits.forEach { outfit ->
-            val id = outfitDao.insert(OutfitEntity(name = outfit.name, createdAtMillis = now - outfit.daysAgo * DAY_MILLIS))
+            val id = outfitDao.insert(
+                OutfitEntity(
+                    name = outfit.name,
+                    createdAtMillis = now - outfit.daysAgo * DAY_MILLIS,
+                    ratingHalfStars = outfit.halfStars,
+                    review = outfit.review,
+                    liked = outfit.liked,
+                ),
+            )
+            outfitIds[outfit.name] = id
             outfitDao.insertItems(
                 outfit.garments.mapIndexed { position, item ->
                     OutfitItemEntity(id, garmentIds.getValue(item.key), position, item.x, item.y, item.scale)
                 },
             )
+            outfitDao.upsertAspectRatings(outfit.aspects.map { (aspect, halfStars) -> OutfitAspectRatingEntity(id, aspect.key, halfStars) })
+        }
+        val today = java.time.Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate()
+        diary.forEach { entry ->
+            val keys = entry.outfit?.let { name -> outfits.first { it.name == name }.garments.map { it.key } } ?: entry.garments
+            val id = diaryDao.insert(
+                DiaryEntryEntity(
+                    dateEpochDay = entry.date(today).toEpochDay(),
+                    outfitId = entry.outfit?.let(outfitIds::getValue),
+                    occasion = entry.occasion,
+                    note = entry.note,
+                    createdAtMillis = now,
+                ),
+            )
+            diaryDao.insertGarments(keys.mapIndexed { position, key -> DiaryEntryGarmentEntity(id, garmentIds.getValue(key), position) })
         }
     }
 

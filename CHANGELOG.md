@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-19
+
+M2: the diary, outfit ratings, and export and import.
+
+### Added
+- **Diary** tab: every wear in a list, newest first, under month headers, with the day, a small collage of what was
+  worn, the occasion and the stars. Tap an entry for its page (date, occasion, note, what was worn), and go on from
+  there to the outfit and each of its garments.
+- **Log wear** on garment and outfit pages (today, one tap away) and **+** in the Diary: pick an outfit or single
+  garments, the date (Today, Yesterday or any past day), an optional **occasion** ("Christmas Eve", "Sam's birthday";
+  the ones used before are suggested) and an optional note.
+- **Wear counts:** garment and outfit pages show "Worn 7 times · last 24 Dec 2025" and the entries they were worn in.
+- **Outfit page** with the collage (tap a garment to open it), its garments, and the same ratings as a garment: stars,
+  heart, details (comfort, style, fit, for the occasion) and a review. The Outfits grid shows the stars and heart.
+- **Export & import** in Settings: save a profile as one .zip file wherever you like (a `profile.yaml` you can read and
+  edit, plus an `images/` folder with the pictures), and import such a file as a new profile. No permission needed;
+  existing profiles are never changed by an import.
+- The test user now has a diary with occasions and notes, and rated outfits.
+
+### Changed
+- Tapping an outfit opens its page; editing it is the pencil there.
+- Logging an outfit records its garments too, so editing the outfit later doesn't change the diary, and deleting an
+  outfit keeps its diary entries.
+- Database version 3 (added by itself on update; nothing is lost).
+
+### Fixed
+- Leaving the Profiles screen while the test user was being filled or reset stopped it half-way.
+
 ## [0.1.2] - 2026-11-19
 
 Names, several categories, reviews, cut-outs and outfits. From a tester's wishes.

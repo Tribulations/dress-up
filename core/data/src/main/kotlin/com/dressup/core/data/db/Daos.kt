@@ -63,6 +63,11 @@ internal interface GarmentDao {
     @Query("DELETE FROM garment_aspect_ratings WHERE garmentId = :garmentId AND aspectKey = :aspectKey")
     suspend fun deleteAspectRating(garmentId: Long, aspectKey: String)
 
+    /** Everything, for an export. */
+    @Transaction
+    @Query("SELECT * FROM garments ORDER BY id")
+    suspend fun getAll(): List<GarmentWithDetails>
+
     /** Only for refilling the test user's wardrobe ([com.dressup.core.data.testuser.TestWardrobe]). */
     @Query("DELETE FROM garments")
     suspend fun deleteAll()
@@ -131,7 +136,73 @@ internal interface OutfitDao {
     @Query("DELETE FROM outfits WHERE id = :id")
     suspend fun delete(id: Long)
 
+    @Query("UPDATE outfits SET ratingHalfStars = :halfStars WHERE id = :id")
+    suspend fun setRating(id: Long, halfStars: Int?)
+
+    @Query("UPDATE outfits SET review = :review WHERE id = :id")
+    suspend fun setReview(id: Long, review: String?)
+
+    @Query("UPDATE outfits SET liked = :liked WHERE id = :id")
+    suspend fun setLiked(id: Long, liked: Boolean)
+
+    @Upsert
+    suspend fun upsertAspectRating(rating: OutfitAspectRatingEntity)
+
+    @Query("DELETE FROM outfit_aspect_ratings WHERE outfitId = :outfitId AND aspectKey = :aspectKey")
+    suspend fun deleteAspectRating(outfitId: Long, aspectKey: String)
+
+    @Upsert
+    suspend fun upsertAspectRatings(ratings: List<OutfitAspectRatingEntity>)
+
+    @Transaction
+    @Query("SELECT * FROM outfits ORDER BY id")
+    suspend fun getAll(): List<OutfitWithItems>
+
     /** Only for refilling the test user's wardrobe. */
     @Query("DELETE FROM outfits")
+    suspend fun deleteAll()
+}
+
+@Dao
+internal interface DiaryDao {
+    @Transaction
+    @Query("SELECT * FROM diary_entries ORDER BY dateEpochDay DESC, createdAtMillis DESC, id DESC")
+    fun observeAll(): Flow<List<DiaryEntryWithGarments>>
+
+    @Transaction
+    @Query("SELECT * FROM diary_entries WHERE id = :id")
+    fun observe(id: Long): Flow<DiaryEntryWithGarments?>
+
+    @Insert
+    suspend fun insert(entry: DiaryEntryEntity): Long
+
+    @Query(
+        "UPDATE diary_entries SET dateEpochDay = :dateEpochDay, outfitId = :outfitId, occasion = :occasion, " +
+            "note = :note WHERE id = :id",
+    )
+    suspend fun update(id: Long, dateEpochDay: Long, outfitId: Long?, occasion: String?, note: String?)
+
+    @Query("DELETE FROM diary_entry_garments WHERE entryId = :entryId")
+    suspend fun deleteGarments(entryId: Long)
+
+    @Insert
+    suspend fun insertGarments(garments: List<DiaryEntryGarmentEntity>)
+
+    @Query("DELETE FROM diary_entries WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    /** Occasions used before, the most recently worn first, for the editor's suggestions. */
+    @Query(
+        "SELECT occasion FROM diary_entries WHERE occasion IS NOT NULL GROUP BY occasion COLLATE NOCASE " +
+            "ORDER BY MAX(dateEpochDay) DESC LIMIT :limit",
+    )
+    fun observeOccasions(limit: Int): Flow<List<String>>
+
+    @Transaction
+    @Query("SELECT * FROM diary_entries ORDER BY dateEpochDay, id")
+    suspend fun getAll(): List<DiaryEntryWithGarments>
+
+    /** Only for refilling the test user's wardrobe. */
+    @Query("DELETE FROM diary_entries")
     suspend fun deleteAll()
 }

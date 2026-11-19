@@ -8,4 +8,6 @@
     <string name="settings_categories_summary">Hide built-in ones, add your own</string>
     <string name="settings_about">About</string>
     <string name="settings_version">dress-up %1$s</string>
+    <string name="settings_backup">Export &amp; import</string>
+    <string name="settings_backup_summary">Save this profile as a file, or add one from a file</string>
 </resources>

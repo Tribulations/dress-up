@@ -77,6 +77,31 @@ internal class FilePhotoStorage(private val context: Context, private val relati
         return name
     }
 
+    /**
+     * Copies a picture from an import into the photo folder under a new name, and returns that name. Only the picture
+     * types the app writes itself are accepted, and at most [maxBytes]; null otherwise. Blocking: call off the main thread.
+     */
+    fun saveImported(input: java.io.InputStream, originalName: String, maxBytes: Long): String? {
+        val extension = originalName.substringAfterLast('.', "").lowercase().takeIf { it in IMPORTED_EXTENSIONS } ?: return null
+        val file = File(photoDir, "${UUID.randomUUID()}.$extension")
+        var total = 0L
+        file.outputStream().use { out ->
+            val buffer = ByteArray(BUFFER_BYTES)
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) break
+                total += read
+                if (total > maxBytes) break
+                out.write(buffer, 0, read)
+            }
+        }
+        if (total > maxBytes || total == 0L) {
+            file.delete()
+            return null
+        }
+        return file.name
+    }
+
     /** The photo as a bitmap, for processing. Blocking: call off the main thread. */
     fun decode(fileName: String): Bitmap {
         val source = ImageDecoder.createSource(file(fileName))
@@ -113,5 +138,7 @@ internal class FilePhotoStorage(private val context: Context, private val relati
         const val MAX_EDGE_PX = 1600
         const val JPEG_QUALITY = 85
         const val CUTOUT_QUALITY = 90
+        const val BUFFER_BYTES = 64 * 1024
+        val IMPORTED_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp")
     }
 }

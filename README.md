@@ -7,10 +7,10 @@ diary, rate and review your garments, put them in lists and see statistics about
 inspiration from **Letterboxd**: what Letterboxd does for the films you watch, dress-up does for the clothes in
 your wardrobe.
 
-> **Current state (2026-11-19): v0.1.2 released** (milestone M1, the wardrobe, plus profiles, a test user, garment
-> names and reviews, cut-outs and outfits). Download the APK from
-> [GitHub releases](https://github.com/Tribulations/dress-up/releases). Tested on the emulator; not yet on the
-> phone (STATUS.md). Next: the diary and backup (M2).
+> **Current state (2026-11-19): v0.2.0 released** (milestones M1, the wardrobe, and M2, the diary and backup: outfits
+> with ratings, a wear diary with occasions, wear counts, export and import, plus profiles, a test user and cut-outs).
+> Download the APK from [GitHub releases](https://github.com/Tribulations/dress-up/releases). Tested on the emulator;
+> not yet on the phone (STATUS.md). Next: lists and statistics (M3).
 
 ## Features
 
@@ -22,17 +22,18 @@ your wardrobe.
 | Rate the details (fit, comfort, quality, style, easy care) and write a review | 🧪 Built in v0.1.2, tested on the emulator |
 | Remove the background from a garment's photo, on the phone (optional adapter, ML Kit) | 🧪 Built in v0.1.2, tested on the emulator |
 | Outfits: pick garments from a gallery and lay them out as a collage | 🧪 Built in v0.1.2, tested on the emulator |
+| Rate and review outfits like garments (stars, like, details, review) on an outfit page | 🧪 Built in v0.2.0, tested on the emulator |
+| Diary: log an outfit or garments worn on a date, with an occasion ("Christmas Eve") and a note; a list by month | 🧪 Built in v0.2.0, tested on the emulator |
+| Wear counts and wear history on garment and outfit pages | 🧪 Built in v0.2.0, tested on the emulator |
+| Export a profile as a zip (readable `profile.yaml` + images) and import one as a new profile | 🧪 Built in v0.2.0, tested on the emulator |
 | Categories: built-in list (pants, shirt, …) plus your own; hide, rename, delete | 🧪 Built in v0.1.0, tested on the emulator |
 | Wardrobe grid: photo tiles, filter (liked, category, colour) and sort | 🧪 Built in v0.1.0, tested on the emulator |
 | Garment page: big photo, details, star rating (with halves) and a like, edit, delete | 🧪 Built in v0.1.0, tested on the emulator |
 | Profiles: your name on the first start; add, rename, switch and delete profiles in Settings | 🧪 Built in v0.1.1, tested on the emulator |
 | Test user: a prefilled, made-up wardrobe to try the app with, can be reset | 🧪 Built in v0.1.1, tested on the emulator |
-| Wear history on the garment page | 📝 Planned (M2) |
-| Diary: log which garments you wore on a date, with an optional note | 📝 Planned (M2) |
 | Statistics: most and least worn, cost per wear, year in review | 📝 Planned (M3) |
 | Lists (e.g. "Summer", "Work", "To donate") and a wishlist | 📝 Planned (M3) |
-| Export and backup of the whole wardrobe | 📝 Planned (M2) |
-| Log a whole outfit as one wear in the diary | 📝 Idea (BRAINSTORMING.md) |
+| A calendar view of the diary | 📝 Idea (BRAINSTORMING.md) |
 | AI tagging of photos | 📝 Idea (BRAINSTORMING.md) |
 
 Legend: 📝 Planned · 🚧 In progress · 🧪 Implemented, untested · ✅ Done & tested
@@ -41,7 +42,7 @@ Legend: 📝 Planned · 🚧 In progress · 🧪 Implemented, untested · ✅ Do
 
 An **Android** app in **Kotlin** with **Jetpack Compose**, offline first, with **Room** for data, the phone's camera
 app opened from inside dress-up for photos, and **Coil** to show them (ARCHITECTURE.md §2). Background removal is an
-optional adapter using ML Kit on the device. No permissions, no network.
+optional adapter using ML Kit on the device. Exports are YAML (kaml) in a zip. No permissions, no network.
 
 ## Requirements
 

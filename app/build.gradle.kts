@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "com.dressup.app"
-        versionCode = 3
-        versionName = "0.1.2"
+        versionCode = 4
+        versionName = "0.2.0"
     }
 
     // One dedicated release key, kept outside the repo and referenced from local.properties
@@ -67,6 +67,8 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":feature:profiles"))
     implementation(project(":feature:outfits"))
+    implementation(project(":feature:diary"))
+    implementation(project(":feature:backup"))
     if (cutoutEnabled) implementation(project(":adapter:cutout-mlkit"))
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)

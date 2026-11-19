@@ -10,11 +10,6 @@
     <string name="garment_no_photo">No photo</string>
     <string name="garment_photo">Garment photo</string>
     <string name="garment_added_on">Added %1$s</string>
-    <string name="garment_your_rating">Your rating</string>
-    <string name="garment_aspects">Rate the details</string>
-    <string name="garment_review">Your review</string>
-    <string name="garment_review_write">Write a review</string>
-    <string name="garment_review_edit">Edit review</string>
     <string name="garment_review_hint">How does it fit, feel, wash and last?</string>
     <string name="garment_remove_background">Remove background</string>
     <string name="garment_removing_background">Removing background…</string>

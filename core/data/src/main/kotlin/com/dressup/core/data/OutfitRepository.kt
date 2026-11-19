@@ -2,11 +2,15 @@ package com.dressup.core.data
 
 import androidx.room.withTransaction
 import com.dressup.core.data.db.DressUpDatabase
+import com.dressup.core.data.db.OutfitAspectRatingEntity
 import com.dressup.core.data.db.OutfitEntity
 import com.dressup.core.data.db.OutfitItemEntity
 import com.dressup.core.model.MAX_OUTFIT_NAME_LENGTH
+import com.dressup.core.model.MAX_REVIEW_LENGTH
 import com.dressup.core.model.Outfit
+import com.dressup.core.model.OutfitAspect
 import com.dressup.core.model.OutfitDraft
+import com.dressup.core.model.Rating
 import com.dressup.core.model.cleanText
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -21,7 +25,16 @@ interface OutfitRepository {
     /** Saves a new outfit or replaces an existing one's name and board, and returns its id. */
     suspend fun save(draft: OutfitDraft): Long
 
-    /** Deletes the outfit only; its garments stay in the wardrobe. */
+    suspend fun setRating(id: Long, rating: Rating?)
+
+    suspend fun setAspectRating(id: Long, aspect: OutfitAspect, rating: Rating?)
+
+    /** A blank review removes it. */
+    suspend fun setReview(id: Long, review: String?)
+
+    suspend fun setLiked(id: Long, liked: Boolean)
+
+    /** Deletes the outfit only; its garments stay in the wardrobe, and its diary entries keep the garments worn. */
     suspend fun delete(id: Long)
 }
 
@@ -47,6 +60,20 @@ internal class RoomOutfitRepository(
         )
         id
     }
+
+    override suspend fun setRating(id: Long, rating: Rating?) = dao.setRating(id, rating?.halfStars)
+
+    override suspend fun setAspectRating(id: Long, aspect: OutfitAspect, rating: Rating?) {
+        if (rating == null) {
+            dao.deleteAspectRating(id, aspect.key)
+        } else {
+            dao.upsertAspectRating(OutfitAspectRatingEntity(id, aspect.key, rating.halfStars))
+        }
+    }
+
+    override suspend fun setReview(id: Long, review: String?) = dao.setReview(id, cleanText(review, MAX_REVIEW_LENGTH))
+
+    override suspend fun setLiked(id: Long, liked: Boolean) = dao.setLiked(id, liked)
 
     override suspend fun delete(id: Long) = dao.delete(id)
 }

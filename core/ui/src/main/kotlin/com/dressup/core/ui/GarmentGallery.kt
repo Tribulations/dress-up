@@ -1,4 +1,4 @@
-package com.dressup.feature.outfits
+package com.dressup.core.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.border
@@ -39,11 +39,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.dressup.core.ui.GarmentPhoto
+import java.io.File
+
+/** One garment in a [GarmentGallery]. */
+data class GalleryTile(val garmentId: Long, val title: String, val picture: File?, val isCutout: Boolean)
 
 /**
- * A gallery of every garment's picture (cut-outs where there are any) to pick an outfit's garments from. Tap to pick or
- * unpick; [onDone] gets the picked ones in the order picked.
+ * A gallery of every garment's picture (cut-outs where there are any) to pick garments from, for an outfit or a diary
+ * entry. Tap to pick or unpick; [onDone] gets the picked ones in the order picked.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,20 +59,20 @@ fun GarmentGallery(tiles: List<GalleryTile>, initiallyPicked: List<Long>, onDone
                 title = {
                     Text(
                         if (picked.isEmpty()) {
-                            stringResource(R.string.outfits_gallery_title)
+                            stringResource(R.string.core_ui_gallery_title)
                         } else {
-                            pluralStringResource(R.plurals.outfits_gallery_picked, picked.size, picked.size)
+                            pluralStringResource(R.plurals.core_ui_gallery_picked, picked.size, picked.size)
                         },
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
-                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.outfits_cancel))
+                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.core_ui_cancel))
                     }
                 },
                 actions = {
                     TextButton(onClick = { onDone(picked.toList()) }, enabled = picked.isNotEmpty()) {
-                        Text(stringResource(R.string.outfits_gallery_done))
+                        Text(stringResource(R.string.core_ui_gallery_done))
                     }
                 },
             )

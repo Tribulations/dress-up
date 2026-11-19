@@ -21,3 +21,16 @@ internal fun ProfilesState.deleteProblem(id: String): DeleteProfileResult? {
         else -> null
     }
 }
+
+/** A name for an imported profile that no profile of the user's own has yet: "Anna", else "Anna (2)", "Anna (3)", … */
+internal fun ProfilesState.uniqueName(wanted: String, fallback: String): String {
+    val base = cleanProfileName(wanted).ifEmpty { fallback }
+    if (nameProblem(base) == null) return base
+    var n = 2
+    while (true) {
+        val suffix = " ($n)"
+        val candidate = base.take(MAX_PROFILE_NAME_LENGTH - suffix.length).trimEnd() + suffix
+        if (nameProblem(candidate) == null) return candidate
+        n++
+    }
+}

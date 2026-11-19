@@ -14,19 +14,47 @@ _Last updated: 2026-11-19_
 
 ## 🚧 Currently working on
 
-_Nothing. v0.1.2 (names, several categories, reviews, cut-outs and outfits) is released; M2 is next._
+_Nothing. v0.2.0 (M2: outfit ratings, the diary with occasions and wear counts, export and import) is released; M3 is next._
 
 ## 🧪 Implemented, not yet tested
 
-- **Everything in v0.1.0–v0.1.2 on the user's phone (Galaxy S20).** Only tested on the emulator so far (below). Things
+- **Everything in v0.1.0–v0.2.0 on the user's phone (Galaxy S20).** Only tested on the emulator so far (below). Things
   worth checking on the real phone: the Samsung camera app returns the photo, portrait photos are upright, the grid
   with real photos, **Remove background on real photos** (the emulator only had flat, made-up pictures, and its model
-  download is the first one on that phone), pinching on the outfit board with real fingers.
+  download is the first one on that phone), pinching on the outfit board with real fingers, **export to and import
+  from Google Drive** (the emulator only had Downloads), and an export of a large real wardrobe (time and size).
 - **The outfit board's pinch-to-resize** was not tested (the emulator's scripted input can't pinch); dragging and the
   Size slider were.
+- **Leaving the Profiles screen while the test user is being reset or created** now lets the fill finish
+  (`NonCancellable`, the same for an import). Found on the emulator (pressing Back cancelled a reset half-way, an old
+  bug); the fix is built and the normal reset was tested again, but leaving mid-way was not repeated.
+- In the diary editor, **Choose garments** (the garment gallery, the same component as the outfit editor's) and
+  editing an existing entry were covered by unit tests only, not tapped through on the emulator.
 
 ## ✅ Done & tested
 
+- **v0.2.0 – M2: outfit ratings, the diary, export and import (2026-11-19).** Unit tests: 82 JVM tests pass, 24 of
+  them new (diary order and wear counts, the diary editor ViewModel, the diary's month grouping and compact collage, the
+  `profile.yaml` round trip, tolerance of unknown keys, star rounding, safe file names and unique import names, the
+  export/import ViewModel, the test user's diary, the garment page's wear history). Manual tests on the emulator
+  (Medium_Phone_API_36, Android 16, Google Play image), **release build** (R8, release key):
+  - **Update from the published v0.1.2 release APK with real data** (the test user and a profile of made-up data):
+    auto-migration 2 → 3 ran, the garments and the three outfits were all there, the Diary tab was empty. No crash.
+  - Test user **Reset**: 13 diary entries over the past year (Christmas Eve, Sam's birthday, …), outfits with ratings.
+  - Diary list: month headers, day and weekday, collages, occasions, stars and hearts, note marks.
+  - Entry page → **Open outfit** → outfit page (rating, aspects, review, "Worn 3 times · last …" with its entries) →
+    a garment from the strip → garment page with its own wear history.
+  - Outfit aspect rating changed (Fit 3.5) and kept.
+  - **Log wear** from a garment page: preset garment and today; typing "birth" filtered the occasion chips to "Sam's
+    birthday"; Yesterday; a note; Save → back on the garment, "Worn 4 times".
+  - Diary **+** → **Choose outfit** (grid) → Midsummer → date picker (2 Nov) → Save: listed under 2 Mon.
+  - **Deleting an outfit** keeps its entries, which then show the garments worn ("Midsummer dress + 2 more").
+  - **Export** to Downloads through the system dialog: a 1.5 MB zip with `profile.yaml` (read by hand: categories,
+    garments, outfits, 15 diary entries) and 53 pictures. **Import** of it: a new profile "Test user" with 32
+    garments, 3 outfits and 15 entries; **Switch to it**: pictures, ratings and the diary all came back. A second
+    export (picture paths now `images/…`) imported as "Test user (2)", pictures shown.
+  - Found and fixed before release: single garments looked tiny in the diary's collages (now a compact layout), the
+    entry page's collage pushed the garments off the screen (now narrower), and the reset bug above.
 - **v0.1.2 – names, several categories, reviews, cut-outs and outfits (2026-11-19).** Unit tests: 58 JVM tests pass,
   21 of them new (garment page and outfit editor ViewModels, outfit board maths and layout, the cut-out crop, garment
   texts, several-category filtering, the test wardrobe's new data). Manual tests on the emulator (Medium_Phone_API_36,
@@ -85,7 +113,6 @@ Each completed milestone gets a minor version tag (AGENTS.md). The milestones ar
 
 - **Still open** (BRAINSTORMING.md "Open questions"): final name, colours and icon; optional price for cost per wear;
   a photo per diary entry.
-- **M2 – diary and backup:** log wears by date, diary view, wear history per garment, export/import of the whole
-  wardrobe (data + photos).
 - **M3 – lists and statistics:** lists, wishlist, most/least worn, cost per wear, year in review.
-- **Later:** logging a whole outfit as one wear, AI tagging, sync between devices (BRAINSTORMING.md).
+- **Later:** a calendar view of the diary, a photo per diary entry, AI tagging, sync between devices
+  (BRAINSTORMING.md).

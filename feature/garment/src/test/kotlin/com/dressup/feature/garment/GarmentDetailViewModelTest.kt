@@ -25,11 +25,16 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import com.dressup.core.model.DiaryEntry
+import com.dressup.core.model.WearSummary
+import com.dressup.core.model.summary
+import java.time.LocalDate
 import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GarmentDetailViewModelTest {
     private val garments = FakeGarments()
+    private val diary = FakeDiary()
     private val categories = object : CategoryRepository {
         override val categories: Flow<List<Category>> = MutableStateFlow(listOf(SWEATER, SPORTSWEAR))
         override suspend fun add(name: String) = CategoryNameResult.Blank
@@ -56,7 +61,7 @@ class GarmentDetailViewModelTest {
     private class TestScopeHolder(val vm: GarmentDetailViewModel)
 
     private fun kotlinx.coroutines.test.TestScope.detail(): TestScopeHolder {
-        val vm = GarmentDetailViewModel(1, garments, categories, photos)
+        val vm = GarmentDetailViewModel(1, garments, categories, photos, diary)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
         return TestScopeHolder(vm)
     }
@@ -121,5 +126,18 @@ class GarmentDetailViewModelTest {
     private companion object {
         val SWEATER = Category(id = 1, name = "Sweater", builtIn = true, hidden = false)
         val SPORTSWEAR = Category(id = 2, name = "Sportswear", builtIn = false, hidden = false)
+    }
+
+    @Test
+    fun `the page lists the diary entries the garment was worn in, newest first`() = runTest {
+        garments.items.value = listOf(testGarment(1, listOf(SWEATER.id)))
+        diary.items.value = listOf(
+            DiaryEntry(3, LocalDate.of(2026, 11, 18), outfitId = 5, garmentIds = listOf(1, 2), occasion = "Office", note = null, createdAtMillis = 0),
+            DiaryEntry(2, LocalDate.of(2026, 11, 10), outfitId = null, garmentIds = listOf(2), occasion = null, note = null, createdAtMillis = 0),
+            DiaryEntry(1, LocalDate.of(2025, 12, 24), outfitId = null, garmentIds = listOf(1), occasion = "Christmas Eve", note = null, createdAtMillis = 0),
+        )
+        val page = detail()
+        assertEquals(listOf(3L, 1L), page.loaded().wears.map { it.id })
+        assertEquals(WearSummary(2, LocalDate.of(2026, 11, 18)), page.loaded().wears.summary())
     }
 }

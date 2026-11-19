@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_title">Export &amp; import</string>
+    <string name="backup_back">Back</string>
+    <string name="backup_export_title">Export “%1$s”</string>
+    <string name="backup_export_text">Saves everything in this profile as one .zip file: garments and their pictures, categories, ratings, reviews, outfits and the diary. Inside is a profile.yaml you can read and an images folder. You choose where it goes, e.g. Downloads or Google Drive.</string>
+    <string name="backup_export">Export…</string>
+    <string name="backup_import_title">Import a profile</string>
+    <string name="backup_import_text">Adds a profile from an export file, as a new profile next to yours. No existing profile is changed.</string>
+    <string name="backup_import">Import…</string>
+    <string name="backup_working">Working…</string>
+    <plurals name="backup_exported">
+        <item quantity="one">Exported %1$d garment.</item>
+        <item quantity="other">Exported %1$d garments.</item>
+    </plurals>
+    <string name="backup_export_failed">The export couldn\'t be written. Try again, or pick another place.</string>
+    <string name="backup_imported">Imported “%1$s”: %2$s, %3$s and %4$s.</string>
+    <plurals name="backup_garments">
+        <item quantity="one">%1$d garment</item>
+        <item quantity="other">%1$d garments</item>
+    </plurals>
+    <plurals name="backup_outfits">
+        <item quantity="one">%1$d outfit</item>
+        <item quantity="other">%1$d outfits</item>
+    </plurals>
+    <plurals name="backup_entries">
+        <item quantity="one">%1$d diary entry</item>
+        <item quantity="other">%1$d diary entries</item>
+    </plurals>
+    <string name="backup_switch">Switch to it</string>
+    <string name="backup_not_an_export">That file isn\'t a dress-up export.</string>
+    <string name="backup_too_new">That file was made by a newer version of dress-up. Update the app, then import it.</string>
+    <string name="backup_import_failed">The file couldn\'t be imported. Nothing was changed.</string>
+</resources>

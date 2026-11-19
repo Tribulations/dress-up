@@ -4,11 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dressup.core.data.CategoryRepository
 import com.dressup.core.data.CutoutResult
+import com.dressup.core.data.DiaryRepository
 import com.dressup.core.data.GarmentRepository
 import com.dressup.core.data.photo.PhotoStorage
+import com.dressup.core.model.DiaryEntry
 import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.Rating
+import com.dressup.core.model.wearsOfGarment
 import com.dressup.core.ui.garmentSubtitle
 import com.dressup.core.ui.garmentTitle
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +37,8 @@ sealed interface GarmentDetailUiState {
         val canCutOut: Boolean,
         val cuttingOut: Boolean,
         val message: DetailMessage?,
+        /** The diary entries it was worn in, newest first. */
+        val wears: List<DiaryEntry> = emptyList(),
     ) : GarmentDetailUiState {
         val isCutout: Boolean get() = garment.cutoutFileName != null
         val hasNameAsTitle: Boolean get() = garment.name != null
@@ -49,11 +54,12 @@ class GarmentDetailViewModel(
     private val garments: GarmentRepository,
     categories: CategoryRepository,
     photos: PhotoStorage,
+    diary: DiaryRepository,
 ) : ViewModel() {
     private val status = MutableStateFlow(DetailStatus())
 
     val uiState: StateFlow<GarmentDetailUiState> =
-        combine(garments.garment(garmentId), categories.categories, status) { garment, allCategories, s ->
+        combine(garments.garment(garmentId), categories.categories, status, diary.entries) { garment, allCategories, s, entries ->
             if (garment == null || s.deleted) {
                 GarmentDetailUiState.Gone
             } else {
@@ -66,6 +72,7 @@ class GarmentDetailViewModel(
                     canCutOut = garments.canCutOut && garment.photoFileName != null,
                     cuttingOut = s.cuttingOut,
                     message = s.message,
+                    wears = entries.wearsOfGarment(garmentId),
                 )
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GarmentDetailUiState.Loading)

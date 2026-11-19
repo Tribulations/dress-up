@@ -9,6 +9,35 @@
     <string name="core_ui_test_user">Test user</string>
     <string name="core_ui_tab_wardrobe">Wardrobe</string>
     <string name="core_ui_tab_outfits">Outfits</string>
+    <string name="core_ui_tab_diary">Diary</string>
+
+    <string name="core_ui_gallery_title">Pick garments</string>
+    <string name="core_ui_gallery_done">Done</string>
+    <plurals name="core_ui_gallery_picked">
+        <item quantity="one">%1$d garment picked</item>
+        <item quantity="other">%1$d garments picked</item>
+    </plurals>
+
+    <string name="core_ui_your_rating">Your rating</string>
+    <string name="core_ui_aspects">Rate the details</string>
+    <string name="core_ui_review">Your review</string>
+    <string name="core_ui_review_write">Write a review</string>
+    <string name="core_ui_review_edit">Edit review</string>
+
+    <string name="core_ui_log_wear">Log wear</string>
+    <string name="core_ui_never_worn">Not worn yet</string>
+    <plurals name="core_ui_worn_times">
+        <item quantity="one">Worn once</item>
+        <item quantity="other">Worn %1$d times</item>
+    </plurals>
+    <string name="core_ui_worn_last">%1$s · last %2$s</string>
+    <string name="core_ui_wear_history">Wear history</string>
+    <string name="core_ui_show_all_wears">Show all %1$d</string>
+
+    <string name="core_ui_outfit_aspect_comfort">Comfort</string>
+    <string name="core_ui_outfit_aspect_style">Style</string>
+    <string name="core_ui_outfit_aspect_fit">Fit</string>
+    <string name="core_ui_outfit_aspect_occasion">For the occasion</string>
 
     <string name="core_ui_aspect_fit">Fit</string>
     <string name="core_ui_aspect_comfort">Comfort</string>

@@ -6,6 +6,7 @@ import androidx.compose.ui.res.stringResource
 import com.dressup.core.model.Category
 import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentAspect
+import com.dressup.core.model.OutfitAspect
 
 /**
  * How a garment is named on screen: its own name, or else its main category (ARCHITECTURE.md §8). The categories go
@@ -30,3 +31,13 @@ private val GarmentAspect.labelRes: Int
         GarmentAspect.STYLE -> R.string.core_ui_aspect_style
         GarmentAspect.EASY_CARE -> R.string.core_ui_aspect_easy_care
     }
+
+@Composable
+fun OutfitAspect.label(): String = stringResource(
+    when (this) {
+        OutfitAspect.COMFORT -> R.string.core_ui_outfit_aspect_comfort
+        OutfitAspect.STYLE -> R.string.core_ui_outfit_aspect_style
+        OutfitAspect.FIT -> R.string.core_ui_outfit_aspect_fit
+        OutfitAspect.OCCASION -> R.string.core_ui_outfit_aspect_occasion
+    },
+)

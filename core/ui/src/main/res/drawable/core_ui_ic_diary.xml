@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A notebook with lines and a bookmark: the wear diary. Our own drawing (GUIDELINES.md §4.1). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M6,2.8 H18 C18.7,2.8 19.2,3.3 19.2,4 V20 C19.2,20.7 18.7,21.2 18,21.2 H6 C5.3,21.2 4.8,20.7 4.8,20 V4 C4.8,3.3 5.3,2.8 6,2.8 Z"
+        android:strokeWidth="1.6"
+        android:strokeColor="#FF000000"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M8.5,8 H15.5 M8.5,11.5 H15.5 M8.5,15 H13"
+        android:strokeWidth="1.6"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round" />
+</vector>

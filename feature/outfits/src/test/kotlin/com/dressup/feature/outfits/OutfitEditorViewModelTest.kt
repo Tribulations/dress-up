@@ -14,6 +14,7 @@ import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.GarmentDraft
 import com.dressup.core.model.Outfit
+import com.dressup.core.model.OutfitAspect
 import com.dressup.core.model.OutfitDraft
 import com.dressup.core.model.OutfitItem
 import com.dressup.core.model.Rating
@@ -89,7 +90,7 @@ class OutfitEditorViewModelTest {
 
     @Test
     fun `editing loads the outfit, and removing the selected garment takes it off the board`() = runTest {
-        outfits.items.value = listOf(Outfit(7, "Office", listOf(OutfitItem(1, 0.5f, 0.3f, 0.4f), OutfitItem(3, 0.5f, 0.8f, 0.3f)), 0))
+        outfits.items.value = listOf(Outfit(7, "Office", listOf(OutfitItem(1, 0.5f, 0.3f, 0.4f), OutfitItem(3, 0.5f, 0.8f, 0.3f)), createdAtMillis = 0))
         val vm = editor(id = 7)
         assertFalse(vm.uiState.value.galleryOpen)
         assertEquals("Office", vm.uiState.value.name)
@@ -114,7 +115,7 @@ class OutfitEditorViewModelTest {
 
     @Test
     fun `a garment deleted from the wardrobe disappears from the board`() = runTest {
-        outfits.items.value = listOf(Outfit(7, null, listOf(OutfitItem(1, 0.5f, 0.3f, 0.4f), OutfitItem(99, 0.5f, 0.8f, 0.3f)), 0))
+        outfits.items.value = listOf(Outfit(7, null, listOf(OutfitItem(1, 0.5f, 0.3f, 0.4f), OutfitItem(99, 0.5f, 0.8f, 0.3f)), createdAtMillis = 0))
         val vm = editor(id = 7)
         assertEquals(listOf(1L), vm.uiState.value.pieces.map { it.item.garmentId })
     }
@@ -138,6 +139,10 @@ class OutfitEditorViewModelTest {
             saved += draft
             return draft.id ?: saved.size.toLong()
         }
+        override suspend fun setRating(id: Long, rating: Rating?) = Unit
+        override suspend fun setAspectRating(id: Long, aspect: OutfitAspect, rating: Rating?) = Unit
+        override suspend fun setReview(id: Long, review: String?) = Unit
+        override suspend fun setLiked(id: Long, liked: Boolean) = Unit
         override suspend fun delete(id: Long) = Unit
     }
 

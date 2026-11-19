@@ -1,6 +1,7 @@
 package com.dressup.core.data.db
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -14,14 +15,20 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         AspectRatingEntity::class,
         OutfitEntity::class,
         OutfitItemEntity::class,
+        OutfitAspectRatingEntity::class,
+        DiaryEntryEntity::class,
+        DiaryEntryGarmentEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
+    // v0.1.2 → v0.2.0 only adds tables and columns (outfit ratings, the diary), which Room can migrate by itself.
+    autoMigrations = [AutoMigration(from = 2, to = 3)],
 )
 internal abstract class DressUpDatabase : RoomDatabase() {
     abstract fun garmentDao(): GarmentDao
     abstract fun categoryDao(): CategoryDao
     abstract fun outfitDao(): OutfitDao
+    abstract fun diaryDao(): DiaryDao
 
     companion object {
         /** [name] is the profile's database file (ProfilePaths). */

@@ -7,4 +7,5 @@ plugins {
 dependencies {
     api(project(":core:model"))
     api(libs.coil.compose)
+    implementation(libs.androidx.activity.compose) // BackHandler in the garment gallery
 }

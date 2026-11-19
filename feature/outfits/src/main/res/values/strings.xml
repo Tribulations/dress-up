@@ -13,19 +13,16 @@
     <string name="outfits_cancel">Cancel</string>
     <string name="outfits_delete">Delete</string>
     <string name="outfits_delete_title">Delete this outfit?</string>
-    <string name="outfits_delete_message">Only the outfit is deleted. Its garments stay in your wardrobe.</string>
+    <string name="outfits_delete_message">Only the outfit is deleted. Its garments stay in your wardrobe, and diary entries keep what you wore.</string>
     <string name="outfits_name_optional">Name (optional)</string>
     <string name="outfits_name_hint">e.g. Sunday walk</string>
     <string name="outfits_board_hint">Drag a garment to move it, pinch to resize it. Tap one to select it.</string>
     <string name="outfits_size">Size</string>
     <string name="outfits_remove_piece">Remove</string>
     <string name="outfits_pick_garments">Pick garments</string>
+    <string name="outfits_back">Back</string>
+    <string name="outfits_edit">Edit</string>
+    <string name="outfits_garments">Garments (%1$d)</string>
+    <string name="outfits_review_hint">How did it feel? What would you change?</string>
     <string name="outfits_save_failed">The outfit couldn\'t be saved. Try again.</string>
-
-    <string name="outfits_gallery_title">Pick garments</string>
-    <string name="outfits_gallery_done">Done</string>
-    <plurals name="outfits_gallery_picked">
-        <item quantity="one">%1$d garment picked</item>
-        <item quantity="other">%1$d garments picked</item>
-    </plurals>
 </resources>

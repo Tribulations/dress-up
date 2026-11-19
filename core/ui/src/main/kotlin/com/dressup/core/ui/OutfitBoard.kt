@@ -1,7 +1,8 @@
-package com.dressup.feature.outfits
+package com.dressup.core.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
@@ -22,13 +23,33 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.dressup.core.model.Category
+import com.dressup.core.model.Garment
 import com.dressup.core.model.OutfitItem
-import com.dressup.core.ui.GarmentPhoto
 import java.io.File
 import kotlin.math.roundToInt
 
 /** One garment as the board draws it: where it sits, and its cut-out or photo. */
 data class BoardPiece(val item: OutfitItem, val title: String, val picture: File?, val isCutout: Boolean)
+
+/** Turns board positions into [BoardPiece]s with each garment's picture ([pictureFile]) and title. */
+class PieceFactory(garments: List<Garment>, categories: List<Category>, private val pictureFile: (String) -> File) {
+    private val garmentsById = garments.associateBy { it.id }
+    private val categoriesById = categories.associateBy { it.id }
+
+    fun title(garment: Garment): String = garmentTitle(garment, categoriesById)
+
+    /** Items whose garment no longer exists are left out. */
+    fun of(items: List<OutfitItem>): List<BoardPiece> = items.mapNotNull { item ->
+        val garment = garmentsById[item.garmentId] ?: return@mapNotNull null
+        BoardPiece(item, title(garment), garment.pictureFileName?.let(pictureFile), garment.cutoutFileName != null)
+    }
+
+    fun tile(garment: Garment): GalleryTile =
+        GalleryTile(garment.id, title(garment), garment.pictureFileName?.let(pictureFile), garment.cutoutFileName != null)
+
+    fun tile(garmentId: Long): GalleryTile? = garmentsById[garmentId]?.let(::tile)
+}
 
 /** The board's shape: a 3:4 portrait, like a full outfit laid out on the floor. */
 const val BOARD_ASPECT_RATIO = 3f / 4f
@@ -46,6 +67,8 @@ fun OutfitBoard(
     selectedGarmentId: Long? = null,
     onSelect: ((Long?) -> Unit)? = null,
     onTransform: ((garmentId: Long, dx: Float, dy: Float, zoom: Float) -> Unit)? = null,
+    /** On a read-only board: tapping a piece, e.g. to open that garment. */
+    onPieceClick: ((Long) -> Unit)? = null,
 ) {
     val colours = MaterialTheme.colorScheme
     val tapToDeselect = if (onSelect == null) Modifier else Modifier.pointerInput(Unit) { detectTapGestures { onSelect(null) } }
@@ -67,6 +90,7 @@ fun OutfitBoard(
                     selected = piece.item.garmentId == selectedGarmentId,
                     onSelect = onSelect,
                     onTransform = onTransform,
+                    onClick = onPieceClick,
                 )
             }
         }
@@ -81,6 +105,7 @@ private fun Piece(
     selected: Boolean,
     onSelect: ((Long?) -> Unit)?,
     onTransform: ((Long, Float, Float, Float) -> Unit)?,
+    onClick: ((Long) -> Unit)?,
 ) {
     val id = piece.item.garmentId
     val sidePx = piece.item.scale * boardWidth
@@ -89,7 +114,7 @@ private fun Piece(
     val currentTransform by rememberUpdatedState(onTransform)
     val currentSelect by rememberUpdatedState(onSelect)
     val gestures = if (onTransform == null) {
-        Modifier
+        if (onClick == null) Modifier else Modifier.clickable(onClickLabel = piece.title) { onClick(id) }
     } else {
         Modifier
             .pointerInput(id) {

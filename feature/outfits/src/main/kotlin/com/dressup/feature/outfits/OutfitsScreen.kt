@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +40,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.dressup.core.data.DressUpData
 import com.dressup.core.model.Outfit
+import com.dressup.core.ui.OutfitBoard
+import com.dressup.core.ui.RatingBar
+import com.dressup.core.ui.DressUpColors
 import java.text.DateFormat
 import java.util.Date
 
@@ -127,6 +133,14 @@ private fun OutfitGrid(outfits: List<OutfitCard>, onOpen: (Long) -> Unit) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (card.outfit.rating != null || card.outfit.liked) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        card.outfit.rating?.let { RatingBar(it, starSize = 14.dp) }
+                        if (card.outfit.liked) {
+                            Icon(Icons.Filled.Favorite, contentDescription = null, tint = DressUpColors.Rose, modifier = Modifier.size(14.dp))
+                        }
+                    }
+                }
             }
         }
     }

@@ -50,23 +50,30 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.dressup.core.data.DressUpData
 import com.dressup.core.model.GarmentAspect
-import com.dressup.core.model.MAX_REVIEW_LENGTH
 import com.dressup.core.model.Rating
 import com.dressup.core.ui.ColourSwatch
 import com.dressup.core.ui.GarmentPhoto
-import com.dressup.core.ui.LikeButton
-import com.dressup.core.ui.RatingBar
-import com.dressup.core.ui.TextDialog
+import com.dressup.core.ui.AspectRatings
+import com.dressup.core.ui.OverallRating
+import com.dressup.core.ui.ReviewBlock
+import com.dressup.core.ui.WearHistory
 import com.dressup.core.ui.label
 import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun GarmentDetailRoute(data: DressUpData, garmentId: Long, onBack: () -> Unit, onEdit: (Long) -> Unit) {
+fun GarmentDetailRoute(
+    data: DressUpData,
+    garmentId: Long,
+    onBack: () -> Unit,
+    onEdit: (Long) -> Unit,
+    onLogWear: (garmentId: Long) -> Unit,
+    onOpenEntry: (entryId: Long) -> Unit,
+) {
     val viewModel: GarmentDetailViewModel = viewModel(
         key = "garment-$garmentId",
         factory = viewModelFactory {
-            initializer { GarmentDetailViewModel(garmentId, data.garments, data.categories, data.photos) }
+            initializer { GarmentDetailViewModel(garmentId, data.garments, data.categories, data.photos, data.diary) }
         },
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -85,6 +92,8 @@ fun GarmentDetailRoute(data: DressUpData, garmentId: Long, onBack: () -> Unit, o
                 DetailAction.CutOut -> viewModel.cutOut()
                 DetailAction.UseOriginalPhoto -> viewModel.useOriginalPhoto()
                 DetailAction.MessageShown -> viewModel.messageShown()
+                DetailAction.LogWear -> onLogWear(garmentId)
+                is DetailAction.OpenEntry -> onOpenEntry(action.entryId)
             }
         },
     )
@@ -100,6 +109,8 @@ sealed interface DetailAction {
     data object CutOut : DetailAction
     data object UseOriginalPhoto : DetailAction
     data object MessageShown : DetailAction
+    data object LogWear : DetailAction
+    data class OpenEntry(val entryId: Long) : DetailAction
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -186,15 +197,30 @@ private fun GarmentDetails(state: GarmentDetailUiState.Loaded, onAction: (Detail
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(4.dp))
-            Label(stringResource(R.string.garment_your_rating))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                RatingBar(rating = state.garment.rating, starSize = 40.dp, onRatingChange = { onAction(DetailAction.Rate(it)) })
-                LikeButton(liked = state.garment.liked, onLikedChange = { onAction(DetailAction.Like(it)) })
-            }
+            OverallRating(
+                rating = state.garment.rating,
+                liked = state.garment.liked,
+                onRate = { onAction(DetailAction.Rate(it)) },
+                onLike = { onAction(DetailAction.Like(it)) },
+            )
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
-            AspectRatings(state, onAction)
+            WearHistory(
+                wears = state.wears,
+                onLogWear = { onAction(DetailAction.LogWear) },
+                onOpenEntry = { onAction(DetailAction.OpenEntry(it)) },
+            )
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
-            Review(state, onAction)
+            AspectRatings(
+                aspects = GarmentAspect.entries.map { it to state.garment.aspectRatings[it] },
+                label = { it.label() },
+                onRate = { aspect, rating -> onAction(DetailAction.RateAspect(aspect, rating)) },
+            )
+            HorizontalDivider(Modifier.padding(vertical = 4.dp))
+            ReviewBlock(
+                review = state.garment.review,
+                hint = stringResource(R.string.garment_review_hint),
+                onSave = { onAction(DetailAction.SaveReview(it)) },
+            )
         }
     }
 }
@@ -232,49 +258,6 @@ private fun Heading(state: GarmentDetailUiState.Loaded) {
             }
         }
     }
-}
-
-@Composable
-private fun AspectRatings(state: GarmentDetailUiState.Loaded, onAction: (DetailAction) -> Unit) {
-    Label(stringResource(R.string.garment_aspects))
-    GarmentAspect.entries.forEach { aspect ->
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Text(aspect.label(), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            RatingBar(
-                rating = state.garment.aspectRatings[aspect],
-                starSize = 28.dp,
-                onRatingChange = { onAction(DetailAction.RateAspect(aspect, it)) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun Review(state: GarmentDetailUiState.Loaded, onAction: (DetailAction) -> Unit) {
-    var editing by rememberSaveable { mutableStateOf(false) }
-    val review = state.garment.review
-    Label(stringResource(R.string.garment_review))
-    if (review != null) Text(review, style = MaterialTheme.typography.bodyLarge)
-    TextButton(onClick = { editing = true }, modifier = Modifier.padding(start = 0.dp)) {
-        Icon(Icons.Filled.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(8.dp))
-        Text(stringResource(if (review == null) R.string.garment_review_write else R.string.garment_review_edit))
-    }
-    if (editing) {
-        TextDialog(
-            title = stringResource(R.string.garment_review),
-            initialText = review.orEmpty(),
-            maxLength = MAX_REVIEW_LENGTH,
-            placeholder = stringResource(R.string.garment_review_hint),
-            onConfirm = { editing = false; onAction(DetailAction.SaveReview(it)) },
-            onDismiss = { editing = false },
-        )
-    }
-}
-
-@Composable
-private fun Label(text: String) {
-    Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 private val DetailMessage.textRes: Int

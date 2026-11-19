@@ -1,15 +1,19 @@
 package com.dressup.core.data
 
 import com.dressup.core.data.db.CategoryEntity
+import com.dressup.core.data.db.DiaryEntryWithGarments
 import com.dressup.core.data.db.GarmentWithDetails
 import com.dressup.core.data.db.OutfitWithItems
 import com.dressup.core.model.Category
+import com.dressup.core.model.DiaryEntry
 import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.Outfit
+import com.dressup.core.model.OutfitAspect
 import com.dressup.core.model.OutfitItem
 import com.dressup.core.model.Rating
+import java.time.LocalDate
 
 internal fun GarmentWithDetails.toModel() = Garment(
     id = garment.id,
@@ -34,7 +38,25 @@ internal fun OutfitWithItems.toModel() = Outfit(
     id = outfit.id,
     name = outfit.name,
     items = items.sortedBy { it.position }.map { OutfitItem(it.garmentId, it.x, it.y, it.scale) },
+    rating = Rating.fromHalfStarsOrNull(outfit.ratingHalfStars),
+    aspectRatings = aspectRatings.mapNotNull { row ->
+        val aspect = OutfitAspect.fromKeyOrNull(row.aspectKey) ?: return@mapNotNull null
+        val rating = Rating.fromHalfStarsOrNull(row.halfStars) ?: return@mapNotNull null
+        aspect to rating
+    }.toMap(),
+    review = outfit.review,
+    liked = outfit.liked,
     createdAtMillis = outfit.createdAtMillis,
+)
+
+internal fun DiaryEntryWithGarments.toModel() = DiaryEntry(
+    id = entry.id,
+    date = LocalDate.ofEpochDay(entry.dateEpochDay),
+    outfitId = entry.outfitId,
+    garmentIds = garments.sortedBy { it.position }.map { it.garmentId },
+    occasion = entry.occasion,
+    note = entry.note,
+    createdAtMillis = entry.createdAtMillis,
 )
 
 internal fun CategoryEntity.toModel() = Category(

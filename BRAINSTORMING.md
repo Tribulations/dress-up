@@ -41,13 +41,16 @@ milestone split is still a draft:
 
 - **M1:** add, edit and delete garments (photo taken in the app, category, optional colour); wardrobe grid with
   filter (category, colour) and sort; garment page.
-- **M2:** diary (log wears), wear history per garment, export/import.
-- **M3:** lists, wishlist, ratings, statistics.
+- **M2:** ~~diary (log wears), wear history per garment, export/import~~ (built in v0.2.0, with outfit ratings and
+  occasions).
+- **M3:** lists, wishlist, statistics.
 
 ## Later / maybe
 
-- **Outfits:** ~~combine garments into an outfit, an outfit grid~~ (built in v0.1.2, ARCHITECTURE.md §5.2, §7.6); still
-  open: log the whole outfit as one wear (M2 diary).
+- **Outfits:** ~~combine garments into an outfit, an outfit grid~~ (built in v0.1.2), ~~log the whole outfit as one
+  wear~~ (built in v0.2.0, ARCHITECTURE.md §5.3).
+- **A calendar view of the diary** (the user's first idea for the diary, 2026-11-19; the list came first): a month
+  grid with marked days, tap a day for its wears.
 - ~~Automatic background removal on garment photos so the grid looks clean.~~ Built in v0.1.2 as a button per garment
   (ARCHITECTURE.md §7.5). Maybe later: offer it right after taking a photo.
 - AI tagging: suggest category, colour and material from the photo (on-device if possible).
@@ -71,7 +74,7 @@ milestone split is still a draft:
 - ~~**Garment fields for the MVP**~~: only **category is required** (pants, shirt, …); **colour is optional**.
 - ~~**Categories**~~: **both** a built-in list and the user's own.
 - ~~**Rating**~~: **both** stars (with halves) and a like.
-- ~~**Diary unit**~~: **single garments** first.
+- ~~**Diary unit**~~: **single garments** first. (Changed 2026-11-19: an entry is an outfit and/or garments.)
 - Added by the user: **take a picture of the garment in the app**, linked to its entry.
 
 ### Still open
@@ -86,6 +89,25 @@ milestone split is still a draft:
 ## Idea log
 
 Newest first. Each entry is dated.
+
+### 2026-11-19 – Outfit ratings, occasions, diary, calendar, export and import (built in v0.2.0)
+
+From the user:
+
+1. Rate outfits the same way as garments.
+2. Asked whether your own categories can be added: yes, Settings → Categories, and **New category** in the garment
+   editor (both since v0.1.0).
+3. Log occasions and dates when an outfit or garment was worn, e.g. "Christmas Eve" or "Nathalie's birthday".
+4. Export and import a profile with everything in it: a simple YAML file that maps to all the data (ratings, image
+   paths, …), exported with the images in a folder the YAML points to. The app keeps its database.
+5. The diary (M2): log a date and a note when an outfit or garment was worn; wear counts per garment and outfit; a
+   calendar view. Minimalistic, intuitive UI and good UX.
+
+Agreed with the user the same day: the diary is a **list of entries** (inspired by how Letterboxd's diary works, not a
+copy of it), newest first and grouped by month. Tapping an entry opens it, the entry leads to its outfit, and the outfit
+to each garment. **No calendar for now.** Outfit aspects are comfort, style, fit and "for the occasion". Export is one
+profile per .zip (profile.yaml plus images/), and import always adds a new profile. Occasions are free text with
+suggestions. A photo of its own per diary entry comes later. See ARCHITECTURE.md §5.2, §5.3, §7.6–7.8.
 
 ### 2026-11-19 – A tester's wishes (built in v0.1.2)
 
@@ -108,7 +130,7 @@ See ARCHITECTURE.md §5, §5.2, §7.5, §7.6.
 The user wants a test user to switch to in the app, with a prefilled wardrobe (clothes, pictures and so on), to see
 where the app is good and where it isn't. As profiles in the settings: a new install asks for the user's name and uses
 it as the profile name. Decided and built, see ARCHITECTURE.md §5.1 and §7.4. Possible later: real (licence-free)
-photos in the test wardrobe instead of drawn ones, and wear diary entries once M2 exists.
+photos in the test wardrobe instead of drawn ones. (Diary entries were added in v0.2.0.)
 
 ### 2026-11-18 – Take the photo in the app
 

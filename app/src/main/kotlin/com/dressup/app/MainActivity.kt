@@ -43,7 +43,7 @@ private fun DressUpApp(profiles: DressUpProfiles, appVersion: String, freshStart
             LaunchedEffect(active.id) {
                 if (freshStart || active.id != firstProfileId) data.cleanUpUnusedPhotos()
             }
-            DressUpNavHost(profiles = profiles, data = data, profile = active, appVersion = appVersion)
+            DressUpNavHost(profiles = profiles, backup = profiles, data = data, profile = active, appVersion = appVersion)
         }
     }
 }

@@ -1,7 +1,10 @@
 package com.dressup.feature.garment
 
 import com.dressup.core.data.CutoutResult
+import com.dressup.core.data.DiaryRepository
 import com.dressup.core.data.GarmentRepository
+import com.dressup.core.model.DiaryDraft
+import com.dressup.core.model.DiaryEntry
 import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.GarmentDraft
@@ -52,4 +55,13 @@ internal class FakeGarments : GarmentRepository {
 
     private fun change(id: Long, edit: (Garment) -> Garment) =
         items.update { list -> list.map { if (it.id == id) edit(it) else it } }
+}
+
+internal class FakeDiary : DiaryRepository {
+    val items = MutableStateFlow<List<DiaryEntry>>(emptyList())
+    override val entries: Flow<List<DiaryEntry>> = items
+    override fun entry(id: Long): Flow<DiaryEntry?> = items.map { list -> list.firstOrNull { it.id == id } }
+    override val occasions: Flow<List<String>> = MutableStateFlow(emptyList())
+    override suspend fun save(draft: DiaryDraft) = 0L
+    override suspend fun delete(id: Long) = Unit
 }

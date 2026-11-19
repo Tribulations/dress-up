@@ -4,6 +4,8 @@ import com.dressup.core.data.db.BUILT_IN_CATEGORIES
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.LocalDate
+import java.time.MonthDay
 
 class TestWardrobeTest {
     private val garments = TestWardrobe.garments
@@ -56,5 +58,27 @@ class TestWardrobeTest {
             }
             outfit.garments.forEach { assertTrue(it.x in 0f..1f && it.y in 0f..1f && it.scale > 0f) }
         }
+    }
+
+    @Test
+    fun `diary entries wear known outfits or keyed garments`() {
+        val keys = garments.mapNotNull { it.key }.toSet()
+        val outfitNames = TestWardrobe.outfits.map { it.name }.toSet()
+        assertTrue(TestWardrobe.diary.any { it.outfit != null } && TestWardrobe.diary.any { it.outfit == null })
+        assertTrue(TestWardrobe.diary.any { it.occasion != null } && TestWardrobe.diary.any { it.note != null })
+        TestWardrobe.diary.forEach { entry ->
+            assertTrue(entry.outfit != null || entry.garments.isNotEmpty())
+            entry.outfit?.let { assertTrue("Unknown outfit $it", it in outfitNames) }
+            entry.garments.forEach { assertTrue("Unknown garment $it", it in keys) }
+        }
+        TestWardrobe.outfits.forEach { outfit -> assertTrue(outfit.aspects.values.all { it in 1..10 }) }
+    }
+
+    @Test
+    fun `a fixed day is the most recent one, never in the future`() {
+        val christmasEve = TestDiaryEntry(monthDay = MonthDay.of(12, 24))
+        assertEquals(LocalDate.of(2025, 12, 24), christmasEve.date(LocalDate.of(2026, 11, 19)))
+        assertEquals(LocalDate.of(2026, 12, 24), christmasEve.date(LocalDate.of(2026, 12, 24)))
+        assertEquals(LocalDate.of(2026, 11, 16), TestDiaryEntry(daysAgo = 3).date(LocalDate.of(2026, 11, 19)))
     }
 }

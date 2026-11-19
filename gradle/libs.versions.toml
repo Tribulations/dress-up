@@ -16,6 +16,9 @@ room = "2.8.5"
 coil = "3.6.3"
 kotlinxCoroutines = "1.11.0"
 junit = "4.13.2"
+# Profile export and import as YAML (ARCHITECTURE.md §7.8).
+kotlinxSerialization = "1.12.0"
+kaml = "0.104.0"
 # Optional adapter :adapter:cutout-mlkit (background removal on the device, ARCHITECTURE.md §7.5).
 mlkitSubjectSegmentation = "16.0.0-beta1"
 playServicesBase = "18.11.1"
@@ -41,6 +44,8 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" 
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 junit = { module = "junit:junit", version.ref = "junit" }
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
+kaml = { module = "com.charleskorn.kaml:kaml", version.ref = "kaml" }
 mlkit-subject-segmentation = { module = "com.google.android.gms:play-services-mlkit-subject-segmentation", version.ref = "mlkitSubjectSegmentation" }
 play-services-base = { module = "com.google.android.gms:play-services-base", version.ref = "playServicesBase" }
 
@@ -53,6 +58,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 # AGP 9's built-in Kotlin support means org.jetbrains.kotlin.android is no longer applied.
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
 

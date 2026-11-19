@@ -18,10 +18,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.File
-
-/** One garment in the gallery the outfit is picked from. */
-data class GalleryTile(val garmentId: Long, val title: String, val picture: File?, val isCutout: Boolean)
+import com.dressup.core.ui.BoardPiece
+import com.dressup.core.ui.GalleryTile
+import com.dressup.core.ui.PieceFactory
 
 data class OutfitEditorUiState(
     val isNew: Boolean,
@@ -34,6 +33,8 @@ data class OutfitEditorUiState(
     val gallery: List<GalleryTile>,
     val saving: Boolean,
     val done: Boolean,
+    /** The saved outfit's id once [done] after a save; null after a delete. */
+    val savedId: Long? = null,
     val saveFailed: Boolean,
 ) {
     val canSave: Boolean get() = loaded && pieces.isNotEmpty() && !saving
@@ -52,6 +53,7 @@ private data class OutfitStatus(
     val selectedGarmentId: Long? = null,
     val saving: Boolean = false,
     val done: Boolean = false,
+    val savedId: Long? = null,
     val saveFailed: Boolean = false,
 )
 
@@ -69,7 +71,7 @@ class OutfitEditorViewModel(
 
     val uiState: StateFlow<OutfitEditorUiState> =
         combine(fields, status, garments.garments, categories.categories) { f, s, allGarments, allCategories ->
-            val pieces = PieceFactory(allGarments, allCategories, photos)
+            val pieces = PieceFactory(allGarments, allCategories, photos::file)
             OutfitEditorUiState(
                 isNew = outfitId == null,
                 loaded = f.loaded,
@@ -77,16 +79,10 @@ class OutfitEditorViewModel(
                 pieces = pieces.of(f.items),
                 selectedGarmentId = s.selectedGarmentId,
                 galleryOpen = f.galleryOpen,
-                gallery = allGarments.map { garment ->
-                    GalleryTile(
-                        garmentId = garment.id,
-                        title = pieces.title(garment),
-                        picture = garment.pictureFileName?.let(photos::file),
-                        isCutout = garment.cutoutFileName != null,
-                    )
-                },
+                gallery = allGarments.map(pieces::tile),
                 saving = s.saving,
                 done = s.done,
+                savedId = s.savedId,
                 saveFailed = s.saveFailed,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), initialState())
@@ -143,7 +139,7 @@ class OutfitEditorViewModel(
         status.update { it.copy(saving = true, saveFailed = false) }
         viewModelScope.launch {
             runCatching { outfits.save(OutfitDraft(outfitId, current.name, current.items)) }
-                .onSuccess { status.update { it.copy(saving = false, done = true) } }
+                .onSuccess { id -> status.update { it.copy(saving = false, done = true, savedId = id) } }
                 .onFailure { status.update { it.copy(saving = false, saveFailed = true) } }
         }
     }
