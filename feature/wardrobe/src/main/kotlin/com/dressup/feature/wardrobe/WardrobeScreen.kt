@@ -64,6 +64,7 @@ fun WardrobeRoute(
     onOpenGarment: (Long) -> Unit,
     onAddGarment: () -> Unit,
     onOpenSettings: () -> Unit,
+    bottomBar: @Composable () -> Unit = {},
 ) {
     val viewModel: WardrobeViewModel = viewModel(
         factory = viewModelFactory { initializer { WardrobeViewModel(data.garments, data.categories, data.photos) } },
@@ -72,6 +73,7 @@ fun WardrobeRoute(
     WardrobeScreen(
         state = state,
         profileName = profileName,
+        bottomBar = bottomBar,
         onAction = { action ->
             when (action) {
                 is WardrobeAction.Open -> onOpenGarment(action.garmentId)
@@ -100,8 +102,14 @@ sealed interface WardrobeAction {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WardrobeScreen(state: WardrobeUiState, profileName: String, onAction: (WardrobeAction) -> Unit) {
+fun WardrobeScreen(
+    state: WardrobeUiState,
+    profileName: String,
+    onAction: (WardrobeAction) -> Unit,
+    bottomBar: @Composable () -> Unit = {},
+) {
     Scaffold(
+        bottomBar = bottomBar,
         topBar = {
             TopAppBar(
                 title = {
@@ -220,9 +228,10 @@ private fun GarmentTile(tile: WardrobeTile, onClick: () -> Unit) {
             .clickable(onClick = onClick),
     ) {
         GarmentPhoto(
-            photo = tile.photo,
-            placeholder = tile.categoryName,
-            contentDescription = tile.categoryName,
+            photo = tile.picture,
+            placeholder = tile.title,
+            contentDescription = tile.title,
+            isCutout = tile.isCutout,
             modifier = Modifier.fillMaxSize(),
         )
         if (tile.garment.liked) {

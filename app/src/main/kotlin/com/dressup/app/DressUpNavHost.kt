@@ -1,6 +1,7 @@
 package com.dressup.app
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -9,18 +10,24 @@ import androidx.navigation.navArgument
 import com.dressup.core.data.DressUpData
 import com.dressup.core.data.profile.ProfileRepository
 import com.dressup.core.model.Profile
+import com.dressup.core.ui.DressUpTab
+import com.dressup.core.ui.DressUpTabBar
 import com.dressup.core.ui.displayName
 import com.dressup.feature.categories.CategoriesRoute
 import com.dressup.feature.garment.GarmentDetailRoute
 import com.dressup.feature.garment.GarmentEditorRoute
+import com.dressup.feature.outfits.OutfitEditorRoute
+import com.dressup.feature.outfits.OutfitsRoute
 import com.dressup.feature.profiles.ProfilesRoute
 import com.dressup.feature.settings.SettingsScreen
 import com.dressup.feature.wardrobe.WardrobeRoute
 
 private object Routes {
     const val WARDROBE = "wardrobe"
+    const val OUTFITS = "outfits"
     const val GARMENT = "garment/{id}"
     const val EDITOR = "editor?id={id}"
+    const val OUTFIT_EDITOR = "outfit?id={id}"
     const val CATEGORIES = "categories"
     const val SETTINGS = "settings"
     const val PROFILES = "profiles"
@@ -28,6 +35,7 @@ private object Routes {
 
     fun garment(id: Long) = "garment/$id"
     fun editor(id: Long?) = "editor?id=${id ?: NO_ID}"
+    fun outfitEditor(id: Long?) = "outfit?id=${id ?: NO_ID}"
 }
 
 /**
@@ -37,6 +45,7 @@ private object Routes {
 @Composable
 fun DressUpNavHost(profiles: ProfileRepository, data: DressUpData, profile: Profile, appVersion: String) {
     val nav = rememberNavController()
+    val optionalId = listOf(navArgument("id") { type = NavType.LongType; defaultValue = Routes.NO_ID })
     NavHost(navController = nav, startDestination = Routes.WARDROBE) {
         composable(Routes.WARDROBE) {
             WardrobeRoute(
@@ -45,6 +54,17 @@ fun DressUpNavHost(profiles: ProfileRepository, data: DressUpData, profile: Prof
                 onOpenGarment = { nav.navigate(Routes.garment(it)) },
                 onAddGarment = { nav.navigate(Routes.editor(null)) },
                 onOpenSettings = { nav.navigate(Routes.SETTINGS) },
+                bottomBar = { DressUpTabBar(DressUpTab.WARDROBE) { nav.switchTab(it) } },
+            )
+        }
+        composable(Routes.OUTFITS) {
+            OutfitsRoute(
+                data = data,
+                profileName = profile.displayName(),
+                onOpenOutfit = { nav.navigate(Routes.outfitEditor(it)) },
+                onNewOutfit = { nav.navigate(Routes.outfitEditor(null)) },
+                onOpenSettings = { nav.navigate(Routes.SETTINGS) },
+                bottomBar = { DressUpTabBar(DressUpTab.OUTFITS) { nav.switchTab(it) } },
             )
         }
         composable(Routes.GARMENT, arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->
@@ -56,10 +76,7 @@ fun DressUpNavHost(profiles: ProfileRepository, data: DressUpData, profile: Prof
                 onEdit = { nav.navigate(Routes.editor(it)) },
             )
         }
-        composable(
-            Routes.EDITOR,
-            arguments = listOf(navArgument("id") { type = NavType.LongType; defaultValue = Routes.NO_ID }),
-        ) { entry ->
+        composable(Routes.EDITOR, arguments = optionalId) { entry ->
             val id = entry.arguments?.getLong("id")?.takeIf { it != Routes.NO_ID }
             GarmentEditorRoute(
                 data = data,
@@ -71,6 +88,10 @@ fun DressUpNavHost(profiles: ProfileRepository, data: DressUpData, profile: Prof
                     if (id == null) nav.navigate(Routes.garment(savedId))
                 },
             )
+        }
+        composable(Routes.OUTFIT_EDITOR, arguments = optionalId) { entry ->
+            val id = entry.arguments?.getLong("id")?.takeIf { it != Routes.NO_ID }
+            OutfitEditorRoute(data = data, outfitId = id, onDone = { nav.popBackStack() })
         }
         composable(Routes.CATEGORIES) {
             CategoriesRoute(data = data, onBack = { nav.popBackStack() })
@@ -86,6 +107,17 @@ fun DressUpNavHost(profiles: ProfileRepository, data: DressUpData, profile: Prof
         }
         composable(Routes.PROFILES) {
             ProfilesRoute(profiles = profiles, onBack = { nav.popBackStack() })
+        }
+    }
+}
+
+/** The tabs share one back stack root (the wardrobe), so Back from Outfits goes to the wardrobe, then out of the app. */
+private fun NavHostController.switchTab(tab: DressUpTab) {
+    when (tab) {
+        DressUpTab.WARDROBE -> popBackStack(Routes.WARDROBE, inclusive = false)
+        DressUpTab.OUTFITS -> navigate(Routes.OUTFITS) {
+            popUpTo(Routes.WARDROBE)
+            launchSingleTop = true
         }
     }
 }

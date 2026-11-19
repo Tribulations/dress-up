@@ -93,7 +93,7 @@ emulator.
 - The emulator's camera app shows a virtual scene; press the shutter at the bottom centre, then **Done**. For the
   gallery, push a **made-up** image to `/sdcard/Pictures/` and send a media-scanner broadcast.
 - **Test data:** Settings → Profiles → **Test user** fills a separate profile with 32 made-up garments with drawn
-  pictures (`core:data` `testuser/`). Use it rather than adding garments by hand; **Reset** restores it. It never
+  pictures and cut-outs, names, reviews and three outfits (`core:data` `testuser/`). Use it rather than adding garments by hand; **Reset** restores it. It never
   touches the user's own profiles.
 
 - **Default device:** a local emulator, booted headless if it isn't running. **Always shut it down when you're
@@ -103,6 +103,9 @@ emulator.
   each tap. Screenshots that show other apps or the user's own photos are private: delete them, never share them.
 - **Never touch the user's real wardrobe data** on the phone (no clearing app data, no test imports into it)
   without asking.
+- **Cut-outs on the emulator:** use the AVD with the Google Play image; the first **Remove background** has Play
+  services download the model. Test cut-outs in the **release** build too: ML Kit needs its R8 keep rules
+  (`adapter/cutout-mlkit/consumer-rules.pro`).
 - **Memory:** the machine has 16 GB and runs earlyoom. A Gradle build while the emulator runs can get the emulator
   killed. Build first, or `./gradlew --stop` before heavy builds.
 - In STATUS.md, record which device was used for a test (phone or emulator, and the Android version).

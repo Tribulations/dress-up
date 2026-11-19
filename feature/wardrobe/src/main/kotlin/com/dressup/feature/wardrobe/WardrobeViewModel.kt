@@ -8,6 +8,7 @@ import com.dressup.core.data.photo.PhotoStorage
 import com.dressup.core.model.Category
 import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentColour
+import com.dressup.core.ui.garmentTitle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.io.File
 
-data class WardrobeTile(val garment: Garment, val categoryName: String, val photo: File?)
+/** [title]: the garment's name or main category. [picture]: its cut-out or photo. */
+data class WardrobeTile(val garment: Garment, val title: String, val picture: File?) {
+    val isCutout: Boolean get() = garment.cutoutFileName != null
+}
 
 sealed interface WardrobeUiState {
     data object Loading : WardrobeUiState
@@ -44,12 +48,12 @@ class WardrobeViewModel(
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), WardrobeUiState.Loading)
 
     private fun buildState(garments: List<Garment>, categories: List<Category>, filter: WardrobeFilter): WardrobeUiState {
-        val names = categories.associate { it.id to it.name }
-        val usedCategoryIds = garments.map { it.categoryId }.toSet()
+        val byId = categories.associateBy { it.id }
+        val usedCategoryIds = garments.flatMap { it.categoryIds }.toSet()
         val usedColours = garments.mapNotNull { it.colour }.toSet()
         return WardrobeUiState.Loaded(
             tiles = applyFilter(garments, categories, filter).map { garment ->
-                WardrobeTile(garment, names[garment.categoryId].orEmpty(), garment.photoFileName?.let(photos::file))
+                WardrobeTile(garment, garmentTitle(garment, byId), garment.pictureFileName?.let(photos::file))
             },
             totalCount = garments.size,
             filter = filter,

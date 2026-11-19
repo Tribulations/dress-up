@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
@@ -52,12 +53,34 @@ internal class FilePhotoStorage(private val context: Context, private val relati
     }
 
     /** Writes [bitmap] as a new JPEG in the photo folder and returns its file name. Blocking: call off the main thread. */
-    fun save(bitmap: Bitmap): String {
-        val name = "${UUID.randomUUID()}.jpg"
+    fun save(bitmap: Bitmap): String = write(bitmap, "jpg", Bitmap.CompressFormat.JPEG, JPEG_QUALITY)
+
+    /**
+     * Writes a cut-out (transparent background) as a new WebP, which keeps the transparency at a fraction of a PNG's
+     * size, and returns its file name. Blocking: call off the main thread.
+     */
+    fun saveCutout(bitmap: Bitmap): String {
+        val format = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Bitmap.CompressFormat.WEBP_LOSSY
+        } else {
+            @Suppress("DEPRECATION")
+            Bitmap.CompressFormat.WEBP
+        }
+        return write(bitmap, "webp", format, CUTOUT_QUALITY)
+    }
+
+    private fun write(bitmap: Bitmap, extension: String, format: Bitmap.CompressFormat, quality: Int): String {
+        val name = "${UUID.randomUUID()}.$extension"
         File(photoDir, name).outputStream().use { out ->
-            if (!bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, out)) throw IOException("JPEG encoding failed")
+            if (!bitmap.compress(format, quality, out)) throw IOException("$extension encoding failed")
         }
         return name
+    }
+
+    /** The photo as a bitmap, for processing. Blocking: call off the main thread. */
+    fun decode(fileName: String): Bitmap {
+        val source = ImageDecoder.createSource(file(fileName))
+        return ImageDecoder.decodeBitmap(source) { decoder, _, _ -> decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE }
     }
 
     /** ImageDecoder applies the EXIF rotation, so photos taken in portrait stay upright. */
@@ -89,5 +112,6 @@ internal class FilePhotoStorage(private val context: Context, private val relati
         const val TAG = "PhotoStorage"
         const val MAX_EDGE_PX = 1600
         const val JPEG_QUALITY = 85
+        const val CUTOUT_QUALITY = 90
     }
 }

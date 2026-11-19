@@ -1,6 +1,7 @@
 package com.dressup.core.data.testuser
 
 import com.dressup.core.data.db.BUILT_IN_CATEGORIES
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -8,14 +9,18 @@ class TestWardrobeTest {
     private val garments = TestWardrobe.garments
 
     @Test
-    fun `every garment's category exists in a fresh database or among the test user's own`() {
+    fun `every garment's categories exist in a fresh database or among the test user's own`() {
         val known = BUILT_IN_CATEGORIES.map { it.first }.toSet() + TestWardrobe.OWN_CATEGORIES
-        garments.forEach { assertTrue("Unknown category ${it.category}", it.category in known) }
+        garments.forEach { garment ->
+            assertTrue(garment.categories.isNotEmpty())
+            garment.categories.forEach { assertTrue("Unknown category $it", it in known) }
+            assertEquals("Duplicate category", garment.categories.size, garment.categories.toSet().size)
+        }
     }
 
     @Test
     fun `every built-in category is used, so each filter chip has something to show`() {
-        val used = garments.map { it.category }.toSet()
+        val used = garments.flatMap { it.categories }.toSet()
         BUILT_IN_CATEGORIES.forEach { (key, _) -> assertTrue("No garment in $key", key in used) }
     }
 
@@ -26,7 +31,30 @@ class TestWardrobeTest {
         assertTrue(garments.any { it.halfStars == null })
         assertTrue(garments.any { it.halfStars != null && it.halfStars % 2 == 1 }) // a half star
         assertTrue(garments.any { it.liked } && garments.any { !it.liked })
+        assertTrue(garments.any { it.name != null } && garments.any { it.name == null })
+        assertTrue(garments.any { it.categories.size > 1 })
+        assertTrue(garments.any { it.review != null } && garments.any { it.aspects.isNotEmpty() })
+        assertTrue(garments.any { it.cutout } && garments.any { it.picture != null && !it.cutout })
         assertTrue(garments.all { it.halfStars == null || it.halfStars in 1..10 })
+        assertTrue(garments.all { g -> g.aspects.values.all { it in 1..10 } })
         assertTrue(garments.all { it.daysAgo >= 0 })
+        assertTrue(garments.none { it.cutout && it.picture == null })
+    }
+
+    @Test
+    fun `outfits only use garments that have a key and a cut-out, each once`() {
+        val keyed = garments.filter { it.key != null }.associateBy { it.key }
+        assertEquals("Duplicate key", garments.count { it.key != null }, keyed.size)
+        assertTrue(TestWardrobe.outfits.isNotEmpty())
+        TestWardrobe.outfits.forEach { outfit ->
+            val keys = outfit.garments.map { it.key }
+            assertEquals(keys.size, keys.toSet().size)
+            keys.forEach { key ->
+                val garment = keyed[key]
+                assertTrue("Unknown garment $key", garment != null)
+                assertTrue("$key has no cut-out", garment!!.cutout)
+            }
+            outfit.garments.forEach { assertTrue(it.x in 0f..1f && it.y in 0f..1f && it.scale > 0f) }
+        }
     }
 }

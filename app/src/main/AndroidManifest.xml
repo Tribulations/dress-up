@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- No permissions: photos are taken by the camera app (TakePicture) and picked with the system photo picker. -->
+    <!-- No permissions: photos are taken by the camera app (TakePicture) and picked with the system photo picker.
+         ML Kit (the optional cut-out adapter) asks for network access only to send Google usage statistics; the app
+         itself never goes online, so both are removed. Google Play services downloads the model in its own process. -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
 
     <!-- Tells Android which camera app TakePicture can open (package visibility, Android 11+). -->
     <queries>

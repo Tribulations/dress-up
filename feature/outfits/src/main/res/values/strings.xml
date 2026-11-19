@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="outfits_title">Outfits</string>
+    <string name="outfits_settings">Settings</string>
+    <string name="outfits_new">New outfit</string>
+    <string name="outfits_empty">No outfits yet.\nTap + to put garments together into an outfit.</string>
+    <string name="outfits_no_garments">Add some garments to your wardrobe first, then put them together into outfits here.</string>
+    <string name="outfits_unnamed">Outfit of %1$s</string>
+
+    <string name="outfits_new_title">New outfit</string>
+    <string name="outfits_edit_title">Edit outfit</string>
+    <string name="outfits_save">Save</string>
+    <string name="outfits_cancel">Cancel</string>
+    <string name="outfits_delete">Delete</string>
+    <string name="outfits_delete_title">Delete this outfit?</string>
+    <string name="outfits_delete_message">Only the outfit is deleted. Its garments stay in your wardrobe.</string>
+    <string name="outfits_name_optional">Name (optional)</string>
+    <string name="outfits_name_hint">e.g. Sunday walk</string>
+    <string name="outfits_board_hint">Drag a garment to move it, pinch to resize it. Tap one to select it.</string>
+    <string name="outfits_size">Size</string>
+    <string name="outfits_remove_piece">Remove</string>
+    <string name="outfits_pick_garments">Pick garments</string>
+    <string name="outfits_save_failed">The outfit couldn\'t be saved. Try again.</string>
+
+    <string name="outfits_gallery_title">Pick garments</string>
+    <string name="outfits_gallery_done">Done</string>
+    <plurals name="outfits_gallery_picked">
+        <item quantity="one">%1$d garment picked</item>
+        <item quantity="other">%1$d garments picked</item>
+    </plurals>
+</resources>

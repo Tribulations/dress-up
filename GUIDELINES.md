@@ -33,7 +33,7 @@ The technical structure these rules produce is described in [ARCHITECTURE.md](AR
 | `core:model` | plain Kotlin data types | nothing |
 | `core:data` | Room database, repositories, photo storage | `core:model` |
 | `core:ui` | design system: theme, photo tile, rating bar, shared components | `core:model` |
-| Optional adapters | sync, AI tagging | `core:*` interfaces |
+| Optional adapters | `adapter:cutout-mlkit` (background removal); later sync, AI tagging | `core:*` interfaces |
 
 (Names will be revised once ARCHITECTURE.md §4 is decided. The shape, not the names, is what's fixed.)
 

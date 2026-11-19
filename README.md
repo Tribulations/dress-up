@@ -7,7 +7,8 @@ diary, rate and review your garments, put them in lists and see statistics about
 inspiration from **Letterboxd**: what Letterboxd does for the films you watch, dress-up does for the clothes in
 your wardrobe.
 
-> **Current state (2026-11-19): v0.1.1 released** (milestone M1, the wardrobe, plus profiles and a test user). Download the APK from
+> **Current state (2026-11-19): v0.1.2 released** (milestone M1, the wardrobe, plus profiles, a test user, garment
+> names and reviews, cut-outs and outfits). Download the APK from
 > [GitHub releases](https://github.com/Tribulations/dress-up/releases). Tested on the emulator; not yet on the
 > phone (STATUS.md). Next: the diary and backup (M2).
 
@@ -16,6 +17,11 @@ your wardrobe.
 | Feature | State |
 |---|---|
 | Add a garment: take a photo from inside the app (or pick one from the gallery), pick a category (required) and a colour (optional) | 🧪 Built in v0.1.0, tested on the emulator |
+| Garment name and description; the name is the page's title, the categories go underneath | 🧪 Built in v0.1.2, tested on the emulator |
+| Several categories per garment (the first is the main one) | 🧪 Built in v0.1.2, tested on the emulator |
+| Rate the details (fit, comfort, quality, style, easy care) and write a review | 🧪 Built in v0.1.2, tested on the emulator |
+| Remove the background from a garment's photo, on the phone (optional adapter, ML Kit) | 🧪 Built in v0.1.2, tested on the emulator |
+| Outfits: pick garments from a gallery and lay them out as a collage | 🧪 Built in v0.1.2, tested on the emulator |
 | Categories: built-in list (pants, shirt, …) plus your own; hide, rename, delete | 🧪 Built in v0.1.0, tested on the emulator |
 | Wardrobe grid: photo tiles, filter (liked, category, colour) and sort | 🧪 Built in v0.1.0, tested on the emulator |
 | Garment page: big photo, details, star rating (with halves) and a like, edit, delete | 🧪 Built in v0.1.0, tested on the emulator |
@@ -26,15 +32,16 @@ your wardrobe.
 | Statistics: most and least worn, cost per wear, year in review | 📝 Planned (M3) |
 | Lists (e.g. "Summer", "Work", "To donate") and a wishlist | 📝 Planned (M3) |
 | Export and backup of the whole wardrobe | 📝 Planned (M2) |
-| Outfits: combine garments and log an outfit at once | 📝 Idea (BRAINSTORMING.md) |
-| Automatic background removal / AI tagging of photos | 📝 Idea (BRAINSTORMING.md) |
+| Log a whole outfit as one wear in the diary | 📝 Idea (BRAINSTORMING.md) |
+| AI tagging of photos | 📝 Idea (BRAINSTORMING.md) |
 
 Legend: 📝 Planned · 🚧 In progress · 🧪 Implemented, untested · ✅ Done & tested
 
 ## Tech stack
 
 An **Android** app in **Kotlin** with **Jetpack Compose**, offline first, with **Room** for data, the phone's camera
-app opened from inside dress-up for photos, and **Coil** to show them (ARCHITECTURE.md §2). No permissions, no network.
+app opened from inside dress-up for photos, and **Coil** to show them (ARCHITECTURE.md §2). Background removal is an
+optional adapter using ML Kit on the device. No permissions, no network.
 
 ## Requirements
 

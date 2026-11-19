@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId = "com.dressup.app"
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.1.2"
     }
 
     // One dedicated release key, kept outside the repo and referenced from local.properties
@@ -48,6 +48,11 @@ android {
     }
 }
 
+// Optional adapters (GUIDELINES.md §1 point 2, §2.2), switched in gradle.properties. Each switch picks the source folder that wires
+// the adapter in, or the one that wires in "not available", so the app builds either way.
+val cutoutEnabled = providers.gradleProperty("dressup.cutout").orNull != "false"
+android.sourceSets.getByName("main").kotlin.srcDir(if (cutoutEnabled) "src/cutout/kotlin" else "src/noCutout/kotlin")
+
 // APKs come out as dress-up-<version>-<buildType>.apk, so the files attached to a GitHub release say what they are.
 base {
     archivesName = "dress-up-${android.defaultConfig.versionName}"
@@ -61,6 +66,8 @@ dependencies {
     implementation(project(":feature:categories"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:profiles"))
+    implementation(project(":feature:outfits"))
+    if (cutoutEnabled) implementation(project(":adapter:cutout-mlkit"))
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
 

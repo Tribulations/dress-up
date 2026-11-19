@@ -46,8 +46,10 @@ milestone split is still a draft:
 
 ## Later / maybe
 
-- **Outfits:** combine garments into an outfit, log the whole outfit as one wear, an outfit grid.
-- Automatic background removal on garment photos so the grid looks clean.
+- **Outfits:** ~~combine garments into an outfit, an outfit grid~~ (built in v0.1.2, ARCHITECTURE.md §5.2, §7.6); still
+  open: log the whole outfit as one wear (M2 diary).
+- ~~Automatic background removal on garment photos so the grid looks clean.~~ Built in v0.1.2 as a button per garment
+  (ARCHITECTURE.md §7.5). Maybe later: offer it right after taking a photo.
 - AI tagging: suggest category, colour and material from the photo (on-device if possible).
 - "Not worn in a year" reminders and suggestions of what to donate.
 - Weather-based suggestions of what to wear.
@@ -84,6 +86,22 @@ milestone split is still a draft:
 ## Idea log
 
 Newest first. Each entry is dated.
+
+### 2026-11-19 – A tester's wishes (built in v0.1.2)
+
+From someone trying the app (in Swedish, summarised):
+
+1. Name garments and describe them, e.g. "Coola favvis tröjan"; the name on top, the type/category underneath.
+2. More than one category per garment.
+3. Your own review of a garment, and ratings of specific things about it.
+4. Cut the garment out of the photo, so only the garment shows and not the background.
+5. A collage/gallery of all garment pictures, and from there put an outfit together by picking garments.
+
+The user said all of it should be built. Choices made while building, to check with the tester: the aspects are a
+**fixed list** (fit, comfort, quality, style, easy care) rather than ones you make up; the main category is the **first
+one picked**; background removal uses **ML Kit via Google Play services** (on the device, but its model is downloaded
+by Play services once); the "gallery" is the picker inside the outfit editor, and the collage is a free board.
+See ARCHITECTURE.md §5, §5.2, §7.5, §7.6.
 
 ### 2026-11-19 – Profiles and a test user
 

@@ -16,10 +16,13 @@ data class WardrobeFilter(
 
 enum class WardrobeSort { NEWEST, OLDEST, RATING, CATEGORY }
 
-/** Filters and sorts [garments]. [categories] gives the category order for [WardrobeSort.CATEGORY]. */
+/**
+ * Filters and sorts [garments]. A garment matches a category filter through any of its categories; [WardrobeSort.CATEGORY]
+ * sorts by the main one, in the order of [categories].
+ */
 internal fun applyFilter(garments: List<Garment>, categories: List<Category>, filter: WardrobeFilter): List<Garment> {
     val shown = garments.filter { garment ->
-        (filter.categoryIds.isEmpty() || garment.categoryId in filter.categoryIds) &&
+        (filter.categoryIds.isEmpty() || garment.categoryIds.any { it in filter.categoryIds }) &&
             (filter.colours.isEmpty() || garment.colour in filter.colours) &&
             (!filter.likedOnly || garment.liked)
     }
@@ -31,7 +34,7 @@ internal fun applyFilter(garments: List<Garment>, categories: List<Category>, fi
         WardrobeSort.RATING -> compareByDescending<Garment> { it.rating?.halfStars ?: 0 }.then(newestFirst)
         WardrobeSort.CATEGORY -> {
             val position = categories.withIndex().associate { (index, category) -> category.id to index }
-            compareBy<Garment> { position[it.categoryId] ?: Int.MAX_VALUE }.then(newestFirst)
+            compareBy<Garment> { position[it.categoryIds.firstOrNull()] ?: Int.MAX_VALUE }.then(newestFirst)
         }
     }
     return shown.sortedWith(comparator)

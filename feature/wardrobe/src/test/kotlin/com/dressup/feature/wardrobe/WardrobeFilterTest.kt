@@ -12,20 +12,33 @@ class WardrobeFilterTest {
     private val shirt = Category(id = 2, name = "Shirt", builtIn = true, hidden = false)
     private val categories = listOf(pants, shirt)
 
-    private fun garment(id: Long, category: Category, colour: GarmentColour? = null, rating: Int? = null, liked: Boolean = false) =
-        Garment(
-            id = id,
-            categoryId = category.id,
-            colour = colour,
-            photoFileName = null,
-            rating = Rating.fromHalfStarsOrNull(rating),
-            liked = liked,
-            createdAtMillis = id * 1000,
-        )
+    private val sportswear = Category(id = 3, name = "Sportswear", builtIn = false, hidden = false)
+
+    private fun garment(
+        id: Long,
+        category: Category,
+        colour: GarmentColour? = null,
+        rating: Int? = null,
+        liked: Boolean = false,
+        also: List<Category> = emptyList(),
+    ) = Garment(
+        id = id,
+        name = null,
+        description = null,
+        categoryIds = (listOf(category) + also).map { it.id },
+        colour = colour,
+        photoFileName = null,
+        cutoutFileName = null,
+        rating = Rating.fromHalfStarsOrNull(rating),
+        aspectRatings = emptyMap(),
+        review = null,
+        liked = liked,
+        createdAtMillis = id * 1000,
+    )
 
     private val blueShirt = garment(1, shirt, GarmentColour.BLUE, rating = 6)
     private val blackPants = garment(2, pants, GarmentColour.BLACK, liked = true)
-    private val bluePants = garment(3, pants, GarmentColour.BLUE, rating = 9, liked = true)
+    private val bluePants = garment(3, pants, GarmentColour.BLUE, rating = 9, liked = true, also = listOf(sportswear))
     private val all = listOf(blueShirt, blackPants, bluePants)
 
     private fun ids(filter: WardrobeFilter) = applyFilter(all, categories, filter).map { it.id }
@@ -44,6 +57,12 @@ class WardrobeFilterTest {
     @Test
     fun `several values of one filter mean any of them`() {
         assertEquals(listOf(3L, 2L, 1L), ids(WardrobeFilter(colours = setOf(GarmentColour.BLUE, GarmentColour.BLACK))))
+    }
+
+    @Test
+    fun `a garment matches a category filter through any of its categories`() {
+        assertEquals(listOf(3L), ids(WardrobeFilter(categoryIds = setOf(sportswear.id))))
+        assertEquals(listOf(3L, 1L), ids(WardrobeFilter(categoryIds = setOf(sportswear.id, shirt.id))))
     }
 
     @Test

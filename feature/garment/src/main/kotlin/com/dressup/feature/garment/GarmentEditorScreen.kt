@@ -14,12 +14,15 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -46,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.createSavedStateHandle
@@ -103,7 +108,9 @@ fun GarmentEditorRoute(data: DressUpData, garmentId: Long?, onCancel: () -> Unit
                 EditorAction.PickPhoto ->
                     pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 EditorAction.RemovePhoto -> viewModel.removePhoto()
-                is EditorAction.SelectCategory -> viewModel.selectCategory(action.id)
+                is EditorAction.ToggleCategory -> viewModel.toggleCategory(action.id)
+                is EditorAction.SetName -> viewModel.setName(action.name)
+                is EditorAction.SetDescription -> viewModel.setDescription(action.description)
                 is EditorAction.SelectColour -> viewModel.selectColour(action.colour)
                 EditorAction.NewCategory -> viewModel.openCategoryDialog()
                 is EditorAction.AddCategory -> viewModel.addCategory(action.name)
@@ -120,7 +127,9 @@ sealed interface EditorAction {
     data object TakePhoto : EditorAction
     data object PickPhoto : EditorAction
     data object RemovePhoto : EditorAction
-    data class SelectCategory(val id: Long) : EditorAction
+    data class ToggleCategory(val id: Long) : EditorAction
+    data class SetName(val name: String) : EditorAction
+    data class SetDescription(val description: String) : EditorAction
     data class SelectColour(val colour: GarmentColour?) : EditorAction
     data object NewCategory : EditorAction
     data class AddCategory(val name: String) : EditorAction
@@ -167,6 +176,7 @@ fun GarmentEditorScreen(state: GarmentEditorUiState, onAction: (EditorAction) ->
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             PhotoSection(state, onAction)
+            NameSection(state, onAction)
             CategorySection(state, onAction)
             ColourSection(state, onAction)
         }
@@ -210,14 +220,51 @@ private fun PhotoSection(state: GarmentEditorUiState, onAction: (EditorAction) -
 }
 
 @Composable
+private fun NameSection(state: GarmentEditorUiState, onAction: (EditorAction) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        OutlinedTextField(
+            value = state.name,
+            onValueChange = { onAction(EditorAction.SetName(it)) },
+            label = { Text(stringResource(R.string.garment_name_optional)) },
+            placeholder = { Text(stringResource(R.string.garment_name_hint)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = state.description,
+            onValueChange = { onAction(EditorAction.SetDescription(it)) },
+            label = { Text(stringResource(R.string.garment_description_optional)) },
+            placeholder = { Text(stringResource(R.string.garment_description_hint)) },
+            minLines = 2,
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
 private fun CategorySection(state: GarmentEditorUiState, onAction: (EditorAction) -> Unit) {
-    Section(stringResource(R.string.garment_category_required)) {
+    val mainId = state.selectedCategoryIds.firstOrNull()
+    Section(stringResource(R.string.garment_categories_required)) {
+        Text(
+            stringResource(R.string.garment_categories_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             state.categories.forEach { category ->
+                val selected = category.id in state.selectedCategoryIds
+                val isMain = category.id == mainId && state.selectedCategoryIds.size > 1
                 FilterChip(
-                    selected = category.id == state.selectedCategoryId,
-                    onClick = { onAction(EditorAction.SelectCategory(category.id)) },
-                    label = { Text(category.name) },
+                    selected = selected,
+                    onClick = { onAction(EditorAction.ToggleCategory(category.id)) },
+                    label = { Text(if (isMain) stringResource(R.string.garment_category_main, category.name) else category.name) },
+                    leadingIcon = if (isMain) {
+                        { Icon(Icons.Filled.Star, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    } else {
+                        null
+                    },
                 )
             }
             AssistChip(

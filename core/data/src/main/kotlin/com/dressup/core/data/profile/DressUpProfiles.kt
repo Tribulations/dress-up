@@ -2,6 +2,7 @@ package com.dressup.core.data.profile
 
 import android.content.Context
 import com.dressup.core.data.DressUpData
+import com.dressup.core.data.photo.BackgroundRemover
 import com.dressup.core.data.testuser.TestWardrobe
 import com.dressup.core.model.Profile
 import com.dressup.core.model.ProfilesState
@@ -20,7 +21,10 @@ import java.util.UUID
  * The app's profiles and each profile's [DressUpData] (manual dependency injection, ARCHITECTURE.md §2). The
  * `Application` creates one instance.
  */
-class DressUpProfiles(context: Context) : ProfileRepository {
+class DressUpProfiles(
+    context: Context,
+    private val backgroundRemover: BackgroundRemover = BackgroundRemover.None,
+) : ProfileRepository {
     private val appContext = context.applicationContext
     private val store = ProfileStore(appContext)
     private val mutableState = MutableStateFlow(store.load())
@@ -31,7 +35,7 @@ class DressUpProfiles(context: Context) : ProfileRepository {
 
     /** The data layer of profile [profileId], opened on first use and kept open while the app runs. */
     fun data(profileId: String): DressUpData = synchronized(openData) {
-        openData.getOrPut(profileId) { DressUpData(appContext, ProfilePaths.of(profileId)) }
+        openData.getOrPut(profileId) { DressUpData(appContext, ProfilePaths.of(profileId), backgroundRemover) }
     }
 
     override fun createFirst(name: String): ProfileNameResult {

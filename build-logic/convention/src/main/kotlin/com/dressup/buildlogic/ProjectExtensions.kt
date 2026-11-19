@@ -21,7 +21,8 @@ internal fun VersionCatalog.versionInt(alias: String): Int =
 
 /**
  * Namespace derived from the module path, so modules don't have to repeat it:
- * `:core:data` → `com.dressup.core.data`.
+ * `:core:data` → `com.dressup.core.data`. A dash, invalid in a package name, is dropped:
+ * `:adapter:cutout-mlkit` → `com.dressup.adapter.cutoutmlkit`.
  */
 internal val Project.derivedNamespace: String
-    get() = "com.dressup" + path.replace(':', '.')
+    get() = "com.dressup" + path.replace(':', '.').replace("-", "")

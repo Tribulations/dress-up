@@ -6,16 +6,29 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [CategoryEntity::class, GarmentEntity::class], version = 1, exportSchema = true)
+@Database(
+    entities = [
+        CategoryEntity::class,
+        GarmentEntity::class,
+        GarmentCategoryEntity::class,
+        AspectRatingEntity::class,
+        OutfitEntity::class,
+        OutfitItemEntity::class,
+    ],
+    version = 2,
+    exportSchema = true,
+)
 internal abstract class DressUpDatabase : RoomDatabase() {
     abstract fun garmentDao(): GarmentDao
     abstract fun categoryDao(): CategoryDao
+    abstract fun outfitDao(): OutfitDao
 
     companion object {
         /** [name] is the profile's database file (ProfilePaths). */
         fun create(context: Context, name: String): DressUpDatabase =
             Room.databaseBuilder(context, DressUpDatabase::class.java, name)
                 .addCallback(SeedBuiltInCategories)
+                .addMigrations(MIGRATION_1_2)
                 .build()
     }
 }

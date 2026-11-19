@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-19
+
+Names, several categories, reviews, cut-outs and outfits. From a tester's wishes.
+
+### Added
+- **Name and description** for a garment (both optional), e.g. "Coola favvis tröjan". The garment page shows the name
+  as its title with the categories (and colour) underneath.
+- **Several categories per garment**, e.g. Sweater and Sportswear. The first one picked is the main one: shown first,
+  used for sorting, and the title when there is no name. Filtering on any of them finds the garment.
+- **Rate the details:** besides the overall rating, rate fit, comfort, quality, style and easy care, each ½–5 stars.
+- **Your review** of a garment.
+- **Remove background** on the garment page: cuts the garment out of its photo on the phone (ML Kit, via Google Play
+  services, which downloads its model once). The cut-out is shown in the grid, on the page and in outfits; **Use the
+  original photo** undoes it. The app still has no internet permission.
+- **Outfits** tab: pick garments from a gallery of all your garment pictures and lay them out as a collage (drag,
+  pinch or slide to resize, tap to bring to the front). Outfits can be named, edited and deleted.
+- The test user now has names, descriptions, several categories, aspect ratings, reviews, cut-outs and three outfits.
+
+### Changed
+- Deleting a garment also removes it from the outfits it is in (the dialog says so).
+- Database version 2. An update from 0.1.1 keeps every garment: its one category becomes its main category.
+
+### Development
+- New modules `feature:outfits` and the optional adapter `adapter:cutout-mlkit` (switch: `dressup.cutout` in
+  `gradle.properties`), behind the `BackgroundRemover` interface in `core:data`. R8 keep rules for ML Kit. 58 unit
+  tests.
+
 ## [0.1.1] - 2026-11-19
 
 Profiles and a test user.
@@ -56,6 +83,7 @@ The first version (milestone M1, the wardrobe).
   user-defined categories; star rating (with halves) plus a like; the diary logs single garments; photos taken with
   the camera from inside the app and linked to the garment.
 
-[Unreleased]: https://github.com/Tribulations/dress-up/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Tribulations/dress-up/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/Tribulations/dress-up/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Tribulations/dress-up/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Tribulations/dress-up/releases/tag/v0.1.0

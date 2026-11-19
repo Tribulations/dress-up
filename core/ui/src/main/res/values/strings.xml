@@ -7,6 +7,14 @@
     <string name="core_ui_save">Save</string>
     <string name="core_ui_cancel">Cancel</string>
     <string name="core_ui_test_user">Test user</string>
+    <string name="core_ui_tab_wardrobe">Wardrobe</string>
+    <string name="core_ui_tab_outfits">Outfits</string>
+
+    <string name="core_ui_aspect_fit">Fit</string>
+    <string name="core_ui_aspect_comfort">Comfort</string>
+    <string name="core_ui_aspect_quality">Quality</string>
+    <string name="core_ui_aspect_style">Style</string>
+    <string name="core_ui_aspect_easy_care">Easy care</string>
 
     <string name="core_ui_colour_black">Black</string>
     <string name="core_ui_colour_white">White</string>

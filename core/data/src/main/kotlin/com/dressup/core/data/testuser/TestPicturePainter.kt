@@ -35,12 +35,18 @@ internal object TestPicturePainter {
     const val HEIGHT = 1350
     private const val UNITS_WIDE = 100f
 
-    fun paint(picture: Picture): Bitmap {
+    /** The "photo": the garment on its backdrop. */
+    fun paint(picture: Picture): Bitmap = draw(picture, backdrop = true)
+
+    /** The garment alone on a transparent background, the way a cut-out of the photo looks. */
+    fun paintCutout(picture: Picture): Bitmap = draw(picture, backdrop = false)
+
+    private fun draw(picture: Picture, backdrop: Boolean): Bitmap {
         val bitmap = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         canvas.scale(WIDTH / UNITS_WIDE, WIDTH / UNITS_WIDE)
-        drawBackdrop(canvas, picture.backdrop)
-        Garment(canvas, picture).draw()
+        if (backdrop) drawBackdrop(canvas, picture.backdrop)
+        Garment(canvas, picture, castShadows = backdrop).draw()
         return bitmap
     }
 
@@ -54,7 +60,7 @@ internal object TestPicturePainter {
 }
 
 /** Draws one garment: the outline filled with fabric, then the details (collar, pockets, seams…). */
-private class Garment(private val canvas: Canvas, private val picture: Picture) {
+private class Garment(private val canvas: Canvas, private val picture: Picture, private val castShadows: Boolean) {
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -149,7 +155,7 @@ private class Garment(private val canvas: Canvas, private val picture: Picture) 
     /** Fills [outline] with the fabric colour, its pattern and soft light, and a seam line. Whole pieces cast a shadow. */
     private fun fabric(outline: Path, colour: Int = picture.fill, pattern: Pattern = picture.pattern, shadow: Boolean = true) {
         fill.shader = null
-        if (shadow) {
+        if (shadow && castShadows) {
             fill.color = 0x38000000
             canvas.save(); canvas.translate(1.2f, 1.6f); canvas.drawPath(outline, fill); canvas.restore()
         }

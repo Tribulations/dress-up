@@ -5,19 +5,15 @@ import androidx.lifecycle.SavedStateHandle
 import com.dressup.core.data.CategoryNameResult
 import com.dressup.core.data.CategoryRepository
 import com.dressup.core.data.DeleteCategoryResult
-import com.dressup.core.data.GarmentRepository
 import com.dressup.core.data.photo.PhotoStorage
 import com.dressup.core.model.Category
-import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.GarmentDraft
-import com.dressup.core.model.Rating
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -52,19 +48,28 @@ class GarmentEditorViewModelTest {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
         assertFalse(vm.uiState.value.canSave)
 
-        vm.selectCategory(PANTS.id)
+        vm.toggleCategory(PANTS.id)
         assertTrue(vm.uiState.value.canSave)
+
+        vm.toggleCategory(PANTS.id) // unpicked again
+        assertFalse(vm.uiState.value.canSave)
     }
 
     @Test
-    fun `saving a new garment saves category and colour, colour optional`() = runTest {
+    fun `saving a new garment saves its name, description, categories in the order picked, and colour`() = runTest {
         val vm = editor()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
-        vm.selectCategory(PANTS.id)
+        vm.setName("Coola favvis tröjan")
+        vm.setDescription("Lambswool")
+        vm.toggleCategory(SHIRT.id)
+        vm.toggleCategory(PANTS.id)
         vm.selectColour(GarmentColour.NAVY)
         vm.save()
 
-        assertEquals(GarmentDraft(null, PANTS.id, GarmentColour.NAVY, null), garments.savedDrafts.single())
+        assertEquals(
+            GarmentDraft(null, "Coola favvis tröjan", "Lambswool", listOf(SHIRT.id, PANTS.id), GarmentColour.NAVY, null),
+            garments.savedDrafts.single(),
+        )
         assertEquals(1L, vm.uiState.value.savedGarmentId)
     }
 
@@ -73,7 +78,8 @@ class GarmentEditorViewModelTest {
         garments.items.value = listOf(garment(id = 7, photo = "original.jpg"))
         val vm = editor(id = 7)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
-        assertEquals(PANTS.id, vm.uiState.value.selectedCategoryId)
+        assertEquals(listOf(PANTS.id, SHIRT.id), vm.uiState.value.selectedCategoryIds)
+        assertEquals("Old jeans", vm.uiState.value.name)
 
         vm.removePhoto()
         assertTrue(photos.deleted.isEmpty())
@@ -96,12 +102,15 @@ class GarmentEditorViewModelTest {
     fun `the inputs survive the app being stopped during a camera trip`() = runTest {
         val saved = SavedStateHandle()
         val first = editor(saved = saved)
-        first.selectCategory(SHIRT.id)
+        first.toggleCategory(SHIRT.id)
+        first.toggleCategory(PANTS.id)
+        first.setName("Rain jacket")
         first.selectColour(GarmentColour.RED)
 
         val restored = editor(saved = saved)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { restored.uiState.collect {} }
-        assertEquals(SHIRT.id, restored.uiState.value.selectedCategoryId)
+        assertEquals(listOf(SHIRT.id, PANTS.id), restored.uiState.value.selectedCategoryIds)
+        assertEquals("Rain jacket", restored.uiState.value.name)
         assertEquals(GarmentColour.RED, restored.uiState.value.colour)
     }
 
@@ -112,31 +121,16 @@ class GarmentEditorViewModelTest {
         vm.openCategoryDialog()
         vm.addCategory("Rain gear")
 
-        assertEquals(categories.items.value.first { it.name == "Rain gear" }.id, vm.uiState.value.selectedCategoryId)
+        assertEquals(listOf(categories.items.value.first { it.name == "Rain gear" }.id), vm.uiState.value.selectedCategoryIds)
         assertEquals(null, vm.uiState.value.categoryDialog)
     }
 
-    private fun garment(id: Long, photo: String?) = Garment(
-        id = id, categoryId = PANTS.id, colour = null, photoFileName = photo, rating = null, liked = false, createdAtMillis = 0,
-    )
+    private fun garment(id: Long, photo: String?) =
+        testGarment(id, categoryIds = listOf(PANTS.id, SHIRT.id), photo = photo).copy(name = "Old jeans")
 
     private companion object {
         val PANTS = Category(id = 1, name = "Pants", builtIn = true, hidden = false)
         val SHIRT = Category(id = 2, name = "Shirt", builtIn = true, hidden = false)
-    }
-
-    private class FakeGarments : GarmentRepository {
-        val items = MutableStateFlow<List<Garment>>(emptyList())
-        val savedDrafts = mutableListOf<GarmentDraft>()
-        override val garments: Flow<List<Garment>> = items
-        override fun garment(id: Long): Flow<Garment?> = items.map { list -> list.firstOrNull { it.id == id } }
-        override suspend fun save(draft: GarmentDraft): Long {
-            savedDrafts += draft
-            return draft.id ?: savedDrafts.size.toLong()
-        }
-        override suspend fun setRating(id: Long, rating: Rating?) = Unit
-        override suspend fun setLiked(id: Long, liked: Boolean) = Unit
-        override suspend fun delete(id: Long) = Unit
     }
 
     private class FakeCategories : CategoryRepository {

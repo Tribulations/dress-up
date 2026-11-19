@@ -26,3 +26,6 @@ include(":feature:garment")
 include(":feature:categories")
 include(":feature:settings")
 include(":feature:profiles")
+include(":feature:outfits")
+// Optional adapters, each behind one switch in gradle.properties (GUIDELINES.md §1 point 2, §2.2).
+if (providers.gradleProperty("dressup.cutout").orNull != "false") include(":adapter:cutout-mlkit")
