@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-19
+
+Profiles and a test user.
+
 ### Added
 - **Profiles.** On the first start the app asks for your name and makes your profile. More profiles can be added,
   renamed, switched between and deleted in **Settings → Profiles**. Each profile has its own garments, categories and
@@ -52,5 +56,6 @@ The first version (milestone M1, the wardrobe).
   user-defined categories; star rating (with halves) plus a like; the diary logs single garments; photos taken with
   the camera from inside the app and linked to the garment.
 
-[Unreleased]: https://github.com/Tribulations/dress-up/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Tribulations/dress-up/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Tribulations/dress-up/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Tribulations/dress-up/releases/tag/v0.1.0

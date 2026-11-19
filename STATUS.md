@@ -14,17 +14,17 @@ _Last updated: 2026-11-19_
 
 ## 🚧 Currently working on
 
-_Nothing. Profiles and the test user are done (not released yet); M2 is next._
+_Nothing. v0.1.1 (profiles and the test user) is released; M2 is next._
 
 ## 🧪 Implemented, not yet tested
 
-- **Everything in v0.1.0 on the user's phone (Galaxy S20).** Only tested on the emulator so far (below). Things worth
+- **Everything in v0.1.0 and v0.1.1 on the user's phone (Galaxy S20).** Only tested on the emulator so far (below). Things worth
   checking on the real phone: the Samsung camera app returns the photo, portrait photos are upright, the grid with
   real photos.
 
 ## ✅ Done & tested
 
-- **Profiles and the test user (2026-11-19, unreleased).** Unit tests: 37 JVM tests pass, 13 of them new (profile
+- **v0.1.1 – profiles and the test user (2026-11-19).** Unit tests: 37 JVM tests pass, 13 of them new (profile
   rules and paths, the test wardrobe's contents, `ProfilesViewModel`). Manual tests on the emulator
   (Medium_Phone_API_36, Android 16), debug build:
   - **Update from v0.1.0** with garments already saved: the app asked "What's your name?" (a blank name shows an
@@ -37,6 +37,10 @@ _Nothing. Profiles and the test user are done (not released yet); M2 is next._
     button; the rule is also enforced in the data layer); deleting the test user and creating it again.
   - Rotation on the Profiles screen keeps the active profile and the screen stack.
   - **Release build** (R8) from a fresh install: name → Settings → Profiles → Test user → garment page, no crashes.
+  - **v0.1.1 release APK** installed as an update over the published v0.1.0 release APK (same key, so Android accepted
+    the update): "What's your name?", Settings shows version 0.1.1, test user created, switching back, no crashes.
+    (That run had no garments in 0.1.0 because the tap came too early, so "garments are kept on update" is verified
+    with the debug build above, not the release.)
 
 - **v0.1.0 – M1 wardrobe (2026-11-18).** Unit tests: 24 JVM tests pass (`./gradlew testDebugUnitTest`). Manual tests on
   the emulator (Medium_Phone_API_36, Android 16), debug build, with `scripts/emulator-ui.sh`:

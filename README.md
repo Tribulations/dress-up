@@ -7,7 +7,7 @@ diary, rate and review your garments, put them in lists and see statistics about
 inspiration from **Letterboxd**: what Letterboxd does for the films you watch, dress-up does for the clothes in
 your wardrobe.
 
-> **Current state (2026-11-18): v0.1.0 released** (milestone M1, the wardrobe). Download the APK from
+> **Current state (2026-11-19): v0.1.1 released** (milestone M1, the wardrobe, plus profiles and a test user). Download the APK from
 > [GitHub releases](https://github.com/Tribulations/dress-up/releases). Tested on the emulator; not yet on the
 > phone (STATUS.md). Next: the diary and backup (M2).
 
@@ -19,8 +19,8 @@ your wardrobe.
 | Categories: built-in list (pants, shirt, …) plus your own; hide, rename, delete | 🧪 Built in v0.1.0, tested on the emulator |
 | Wardrobe grid: photo tiles, filter (liked, category, colour) and sort | 🧪 Built in v0.1.0, tested on the emulator |
 | Garment page: big photo, details, star rating (with halves) and a like, edit, delete | 🧪 Built in v0.1.0, tested on the emulator |
-| Profiles: your name on the first start; add, rename, switch and delete profiles in Settings | 🧪 Built (unreleased), tested on the emulator |
-| Test user: a prefilled, made-up wardrobe to try the app with, can be reset | 🧪 Built (unreleased), tested on the emulator |
+| Profiles: your name on the first start; add, rename, switch and delete profiles in Settings | 🧪 Built in v0.1.1, tested on the emulator |
+| Test user: a prefilled, made-up wardrobe to try the app with, can be reset | 🧪 Built in v0.1.1, tested on the emulator |
 | Wear history on the garment page | 📝 Planned (M2) |
 | Diary: log which garments you wore on a date, with an optional note | 📝 Planned (M2) |
 | Statistics: most and least worn, cost per wear, year in review | 📝 Planned (M3) |
