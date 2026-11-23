@@ -94,7 +94,7 @@ internal object ProfileImporter {
                     GarmentEntity(
                         name = cleanText(g.name, MAX_GARMENT_NAME_LENGTH),
                         description = cleanText(g.description, MAX_DESCRIPTION_LENGTH),
-                        colourKey = GarmentColour.fromKeyOrNull(g.colour)?.key,
+                        colourKeys = colourKeys(g),
                         photoFileName = g.photo?.let { pictures[picturePath(it)] },
                         cutoutFileName = g.cutout?.let { pictures[picturePath(it)] },
                         ratingHalfStars = halfStars(g.rating),
@@ -129,7 +129,7 @@ internal object ProfileImporter {
                 val items = o.items.mapNotNull { item -> garmentIds[item.garment]?.let { item to it } }.distinctBy { it.second }
                 outfitDao.insertItems(
                     items.mapIndexed { position, (item, garmentId) ->
-                        OutfitItemEntity(id, garmentId, position, fraction(item.x), fraction(item.y), scale(item.scale), normalizedRotation(item.rotation))
+                        OutfitItemEntity(id, garmentId, position, fraction(item.x), fraction(item.y), scale(item.scale), normalizedRotation(item.rotation), item.locked)
                     },
                 )
                 outfitDao.upsertAspectRatings(
@@ -199,6 +199,10 @@ internal object ProfileImporter {
             out.write(buffer, 0, read)
         }
     }
+
+    /** The garment's colours as stored, from the list or (in older files) the single colour; unknown keys dropped. */
+    internal fun colourKeys(garment: GarmentFile): String? =
+        GarmentColour.keysOf((garment.colours + listOfNotNull(garment.colour)).mapNotNull(GarmentColour::fromKeyOrNull))
 
     internal fun halfStars(stars: Double?): Int? =
         stars?.takeIf { it.isFinite() }?.let { Rating.fromHalfStarsOrNull((it * 2).roundToInt()) }?.halfStars

@@ -85,9 +85,9 @@ class OutfitEditorViewModelTest {
 
         val draft = outfits.saved.single()
         assertEquals("Sunday walk", draft.name)
-        // Selecting garment 1 brought it to the front, i.e. last.
-        assertEquals(listOf(3L, 1L), draft.items.map { it.garmentId })
-        assertEquals(0.28f + 0.1f, draft.items[1].x, 0.0001f) // its start position, moved right by a tenth
+        // Selecting doesn't change the layers: the order picked.
+        assertEquals(listOf(1L, 3L), draft.items.map { it.garmentId })
+        assertEquals(0.28f + 0.1f, draft.items[0].x, 0.0001f) // its start position, moved right by a tenth
         assertTrue(vm.uiState.value.done)
     }
 
@@ -102,6 +102,28 @@ class OutfitEditorViewModelTest {
         vm.removeSelected()
         assertEquals(listOf(1L), vm.uiState.value.pieces.map { it.item.garmentId })
         assertNull(vm.uiState.value.selectedGarmentId)
+    }
+
+    @Test
+    fun `layers and a lock, a locked garment stays put, is saved locked and survives the app being stopped`() = runTest {
+        val saved = SavedStateHandle()
+        val vm = editor(saved = saved)
+        vm.pickGarments(listOf(1L, 2L, 3L)) // 3 is in front
+        vm.select(1)
+        vm.moveLayer(1)
+        assertEquals(listOf(2L, 1L, 3L), vm.uiState.value.pieces.map { it.item.garmentId })
+        vm.toggleLock()
+        val before = vm.uiState.value.selectedPiece!!.item
+        vm.transform(1, dx = 0.2f, dy = 0.2f, zoom = 2f, rotation = 30f)
+        vm.resize(1, 1f)
+        vm.rotate(1, 90f)
+        assertEquals(before, vm.uiState.value.selectedPiece!!.item)
+        assertTrue(before.locked)
+
+        val restored = editor(saved = saved)
+        assertEquals(listOf(false, true, false), restored.uiState.value.pieces.map { it.item.locked })
+        restored.save()
+        assertEquals(listOf(false, true, false), outfits.saved.single().items.map { it.locked })
     }
 
     @Test
@@ -160,7 +182,7 @@ class OutfitEditorViewModelTest {
         val PANTS = Category(id = 1, name = "Pants", builtIn = true, hidden = false)
 
         fun garment(id: Long, name: String?, cutout: Boolean = false) = Garment(
-            id = id, name = name, description = null, categoryIds = listOf(PANTS.id), colour = null,
+            id = id, name = name, description = null, categoryIds = listOf(PANTS.id), colours = emptyList(),
             photoFileName = "photo$id.jpg", cutoutFileName = if (cutout) "cutout$id.webp" else null, rating = null,
             aspectRatings = emptyMap(), review = null, liked = false, createdAtMillis = id,
         )

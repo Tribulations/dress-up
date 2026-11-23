@@ -7,7 +7,7 @@ diary, rate and review your garments, put them in lists and see statistics about
 inspiration from **Letterboxd**: what Letterboxd does for the films you watch, dress-up does for the clothes in
 your wardrobe.
 
-> **Current state (2026-11-19): v0.2.1 released** (milestones M1, the wardrobe, and M2, the diary and backup: outfits
+> **Current state (2026-11-23): v0.2.2 released** (milestones M1, the wardrobe, and M2, the diary and backup: outfits
 > with ratings, a wear diary with occasions, wear counts, export and import, plus profiles, a test user and cut-outs).
 > Download the APK from [GitHub releases](https://github.com/Tribulations/dress-up/releases). Tested on the emulator;
 > not yet on the phone (STATUS.md). Next: lists and statistics (M3).
@@ -16,19 +16,20 @@ your wardrobe.
 
 | Feature | State |
 |---|---|
-| Add a garment: take a photo from inside the app (or pick one from the gallery), pick a category (required) and a colour (optional) | 🧪 Built in v0.1.0, tested on the emulator |
+| Add a garment: take a photo from inside the app (or pick one from the gallery), pick a category (required) and colours (optional; several since v0.2.2) | 🧪 Built in v0.1.0, tested on the emulator |
 | Garment name and description; the name is the page's title, the categories go underneath | 🧪 Built in v0.1.2, tested on the emulator |
 | Several categories per garment (the first is the main one) | 🧪 Built in v0.1.2, tested on the emulator |
 | Rate the details (fit, comfort, quality, style, easy care) and write a review | 🧪 Built in v0.1.2, tested on the emulator |
 | Remove the background from a garment's photo, on the phone (optional adapter, ML Kit) | 🧪 Built in v0.1.2, tested on the emulator |
 | Outfits: pick garments from a gallery and lay them out as a collage | 🧪 Built in v0.1.2, tested on the emulator |
 | Turn garments on the outfit board; outfit backgrounds (a colour or your own picture) | 🧪 Built in v0.2.1, tested on the emulator |
+| Outfit editor: layer strip (select, forward, back), lock a garment, gestures go to the selected garment | 🧪 Built in v0.2.2, tested on the emulator |
 | Rate and review outfits like garments (stars, like, details, review) on an outfit page | 🧪 Built in v0.2.0, tested on the emulator |
 | Diary: log an outfit or garments worn on a date, with an occasion ("Christmas Eve") and a note; a list by month | 🧪 Built in v0.2.0, tested on the emulator |
 | Wear counts and wear history on garment and outfit pages | 🧪 Built in v0.2.0, tested on the emulator |
 | Export a profile as a zip (readable `profile.yaml` + images) and import one as a new profile, also on the first start | 🧪 Built in v0.2.0 (first start v0.2.1), tested on the emulator |
 | Categories: built-in list (pants, shirt, …) plus your own; hide, rename, delete | 🧪 Built in v0.1.0, tested on the emulator |
-| Wardrobe grid: photo tiles, filter (liked, category, colour) and sort (also most and least worn since v0.2.1) | 🧪 Built in v0.1.0, tested on the emulator |
+| Wardrobe grid: photo tiles, filter (liked, category, colour; a garment with several colours under each) and sort (also most and least worn since v0.2.1) | 🧪 Built in v0.1.0, tested on the emulator |
 | Garment page: big photo, details, star rating (with halves) and a like, edit, delete | 🧪 Built in v0.1.0, tested on the emulator |
 | Profiles: your name on the first start; add, rename, switch and delete profiles in Settings | 🧪 Built in v0.1.1, tested on the emulator |
 | Test user: a prefilled, made-up wardrobe to try the app with, can be reset | 🧪 Built in v0.1.1, tested on the emulator |

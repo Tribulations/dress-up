@@ -90,6 +90,19 @@ milestone split is still a draft:
 
 Newest first. Each entry is dated.
 
+### 2026-11-23 – A garment list in the outfit editor, easier resizing, several colours per garment (built in v0.2.2)
+
+From the user:
+
+1. In the outfit editor, a list of the garments in the outfit; picking one in the list selects it on the board.
+2. Resizing with two fingers often selects another garment when the board is crowded. Find a good way, maybe
+   layers.
+3. Several colours per garment (e.g. blue and red), and the garment shows up when filtering on either. Keep Multi.
+
+Agreed the same day: the list is the layer order (front first) with Forward/Back; once a garment is selected,
+gestures anywhere on the board move only that one; a lock per garment; a garment has a list of colours, Multicolour
+kept. Fixed layers per category were left out. See ARCHITECTURE.md §5, §5.2, §7.3, §7.6.
+
 ### 2026-11-19 – Fill with the cut-out, rotate and backgrounds on outfits, sort by wear, import on first start (built in v0.2.1)
 
 From the user:

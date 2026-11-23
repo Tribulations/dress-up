@@ -54,7 +54,7 @@ class WardrobeViewModel(
     private fun buildState(garments: List<Garment>, categories: List<Category>, filter: WardrobeFilter, entries: List<DiaryEntry>): WardrobeUiState {
         val byId = categories.associateBy { it.id }
         val usedCategoryIds = garments.flatMap { it.categoryIds }.toSet()
-        val usedColours = garments.mapNotNull { it.colour }.toSet()
+        val usedColours = garments.flatMap { it.colours }.toSet()
         return WardrobeUiState.Loaded(
             tiles = applyFilter(garments, categories, filter, entries.garmentWears()).map { garment ->
                 WardrobeTile(garment, garmentTitle(garment, byId), garment.pictureFileName?.let(photos::file))

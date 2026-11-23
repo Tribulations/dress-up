@@ -75,7 +75,11 @@ internal data class TestGarment(
     val aspects: Map<GarmentAspect, Int> = emptyMap(),
     val cutout: Boolean = picture != null,
     val key: String? = null,
+    /** Colours after the main [colour], e.g. the navy of a white tee with navy stripes. */
+    val moreColours: List<GarmentColour> = emptyList(),
 ) {
+    val colours: List<GarmentColour> get() = listOfNotNull(colour) + moreColours
+
     constructor(
         category: String,
         colour: GarmentColour?,
@@ -90,7 +94,11 @@ internal data class TestGarment(
         cutout: Boolean = picture != null,
         key: String? = null,
         also: List<String> = emptyList(),
-    ) : this(listOf(category) + also, colour, picture, halfStars, liked, daysAgo, name, description, review, aspects, cutout, key)
+        moreColours: List<GarmentColour> = emptyList(),
+    ) : this(
+        listOf(category) + also, colour, picture, halfStars, liked, daysAgo, name, description, review, aspects, cutout, key,
+        moreColours,
+    )
 }
 
 /** A made-up outfit: the [garments] by [TestGarment.key], top to bottom of the board. */
@@ -125,7 +133,14 @@ internal data class TestDiaryEntry(
     }
 }
 
-internal data class TestOutfitItem(val key: String, val x: Float, val y: Float, val scale: Float, val rotation: Float = 0f)
+internal data class TestOutfitItem(
+    val key: String,
+    val x: Float,
+    val y: Float,
+    val scale: Float,
+    val rotation: Float = 0f,
+    val locked: Boolean = false,
+)
 
 /**
  * The test user's prefilled wardrobe (ARCHITECTURE.md §5.1): made-up garments with drawn pictures, a mix of rated
@@ -158,8 +173,8 @@ internal object TestWardrobe {
         TestGarment("tshirt", BLACK, Picture(TEE, colour(BLACK), backdrop = SAND), 8, daysAgo = 40, key = "black-tee"),
         TestGarment("tshirt", GREEN, Picture(TEE, colour(GREEN), backdrop = SAND), 6, daysAgo = 75, cutout = false),
         TestGarment(
-            "tshirt", MULTI, Picture(TEE, colour(WHITE), STRIPES, accent = colour(NAVY), backdrop = BLUSH), 7, daysAgo = 120,
-            name = "Breton stripes", key = "breton",
+            "tshirt", WHITE, Picture(TEE, colour(WHITE), STRIPES, accent = colour(NAVY), backdrop = BLUSH), 7, daysAgo = 120,
+            name = "Breton stripes", key = "breton", moreColours = listOf(NAVY),
         ),
         TestGarment(
             "shirt", BLUE, Picture(SHIRT, 0xFF8FB3DE.toInt(), backdrop = SAND), 8, daysAgo = 12,
@@ -170,7 +185,7 @@ internal object TestWardrobe {
         TestGarment(
             "shirt", RED, Picture(SHIRT, colour(RED), CHECK, accent = colour(BLACK), backdrop = STONE), null, daysAgo = 260,
             name = "Lumberjack flannel", description = "Brushed flannel, a size too big on purpose.",
-            also = listOf("jacket"), key = "flannel",
+            also = listOf("jacket"), key = "flannel", moreColours = listOf(BLACK),
         ),
         TestGarment(
             "sweater", BEIGE, Picture(SWEATER, colour(BEIGE), RIB, backdrop = SLATE), 10, liked = true, daysAgo = 30,
@@ -236,7 +251,7 @@ internal object TestWardrobe {
         TestGarment("accessory", null, picture = null, halfStars = 3, daysAgo = 340),
         TestGarment(
             SPORTSWEAR, ORANGE, Picture(TEE, colour(ORANGE), STRIPES, accent = colour(BLACK), backdrop = SLATE), 5, daysAgo = 25,
-            also = listOf("tshirt"), name = "Running top",
+            also = listOf("tshirt"), name = "Running top", moreColours = listOf(BLACK),
         ),
         TestGarment(NIGHTWEAR, null, Picture(PANTS, 0xFF8C9CC4.toInt(), CHECK, accent = colour(WHITE), backdrop = BLUSH), null, daysAgo = 70),
     )
@@ -245,7 +260,7 @@ internal object TestWardrobe {
         TestOutfit(
             "Sunday walk", daysAgo = 2,
             listOf(
-                TestOutfitItem("camel-coat", 0.32f, 0.32f, 0.55f),
+                TestOutfitItem("camel-coat", 0.32f, 0.32f, 0.55f, locked = true),
                 TestOutfitItem("favourite-sweater", 0.68f, 0.26f, 0.45f),
                 TestOutfitItem("scarf", 0.72f, 0.55f, 0.3f, rotation = -18f),
                 TestOutfitItem("jeans", 0.35f, 0.72f, 0.42f),
@@ -332,7 +347,7 @@ internal object TestWardrobe {
             outfitIds[outfit.name] = id
             outfitDao.insertItems(
                 outfit.garments.mapIndexed { position, item ->
-                    OutfitItemEntity(id, garmentIds.getValue(item.key), position, item.x, item.y, item.scale, item.rotation)
+                    OutfitItemEntity(id, garmentIds.getValue(item.key), position, item.x, item.y, item.scale, item.rotation, item.locked)
                 },
             )
             outfitDao.upsertAspectRatings(outfit.aspects.map { (aspect, halfStars) -> OutfitAspectRatingEntity(id, aspect.key, halfStars) })
@@ -363,7 +378,7 @@ internal object TestWardrobe {
             GarmentEntity(
                 name = garment.name,
                 description = garment.description,
-                colourKey = garment.colour?.key,
+                colourKeys = GarmentColour.keysOf(garment.colours),
                 photoFileName = photo,
                 cutoutFileName = cutout,
                 ratingHalfStars = garment.halfStars,

@@ -24,10 +24,10 @@ internal interface GarmentDao {
     suspend fun insert(garment: GarmentEntity): Long
 
     @Query(
-        "UPDATE garments SET name = :name, description = :description, colourKey = :colourKey, " +
+        "UPDATE garments SET name = :name, description = :description, colourKeys = :colourKeys, " +
             "photoFileName = :photoFileName WHERE id = :id",
     )
-    suspend fun updateDetails(id: Long, name: String?, description: String?, colourKey: String?, photoFileName: String?)
+    suspend fun updateDetails(id: Long, name: String?, description: String?, colourKeys: String?, photoFileName: String?)
 
     @Query("UPDATE garments SET cutoutFileName = :fileName WHERE id = :id")
     suspend fun setCutout(id: Long, fileName: String?)

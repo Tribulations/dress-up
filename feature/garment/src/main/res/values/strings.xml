@@ -32,7 +32,7 @@
     <string name="garment_name_hint">e.g. My favourite sweater</string>
     <string name="garment_description_optional">Description (optional)</string>
     <string name="garment_description_hint">Material, where it\'s from, how it fits…</string>
-    <string name="garment_colour_optional">Colour (optional)</string>
+    <string name="garment_colour_optional">Colours (optional, pick one or more)</string>
     <string name="garment_no_colour">None</string>
     <string name="garment_new_category">New category</string>
     <string name="garment_category_blank">Enter a name.</string>

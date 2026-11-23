@@ -196,7 +196,7 @@ class DiaryEditorViewModelTest {
 
     private object FakeGarments : GarmentRepository {
         private fun garment(id: Long, name: String) = Garment(
-            id, name, null, listOf(PANTS.id), null, "p$id.jpg", null, null, emptyMap(), null, false, 0,
+            id, name, null, listOf(PANTS.id), emptyList(), "p$id.jpg", null, null, emptyMap(), null, false, 0,
         )
         override val garments: Flow<List<Garment>> = MutableStateFlow(listOf(garment(1, "Oxford"), garment(2, "Chinos"), garment(3, "Jeans")))
         override fun garment(id: Long): Flow<Garment?> = garments.map { list -> list.firstOrNull { it.id == id } }

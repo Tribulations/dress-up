@@ -24,8 +24,8 @@ internal data class GarmentEntity(
     /** The user's own name for it ("my favourite sweater"), or null. */
     val name: String? = null,
     val description: String? = null,
-    /** [com.dressup.core.model.GarmentColour.key], or null when no colour is set. */
-    val colourKey: String?,
+    /** Its colours' keys in order, comma separated ([com.dressup.core.model.GarmentColour.keysOf]); null for none. */
+    val colourKeys: String?,
     val photoFileName: String?,
     /** The photo with its background removed (a PNG), or null. */
     val cutoutFileName: String? = null,
@@ -152,6 +152,7 @@ internal data class OutfitItemEntity(
     val scale: Float,
     /** Degrees clockwise, -180..180. */
     @ColumnInfo(defaultValue = "0") val rotation: Float = 0f,
+    @ColumnInfo(defaultValue = "0") val locked: Boolean = false,
 )
 
 internal data class GarmentWithDetails(

@@ -20,6 +20,7 @@ class WardrobeFilterTest {
         id: Long,
         category: Category,
         colour: GarmentColour? = null,
+        moreColours: List<GarmentColour> = emptyList(),
         rating: Int? = null,
         liked: Boolean = false,
         also: List<Category> = emptyList(),
@@ -28,7 +29,7 @@ class WardrobeFilterTest {
         name = null,
         description = null,
         categoryIds = (listOf(category) + also).map { it.id },
-        colour = colour,
+        colours = listOfNotNull(colour) + moreColours,
         photoFileName = null,
         cutoutFileName = null,
         rating = Rating.fromHalfStarsOrNull(rating),
@@ -59,6 +60,16 @@ class WardrobeFilterTest {
     @Test
     fun `several values of one filter mean any of them`() {
         assertEquals(listOf(3L, 2L, 1L), ids(WardrobeFilter(colours = setOf(GarmentColour.BLUE, GarmentColour.BLACK))))
+    }
+
+    @Test
+    fun `a garment with several colours shows up under each of them`() {
+        val stripes = garment(4, shirt, GarmentColour.WHITE, moreColours = listOf(GarmentColour.NAVY, GarmentColour.MULTI))
+        fun ids(filter: WardrobeFilter) = applyFilter(all + stripes, categories, filter).map { it.id }
+        assertEquals(listOf(4L), ids(WardrobeFilter(colours = setOf(GarmentColour.WHITE))))
+        assertEquals(listOf(4L), ids(WardrobeFilter(colours = setOf(GarmentColour.NAVY))))
+        assertEquals(listOf(4L), ids(WardrobeFilter(colours = setOf(GarmentColour.MULTI))))
+        assertEquals(listOf(4L, 3L, 1L), ids(WardrobeFilter(colours = setOf(GarmentColour.NAVY, GarmentColour.BLUE))))
     }
 
     @Test

@@ -20,14 +20,14 @@ class ProfileFileTest {
         categories = listOf(CategoryFile(1, "T-shirt", builtIn = "tshirt"), CategoryFile(14, "Sportswear", hidden = true)),
         garments = listOf(
             GarmentFile(
-                id = 3, name = "Coola favvis tröjan", categories = listOf(14, 1), colour = "beige",
+                id = 3, name = "Coola favvis tröjan", categories = listOf(14, 1), colours = listOf("beige", "navy"),
                 photo = "a.jpg", cutout = "b.webp", rating = 4.5, aspects = mapOf("fit" to 5.0),
                 review = "Warm.\nItches a little: at the neck.", liked = true, added = "2026-01-02T03:04:05Z",
             ),
             GarmentFile(id = 4, name = "true", description = "42", review = "null", categories = listOf(1)),
         ),
         outfits = listOf(
-            OutfitFile(id = 2, name = "Office", rating = 3.0, backgroundColour = "sage", items = listOf(OutfitItemFile(3, 0.5f, 0.25f, 0.45f, rotation = -15f))),
+            OutfitFile(id = 2, name = "Office", rating = 3.0, backgroundColour = "sage", items = listOf(OutfitItemFile(3, 0.5f, 0.25f, 0.45f, rotation = -15f, locked = true))),
             OutfitFile(id = 5, backgroundImage = "images/bg.jpg", items = listOf(OutfitItemFile(4, 0.5f, 0.5f, 0.45f))),
         ),
         diary = listOf(DiaryFile(date = "2025-12-24", outfit = 2, garments = listOf(3, 4), occasion = "Christmas Eve", note = "Too warm # by the fire")),
@@ -54,6 +54,21 @@ class ProfileFileTest {
         assertTrue(text.contains("favouriteColour"))
         assertEquals("Anna", ProfileYaml.decode(text).profile.name)
         assertEquals(ProfileYaml.Header("dress-up-profile", 1), ProfileYaml.header(text))
+    }
+
+    @Test
+    fun `several colours are a list, and a file with the single colour of v0_2_1 still reads`() {
+        val text = ProfileYaml.encode(file)
+        assertTrue(text, text.contains("colours:"))
+        assertFalse(text, text.contains("colour:"))
+        val old = text.replace(Regex("colours:\\n(\\s*- \"?\\w+\"?\\n)+"), "colour: beige\n")
+        val garment = ProfileYaml.decode(old).garments.first()
+        assertEquals("beige", garment.colour)
+        assertEquals(emptyList<String>(), garment.colours)
+        assertEquals("beige", ProfileImporter.colourKeys(garment))
+        assertEquals("beige,navy", ProfileImporter.colourKeys(file.garments.first()))
+        assertEquals("red", ProfileImporter.colourKeys(GarmentFile(1, categories = listOf(1), colours = listOf("teal", "red"))))
+        assertNull(ProfileImporter.colourKeys(file.garments[1]))
     }
 
     @Test

@@ -111,7 +111,8 @@ fun GarmentEditorRoute(data: DressUpData, garmentId: Long?, onCancel: () -> Unit
                 is EditorAction.ToggleCategory -> viewModel.toggleCategory(action.id)
                 is EditorAction.SetName -> viewModel.setName(action.name)
                 is EditorAction.SetDescription -> viewModel.setDescription(action.description)
-                is EditorAction.SelectColour -> viewModel.selectColour(action.colour)
+                is EditorAction.ToggleColour -> viewModel.toggleColour(action.colour)
+                EditorAction.ClearColours -> viewModel.clearColours()
                 EditorAction.NewCategory -> viewModel.openCategoryDialog()
                 is EditorAction.AddCategory -> viewModel.addCategory(action.name)
                 EditorAction.CloseCategoryDialog -> viewModel.closeCategoryDialog()
@@ -130,7 +131,8 @@ sealed interface EditorAction {
     data class ToggleCategory(val id: Long) : EditorAction
     data class SetName(val name: String) : EditorAction
     data class SetDescription(val description: String) : EditorAction
-    data class SelectColour(val colour: GarmentColour?) : EditorAction
+    data class ToggleColour(val colour: GarmentColour) : EditorAction
+    data object ClearColours : EditorAction
     data object NewCategory : EditorAction
     data class AddCategory(val name: String) : EditorAction
     data object CloseCategoryDialog : EditorAction
@@ -281,14 +283,14 @@ private fun ColourSection(state: GarmentEditorUiState, onAction: (EditorAction) 
     Section(stringResource(R.string.garment_colour_optional)) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
-                selected = state.colour == null,
-                onClick = { onAction(EditorAction.SelectColour(null)) },
+                selected = state.colours.isEmpty(),
+                onClick = { onAction(EditorAction.ClearColours) },
                 label = { Text(stringResource(R.string.garment_no_colour)) },
             )
             GarmentColour.entries.forEach { colour ->
                 FilterChip(
-                    selected = colour == state.colour,
-                    onClick = { onAction(EditorAction.SelectColour(colour)) },
+                    selected = colour in state.colours,
+                    onClick = { onAction(EditorAction.ToggleColour(colour)) },
                     label = { Text(colour.label()) },
                     leadingIcon = { ColourSwatch(colour) },
                 )

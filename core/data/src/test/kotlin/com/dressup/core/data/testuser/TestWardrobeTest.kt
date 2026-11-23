@@ -30,6 +30,7 @@ class TestWardrobeTest {
     fun `the wardrobe has the edge cases worth testing`() {
         assertTrue(garments.any { it.picture == null })
         assertTrue(garments.any { it.colour == null })
+        assertTrue(garments.any { it.colours.size > 1 })
         assertTrue(garments.any { it.halfStars == null })
         assertTrue(garments.any { it.halfStars != null && it.halfStars % 2 == 1 }) // a half star
         assertTrue(garments.any { it.liked } && garments.any { !it.liked })

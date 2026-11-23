@@ -56,18 +56,23 @@ class GarmentEditorViewModelTest {
     }
 
     @Test
-    fun `saving a new garment saves its name, description, categories in the order picked, and colour`() = runTest {
+    fun `saving a new garment saves its name, description, categories and colours in the order picked`() = runTest {
         val vm = editor()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
         vm.setName("Coola favvis tröjan")
         vm.setDescription("Lambswool")
         vm.toggleCategory(SHIRT.id)
         vm.toggleCategory(PANTS.id)
-        vm.selectColour(GarmentColour.NAVY)
+        vm.toggleColour(GarmentColour.NAVY)
+        vm.toggleColour(GarmentColour.RED)
+        vm.toggleColour(GarmentColour.BLUE)
+        vm.toggleColour(GarmentColour.RED) // tapped again: taken away
         vm.save()
 
         assertEquals(
-            GarmentDraft(null, "Coola favvis tröjan", "Lambswool", listOf(SHIRT.id, PANTS.id), GarmentColour.NAVY, null),
+            GarmentDraft(
+                null, "Coola favvis tröjan", "Lambswool", listOf(SHIRT.id, PANTS.id), listOf(GarmentColour.NAVY, GarmentColour.BLUE), null,
+            ),
             garments.savedDrafts.single(),
         )
         assertEquals(1L, vm.uiState.value.savedGarmentId)
@@ -105,13 +110,17 @@ class GarmentEditorViewModelTest {
         first.toggleCategory(SHIRT.id)
         first.toggleCategory(PANTS.id)
         first.setName("Rain jacket")
-        first.selectColour(GarmentColour.RED)
+        first.toggleColour(GarmentColour.RED)
+        first.toggleColour(GarmentColour.MULTI)
 
         val restored = editor(saved = saved)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { restored.uiState.collect {} }
         assertEquals(listOf(SHIRT.id, PANTS.id), restored.uiState.value.selectedCategoryIds)
         assertEquals("Rain jacket", restored.uiState.value.name)
-        assertEquals(GarmentColour.RED, restored.uiState.value.colour)
+        assertEquals(listOf(GarmentColour.RED, GarmentColour.MULTI), restored.uiState.value.colours)
+
+        restored.clearColours()
+        assertEquals(emptyList<GarmentColour>(), restored.uiState.value.colours)
     }
 
     @Test

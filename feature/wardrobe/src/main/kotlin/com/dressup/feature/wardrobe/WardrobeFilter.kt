@@ -31,7 +31,7 @@ internal fun applyFilter(
 ): List<Garment> {
     val shown = garments.filter { garment ->
         (filter.categoryIds.isEmpty() || garment.categoryIds.any { it in filter.categoryIds }) &&
-            (filter.colours.isEmpty() || garment.colour in filter.colours) &&
+            (filter.colours.isEmpty() || garment.colours.any { it in filter.colours }) &&
             (!filter.likedOnly || garment.liked)
     }
     val newestFirst = compareByDescending<Garment> { it.createdAtMillis }.thenByDescending { it.id }

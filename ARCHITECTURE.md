@@ -70,10 +70,11 @@ Decided 2026-11-18 (the user's answers in BRAINSTORMING.md "Open questions"); bu
 since v0.1.2 (`MIGRATION_1_2`: the old garments table is renamed, copied into the new one and dropped only after every
 row and its category link are in the new tables), version 3 since v0.2.0 (a Room auto-migration: it only adds outfit
 rating columns and the outfit-aspect and diary tables), version 4 since v0.2.1 (auto-migration: outfit backgrounds and
-garment rotation on the board).
+garment rotation on the board), version 5 since v0.2.2 (auto-migration: `colourKey` renamed to `colourKeys`, the lock
+of outfit items).
 
 - **Garment** (`garments`): id, **name (optional**, e.g. "Coola favvis tröjan", at most 40 characters),
-  **description (optional**, 500), colourKey (optional), photoFileName (optional), **cutoutFileName** (optional, the
+  **description (optional**, 500), colourKeys (optional, §5 Colour), photoFileName (optional), **cutoutFileName** (optional, the
   photo with its background removed, §7.5), ratingHalfStars (optional, 1..10), **review (optional**, 2000), liked,
   createdAtMillis. Blank texts are stored as null. More optional fields (brand, size, price, material) can be added
   when a feature needs them, with a migration.
@@ -91,8 +92,11 @@ garment rotation on the board).
 - The garment-category link's category foreign key is **RESTRICT**: a category in use can't be deleted, so no garment
   ever loses its last category. Deleting a garment removes its links and aspect ratings (CASCADE).
 - **Rating:** **both** a star rating (½ to 5 stars, in half steps) **and** a separate like (heart), each optional.
-- **Colour:** one of a fixed list (`GarmentColour`: black, white, grey, beige, brown, red, pink, orange, yellow, green,
-  blue, navy, purple, multicolour). The stored `key` must never change.
+- **Colours** (several since v0.2.2): none, one or more of a fixed list (`GarmentColour`: black, white, grey, beige,
+  brown, red, pink, orange, yellow, green, blue, navy, purple, multicolour), in the order picked (the first is the
+  main one). **Multicolour** is for patterns and can be combined with others. Stored as the keys, comma separated, in
+  `colourKeys` ("white,navy"); a value from before v0.2.2 is a valid list of one, so the migration only renames the
+  column. The keys must never change.
 - **Diary entries**: see §5.3.
 - **List** (M3, not decided): id, name, ordered garment ids.
 
@@ -121,10 +125,10 @@ garment rotation on the board).
 - **Outfit aspect ratings** (`outfit_aspect_ratings`: outfitId, aspectKey, halfStars): a fixed list of its own
   (`OutfitAspect`: comfort, style, fit, **for the occasion**), chosen 2026-11-19 because "easy care" and "quality"
   belong to single garments.
-- **Outfit item** (`outfit_items`: outfitId, garmentId, position, x, y, scale, rotation): one garment on the outfit's
-  collage board. x and y are the centre of its picture as fractions of the 3:4 board (0..1), scale its width as a
-  fraction of the board's width (0.15–1.2), rotation its turn in degrees clockwise (-180..180, since v0.2.1), position
-  the drawing order (last on top).
+- **Outfit item** (`outfit_items`: outfitId, garmentId, position, x, y, scale, rotation, locked): one garment on the
+  outfit's collage board. x and y are the centre of its picture as fractions of the 3:4 board (0..1), scale its width
+  as a fraction of the board's width (0.15–1.2), rotation its turn in degrees clockwise (-180..180, since v0.2.1),
+  position the drawing order, i.e. its **layer** (last on top), and locked (v0.2.2) whether it stays put on the board.
 - **Outfit background** (v0.2.1, on `outfits`): backgroundColourKey (one of a fixed palette, `BoardColour`: white,
   cream, sand, blush, sage, sky, mustard, terracotta, slate, plum, charcoal, black; keys never change) or
   backgroundFileName (the user's own picture from the camera or gallery, imported like a garment photo into the
@@ -165,13 +169,13 @@ those go into an export.
 2. The result is imported at once: decoded with `ImageDecoder` (applies the EXIF rotation), downscaled, written to
    `files/photos/<uuid>.jpg`.
 3. Optionally a **name** and a **description**; one or more **categories** (required; the first picked is the main one,
-   marked "(main)"; **New category** adds one from the editor); optionally a colour. Then **Save**. A new garment then
+   marked "(main)"; **New category** adds one from the editor); optionally one or more colours (tap to add, tap again to take away; **None** clears them). Then **Save**. A new garment then
    opens its page; an edit returns to it.
 
 Never losing work or photos:
 
 - The editor's inputs live in `SavedStateHandle`, and the pending camera URI in `rememberSaveable`, so if Android
-  stops dress-up while the camera is open, the editor comes back with the category, colour and new photo.
+  stops dress-up while the camera is open, the editor comes back with the category, colours and new photo.
 - On edit, the old photo file is deleted only **after** the database points at the new one.
 - A photo taken in the editor and then replaced before saving is deleted at once. A photo from an editor that was left
   without saving is removed by `DressUpData.cleanUpUnusedPhotos()`, which runs only on a **fresh** app start (not when
@@ -189,7 +193,8 @@ is a separate toggle. Under **Rate the details**, each aspect (§5) has its own 
 
 A grid of 2:3 photo tiles (adaptive, about three columns on a phone), newest first. Filter chips: **Liked**, then
 each category in use, then each colour in use (only chips that give a result). Several chips of one kind mean "any of
-them"; different kinds combine. A garment with several categories matches the chip of any of them. Sort: newest, oldest, highest rated (unrated
+them"; different kinds combine. A garment with several categories matches the chip of any of them, and one with
+several colours (v0.2.2) the chip of any of its colours. Sort: newest, oldest, highest rated (unrated
 last), by (main) category, **most worn** and **least worn** (v0.2.1; counted from the diary, never-worn garments
 count as least worn; on equal counts the more recently worn first). A new sort or filter scrolls the grid to the top;
 coming back from a garment keeps the place. A tile shows the cut-out when there is one (whole, on the app's own soft backdrop),
@@ -229,10 +234,20 @@ keeps its classes.
 
 1. Outfits tab → **+** opens the **gallery**: every garment's picture (cut-outs where there are any) in a grid. Tap to
    pick or unpick, then **Done**.
-2. The picked garments land on the **board** in two columns, fully visible. Drag a garment to move it, pinch to resize
-   it; tapping one selects it (outlined) and brings it to the front. The selected garment gets a **Size** slider (for
-   resizing without pinching) and **Remove**. Since v0.2.1 a garment can also be **turned**: twist it with two
-   fingers, or use the **Turn** slider (-180..180°) with **Straighten**. **Background** opens a dialog: none, a palette
+2. The picked garments land on the **board** in two columns, fully visible. **Selecting and moving** (v0.2.2, so a
+   crowded board doesn't steal gestures): a quick tap selects the topmost unlocked garment under the finger (outlined),
+   or nothing on an empty spot. Then dragging, pinching and twisting **anywhere on the board** move, resize and turn
+   only the selected garment, even with the fingers on other garments; a gesture never changes the selection. With
+   nothing selected, a drag that starts on a garment selects and moves it. The touch test follows each garment's
+   turned square (`topmostAt`).
+   **Layers** (v0.2.2): under the board, a strip of the outfit's garments, the front one first. Tapping one selects
+   it on the board, and selecting on the board highlights it there. Selecting no longer brings a garment to the front;
+   the selected garment's **Forward** / **Back** move it one layer. **Lock** keeps a garment where it is (e.g. a coat
+   in the background): the board's touches pass it by, its sliders are hidden, and it can only be selected (and
+   unlocked) in the strip, where it shows a padlock. The lock is saved with the outfit.
+   The selected garment also gets a **Size** slider (for resizing without pinching) and **Remove**. Since v0.2.1 a
+   garment can also be **turned**: twist it with two fingers, or use the **Turn** slider (-180..180°) with
+   **Straighten**. **Background** opens a dialog: none, a palette
    colour, or your own picture (**Take photo** / **From gallery**). The board looks the same everywhere it's shown
    (outfit list, outfit page, diary). **Pick garments** reopens the gallery: still-picked garments keep their
    place, new ones are laid out, unpicked ones leave.
@@ -268,7 +283,8 @@ chooses the place (Downloads, Google Drive, …) and the app needs no permission
     categories (built-in ones by key, with their hidden flag), garments (names, categories, colour, picture paths,
     stars as 0.5–5, aspects, review, like, date added), outfits (ratings, aspects, review, board items) and the diary
     (date, outfit, garments worn, occasion, note). Since v0.2.1 an outfit can have `backgroundColour` (a palette key)
-    or `backgroundImage` (`images/<file>`), and a board item `rotation`. Empty fields are left out; ids only link
+    or `backgroundImage` (`images/<file>`), and a board item `rotation`. Since v0.2.2 a garment has `colours` (a list of
+    keys) and a board item `locked`; the single `colour` of older files is still read. Empty fields are left out; ids only link
     things within the file.
   - `images/`: every photo and cut-out, under the names the YAML gives (`photo: images/<file>.jpg`).
 - **Import** always adds a **new profile** (never touches an existing one) named after the file's profile, with " (2)"
@@ -313,7 +329,8 @@ likes, and a mustard coat-hanger launcher icon. The name is still a working titl
 
 See GUIDELINES.md §5. Unit tests (JVM): rating and colour models, category-name cleaning, the rating bar's touch
 maths, wardrobe filtering/sorting (several categories), the garment editor and page, outfit editor and profiles
-ViewModels with fake repositories, the outfit board's maths and default layout, the cut-out crop, profile rules and
+ViewModels with fake repositories, the outfit board's maths, layers, lock, touch test (`topmostAt`) and default layout, several colours (storage,
+filter, editor, export), the cut-out crop, profile rules and
 paths, the test wardrobe's contents, the diary model (order, wear counts), the diary editor, the `profile.yaml` round
 trip and import rules, and the export/import screen. The database migration is verified by updating the published
 previous release on the emulator with real data, and export/import by a full round trip on the emulator (STATUS.md). For manual testing, the **test user** (§5.1) gives a full wardrobe in one tap. Manual tests on the emulator

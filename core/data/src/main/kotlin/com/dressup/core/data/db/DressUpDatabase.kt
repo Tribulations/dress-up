@@ -3,8 +3,10 @@ package com.dressup.core.data.db
 import android.content.Context
 import androidx.room.AutoMigration
 import androidx.room.Database
+import androidx.room.RenameColumn
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.AutoMigrationSpec
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
@@ -19,11 +21,16 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         DiaryEntryEntity::class,
         DiaryEntryGarmentEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
     // v0.1.2 → v0.2.0 (outfit ratings, the diary) and v0.2.0 → v0.2.1 (outfit backgrounds, rotation) only add tables
-    // and columns, which Room can migrate by itself.
-    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
+    // and columns, which Room can migrate by itself. v0.2.1 → v0.2.2 renames colourKey to colourKeys (a garment can
+    // have several colours now, and the one it had is a valid list of one) and adds the lock of outfit items.
+    autoMigrations = [
+        AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 3, to = 4),
+        AutoMigration(from = 4, to = 5, spec = SeveralColours::class),
+    ],
 )
 internal abstract class DressUpDatabase : RoomDatabase() {
     abstract fun garmentDao(): GarmentDao
@@ -40,6 +47,9 @@ internal abstract class DressUpDatabase : RoomDatabase() {
                 .build()
     }
 }
+
+@RenameColumn(tableName = "garments", fromColumnName = "colourKey", toColumnName = "colourKeys")
+internal class SeveralColours : AutoMigrationSpec
 
 /** The categories the app ships with (ARCHITECTURE.md §5). The keys are stored, so they must never change. */
 internal val BUILT_IN_CATEGORIES = listOf(

@@ -1,5 +1,9 @@
 package com.dressup.core.model
 
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
+
 /**
  * Garments put together as one look (ARCHITECTURE.md §5.2), shown as a collage: each [items] entry places one garment's
  * picture on the board. The list order is the drawing order, the last one on top.
@@ -59,6 +63,8 @@ data class OutfitItem(
     val y: Float,
     val scale: Float,
     val rotation: Float = 0f,
+    /** Locked garments stay where they are: touching them on the board neither selects nor moves them. */
+    val locked: Boolean = false,
 ) {
     companion object {
         const val MIN_SCALE = 0.15f
@@ -95,3 +101,19 @@ fun defaultOutfitLayout(garmentIds: List<Long>, existing: Int = 0): List<OutfitI
     val row = (slot / 2) % 3
     OutfitItem(garmentId = id, x = 0.28f + 0.44f * column, y = 0.18f + 0.32f * row, scale = OutfitItem.DEFAULT_SCALE)
 }
+
+/**
+ * The garment a touch at ([px], [py]) pixels lands on, on a board of [boardWidth] × [boardHeight] pixels: the topmost
+ * (last drawn) one whose square, turned with it, contains the point. Locked garments are skipped. Null: nothing there.
+ */
+fun List<OutfitItem>.topmostAt(px: Float, py: Float, boardWidth: Float, boardHeight: Float): Long? = lastOrNull { item ->
+    if (item.locked) return@lastOrNull false
+    val half = item.scale * boardWidth / 2
+    val dx = px - item.x * boardWidth
+    val dy = py - item.y * boardHeight
+    // Turn the point back by the garment's rotation, so the test is against an upright square.
+    val radians = Math.toRadians(-item.rotation.toDouble())
+    val localX = dx * cos(radians) - dy * sin(radians)
+    val localY = dx * sin(radians) + dy * cos(radians)
+    abs(localX) <= half && abs(localY) <= half
+}?.garmentId

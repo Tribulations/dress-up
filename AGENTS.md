@@ -93,7 +93,7 @@ emulator.
 - The emulator's camera app shows a virtual scene; press the shutter at the bottom centre, then **Done**. For the
   gallery, push a **made-up** image to `/sdcard/Pictures/` and send a media-scanner broadcast.
 - **Test data:** Settings → Profiles → **Test user** fills a separate profile with 32 made-up garments with drawn
-  pictures and cut-outs, names, reviews, three rated outfits and a diary of 13 wears (`core:data` `testuser/`). Wait
+  pictures and cut-outs, names, reviews, three rated outfits (Sunday walk has a locked coat), a few garments with several colours, and a diary of 13 wears (`core:data` `testuser/`). Wait
   for "The test wardrobe is reset." before leaving the screen. Use it rather than adding garments by hand; **Reset** restores it. It never
   touches the user's own profiles.
 

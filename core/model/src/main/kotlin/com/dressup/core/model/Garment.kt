@@ -12,7 +12,8 @@ data class Garment(
     val name: String?,
     val description: String?,
     val categoryIds: List<Long>,
-    val colour: GarmentColour?,
+    /** Its colours in the order picked, the first being the main one; empty when none is set. */
+    val colours: List<GarmentColour>,
     val photoFileName: String?,
     val cutoutFileName: String?,
     val rating: Rating?,
@@ -31,7 +32,7 @@ data class GarmentDraft(
     val name: String?,
     val description: String?,
     val categoryIds: List<Long>,
-    val colour: GarmentColour?,
+    val colours: List<GarmentColour>,
     val photoFileName: String?,
 )
 

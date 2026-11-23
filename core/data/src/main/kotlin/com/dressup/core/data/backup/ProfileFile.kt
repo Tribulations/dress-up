@@ -49,6 +49,9 @@ internal data class GarmentFile(
     val description: String? = null,
     /** Category ids, the main one first. */
     val categories: List<Long>,
+    /** Colour keys (blue, red, multi, …), the main one first. */
+    val colours: List<String> = emptyList(),
+    /** Files from v0.2.0 and v0.2.1 have a single colour here instead; still read, never written. */
     val colour: String? = null,
     val photo: String? = null,
     val cutout: String? = null,
@@ -81,7 +84,14 @@ internal data class OutfitFile(
  * [rotation] in degrees clockwise.
  */
 @Serializable
-internal data class OutfitItemFile(val garment: Long, val x: Float, val y: Float, val scale: Float, val rotation: Float = 0f)
+internal data class OutfitItemFile(
+    val garment: Long,
+    val x: Float,
+    val y: Float,
+    val scale: Float,
+    val rotation: Float = 0f,
+    val locked: Boolean = false,
+)
 
 @Serializable
 internal data class DiaryFile(

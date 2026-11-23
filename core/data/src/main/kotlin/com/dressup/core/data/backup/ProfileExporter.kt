@@ -2,6 +2,7 @@ package com.dressup.core.data.backup
 
 import androidx.room.withTransaction
 import com.dressup.core.data.DressUpData
+import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.Rating
 import java.io.OutputStream
 import java.time.Instant
@@ -58,7 +59,7 @@ internal object ProfileExporter {
                         name = g.name,
                         description = g.description,
                         categories = row.categories.sortedBy { it.position }.map { it.categoryId },
-                        colour = g.colourKey,
+                        colours = GarmentColour.listFromKeys(g.colourKeys).map { it.key },
                         photo = g.photoFileName?.let { IMAGES_DIR + it },
                         cutout = g.cutoutFileName?.let { IMAGES_DIR + it },
                         rating = stars(g.ratingHalfStars),
@@ -80,7 +81,7 @@ internal object ProfileExporter {
                         created = Instant.ofEpochMilli(o.createdAtMillis).toString(),
                         backgroundColour = o.backgroundColourKey.takeIf { o.backgroundFileName == null },
                         backgroundImage = o.backgroundFileName?.let { IMAGES_DIR + it },
-                        items = row.items.sortedBy { it.position }.map { OutfitItemFile(it.garmentId, it.x, it.y, it.scale, it.rotation) },
+                        items = row.items.sortedBy { it.position }.map { OutfitItemFile(it.garmentId, it.x, it.y, it.scale, it.rotation, it.locked) },
                     )
                 },
                 diary = diary.map { row ->

@@ -140,19 +140,36 @@ class OutfitEditorViewModel(
         if (status.value.selectedGarmentId !in garmentIds) select(null)
     }
 
-    /** Selecting a garment also brings it to the front, so it is the one being moved. */
-    fun select(garmentId: Long?) {
-        if (garmentId != null && garmentId != status.value.selectedGarmentId) {
-            setFields { it.copy(items = it.items.broughtToFront(garmentId)) }
-        }
-        status.update { it.copy(selectedGarmentId = garmentId) }
+    /**
+     * Selects a garment on the board or in the layer list (where a locked one can be selected too, to unlock it).
+     * Selecting never changes the layer order: that is [moveLayer]'s job.
+     */
+    fun select(garmentId: Long?) = status.update { it.copy(selectedGarmentId = garmentId) }
+
+    /** A locked garment is never moved, whatever the gesture. */
+    fun transform(garmentId: Long, dx: Float, dy: Float, zoom: Float, rotation: Float = 0f) {
+        if (isLocked(garmentId)) return
+        setFields { it.copy(items = it.items.transformed(garmentId, dx, dy, zoom, rotation)) }
     }
 
-    fun transform(garmentId: Long, dx: Float, dy: Float, zoom: Float, rotation: Float = 0f) =
-        setFields { it.copy(items = it.items.transformed(garmentId, dx, dy, zoom, rotation)) }
-
     /** The rotation slider: turns the garment to [degrees]. */
-    fun rotate(garmentId: Long, degrees: Float) = setFields { it.copy(items = it.items.rotated(garmentId, degrees)) }
+    fun rotate(garmentId: Long, degrees: Float) {
+        if (isLocked(garmentId)) return
+        setFields { it.copy(items = it.items.rotated(garmentId, degrees)) }
+    }
+
+    /** Moves the selected garment one layer to the front ([steps] 1) or the back (-1). */
+    fun moveLayer(steps: Int) {
+        val id = status.value.selectedGarmentId ?: return
+        setFields { it.copy(items = it.items.movedLayer(id, steps)) }
+    }
+
+    fun toggleLock() {
+        val id = status.value.selectedGarmentId ?: return
+        setFields { it.copy(items = it.items.lockToggled(id)) }
+    }
+
+    private fun isLocked(garmentId: Long) = fields.value.items.any { it.garmentId == garmentId && it.locked }
 
     /** A palette colour, or null for no background. */
     fun setBackgroundColour(colour: BoardColour?) = replaceBackground(colour?.let(OutfitBackground::Colour))
@@ -181,7 +198,10 @@ class OutfitEditorViewModel(
         }
     }
 
-    fun resize(garmentId: Long, scale: Float) = setFields { it.copy(items = it.items.resized(garmentId, scale)) }
+    fun resize(garmentId: Long, scale: Float) {
+        if (isLocked(garmentId)) return
+        setFields { it.copy(items = it.items.resized(garmentId, scale)) }
+    }
 
     fun removeSelected() {
         val id = status.value.selectedGarmentId ?: return
@@ -221,6 +241,7 @@ class OutfitEditorViewModel(
         savedState[KEY_YS] = updated.items.map { it.y }.toFloatArray()
         savedState[KEY_SCALES] = updated.items.map { it.scale }.toFloatArray()
         savedState[KEY_ROTATIONS] = updated.items.map { it.rotation }.toFloatArray()
+        savedState[KEY_LOCKS] = updated.items.map { it.locked }.toBooleanArray()
         savedState[KEY_BG_COLOUR] = (updated.background as? OutfitBackground.Colour)?.colour?.key
         savedState[KEY_BG_IMAGE] = (updated.background as? OutfitBackground.Image)?.fileName
         savedState[KEY_BG_SAVED] = updated.savedBackgroundFile
@@ -232,13 +253,14 @@ class OutfitEditorViewModel(
         val ys = savedState.get<FloatArray>(KEY_YS) ?: FloatArray(0)
         val scales = savedState.get<FloatArray>(KEY_SCALES) ?: FloatArray(0)
         val rotations = savedState.get<FloatArray>(KEY_ROTATIONS) ?: FloatArray(0)
+        val locks = savedState.get<BooleanArray>(KEY_LOCKS) ?: BooleanArray(0)
         val count = minOf(ids.size, xs.size, ys.size, scales.size)
         val image = savedState.get<String>(KEY_BG_IMAGE)?.let(OutfitBackground::Image)
         val colour = BoardColour.fromKeyOrNull(savedState.get<String>(KEY_BG_COLOUR))?.let(OutfitBackground::Colour)
         return OutfitFields(
             loaded = savedState[KEY_LOADED] ?: false,
             name = savedState[KEY_NAME] ?: "",
-            items = (0 until count).map { OutfitItem(ids[it], xs[it], ys[it], scales[it], rotations.getOrElse(it) { 0f }) },
+            items = (0 until count).map { OutfitItem(ids[it], xs[it], ys[it], scales[it], rotations.getOrElse(it) { 0f }, locks.getOrElse(it) { false }) },
             galleryOpen = savedState[KEY_GALLERY] ?: false,
             background = image ?: colour,
             savedBackgroundFile = savedState[KEY_BG_SAVED],
@@ -268,6 +290,7 @@ class OutfitEditorViewModel(
         const val KEY_YS = "ys"
         const val KEY_SCALES = "scales"
         const val KEY_ROTATIONS = "rotations"
+        const val KEY_LOCKS = "locks"
         const val KEY_BG_COLOUR = "backgroundColour"
         const val KEY_BG_IMAGE = "backgroundImage"
         const val KEY_BG_SAVED = "savedBackgroundImage"

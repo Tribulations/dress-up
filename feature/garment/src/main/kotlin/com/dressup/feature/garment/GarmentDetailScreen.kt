@@ -3,6 +3,7 @@ package com.dressup.feature.garment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -237,23 +238,24 @@ private fun CutoutButton(state: GarmentDetailUiState.Loaded, onAction: (DetailAc
     }
 }
 
-/** The name on top, its categories (and colour) underneath (ARCHITECTURE.md §8). */
+/** The name on top, its categories (and colours) underneath (ARCHITECTURE.md §8). */
 @Composable
 private fun Heading(state: GarmentDetailUiState.Loaded) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(state.title, style = MaterialTheme.typography.headlineMedium)
-        val colour = state.garment.colour
+        val colours = state.garment.colours
         val showCategories = state.hasNameAsTitle || state.garment.categoryIds.size > 1
-        if (showCategories || colour != null) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (showCategories) {
-                    Text(state.subtitle, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                }
-                if (colour != null) {
-                    if (showCategories) Spacer(Modifier.width(12.dp))
-                    ColourSwatch(colour)
-                    Spacer(Modifier.width(6.dp))
-                    Text(colour.label(), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (showCategories) {
+            Text(state.subtitle, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+        }
+        if (colours.isNotEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                colours.forEach { colour ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        ColourSwatch(colour)
+                        Spacer(Modifier.width(6.dp))
+                        Text(colour.label(), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }

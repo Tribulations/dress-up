@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-23
+
+### Added
+- **Several colours per garment:** tap blue and red (and more) in the garment editor. The garment shows up under the
+  wardrobe filter of each of its colours. Multicolour stays, for patterns, and can be combined with others.
+- **Layers in the outfit editor:** a strip of the outfit's garments under the board, the front one first. Tap one to
+  select it on the board; **Forward** and **Back** move the selected garment one layer.
+- **Lock** a garment on the outfit board, e.g. a coat in the background: touching it on the board neither selects nor
+  moves it. Unlock it from the layer strip. Saved with the outfit and in exports.
+
+### Changed
+- On the outfit board, once a garment is selected, dragging, pinching and twisting **anywhere on the board** move only
+  that garment, so a crowded board no longer picks up the wrong one mid-gesture. A quick tap selects another garment.
+- Selecting a garment no longer brings it to the front (use Forward and Back).
+- Exports write `colours:` as a list; files with the older single `colour:` still import.
+- Database version 5 (added by itself on update; a garment's colour is kept).
+
 ## [0.2.1] - 2026-11-19
 
 ### Added

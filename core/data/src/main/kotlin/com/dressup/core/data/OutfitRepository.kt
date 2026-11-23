@@ -69,7 +69,7 @@ internal class RoomOutfitRepository(
             dao.deleteItems(id)
             dao.insertItems(
                 draft.items.distinctBy { it.garmentId }.mapIndexed { position, item ->
-                    OutfitItemEntity(id, item.garmentId, position, item.x, item.y, item.scale, normalizedRotation(item.rotation))
+                    OutfitItemEntity(id, item.garmentId, position, item.x, item.y, item.scale, normalizedRotation(item.rotation), item.locked)
                 },
             )
             id

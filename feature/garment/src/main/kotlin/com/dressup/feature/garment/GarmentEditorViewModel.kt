@@ -30,7 +30,8 @@ private data class EditorFields(
     val description: String = "",
     /** In the order picked: the first is the main category. */
     val categoryIds: List<Long> = emptyList(),
-    val colour: GarmentColour? = null,
+    /** In the order picked: the first is the main colour. */
+    val colours: List<GarmentColour> = emptyList(),
     val photoFileName: String? = null,
 )
 
@@ -57,7 +58,7 @@ data class GarmentEditorUiState(
     val description: String,
     /** In the order picked: the first is the main category. */
     val selectedCategoryIds: List<Long>,
-    val colour: GarmentColour?,
+    val colours: List<GarmentColour>,
     val photo: File?,
     val importingPhoto: Boolean,
     val saving: Boolean,
@@ -91,7 +92,7 @@ class GarmentEditorViewModel(
                 name = f.name,
                 description = f.description,
                 selectedCategoryIds = f.categoryIds,
-                colour = f.colour,
+                colours = f.colours,
                 photo = f.photoFileName?.let(photos::file),
                 importingPhoto = s.importingPhoto,
                 saving = s.saving,
@@ -120,7 +121,7 @@ class GarmentEditorViewModel(
                     name = garment?.name.orEmpty(),
                     description = garment?.description.orEmpty(),
                     categoryIds = garment?.categoryIds.orEmpty(),
-                    colour = garment?.colour,
+                    colours = garment?.colours.orEmpty(),
                     photoFileName = garment?.photoFileName,
                 )
             }
@@ -136,7 +137,12 @@ class GarmentEditorViewModel(
 
     fun setDescription(description: String) = setFields { it.copy(description = description.take(MAX_DESCRIPTION_LENGTH)) }
 
-    fun selectColour(colour: GarmentColour?) = setFields { it.copy(colour = colour) }
+    /** Tapping a colour adds it, or takes it away again. */
+    fun toggleColour(colour: GarmentColour) = setFields {
+        it.copy(colours = if (colour in it.colours) it.colours - colour else it.colours + colour)
+    }
+
+    fun clearColours() = setFields { it.copy(colours = emptyList()) }
 
     fun newCaptureUri(): Uri = photos.newCaptureUri()
 
@@ -176,7 +182,7 @@ class GarmentEditorViewModel(
                         name = current.name,
                         description = current.description,
                         categoryIds = current.categoryIds,
-                        colour = current.colour,
+                        colours = current.colours,
                         photoFileName = current.photoFileName,
                     ),
                 )
@@ -217,7 +223,7 @@ class GarmentEditorViewModel(
         savedState[KEY_NAME] = updated.name
         savedState[KEY_DESCRIPTION] = updated.description
         savedState[KEY_CATEGORIES] = updated.categoryIds.toLongArray()
-        savedState[KEY_COLOUR] = updated.colour?.key
+        savedState[KEY_COLOURS] = GarmentColour.keysOf(updated.colours)
         savedState[KEY_PHOTO] = updated.photoFileName
     }
 
@@ -226,7 +232,7 @@ class GarmentEditorViewModel(
         name = savedState[KEY_NAME] ?: "",
         description = savedState[KEY_DESCRIPTION] ?: "",
         categoryIds = savedState.get<LongArray>(KEY_CATEGORIES)?.toList().orEmpty(),
-        colour = GarmentColour.fromKeyOrNull(savedState[KEY_COLOUR]),
+        colours = GarmentColour.listFromKeys(savedState[KEY_COLOURS]),
         photoFileName = savedState[KEY_PHOTO],
     )
 
@@ -237,7 +243,7 @@ class GarmentEditorViewModel(
         name = "",
         description = "",
         selectedCategoryIds = emptyList(),
-        colour = null,
+        colours = emptyList(),
         photo = null,
         importingPhoto = false,
         saving = false,
@@ -252,7 +258,7 @@ class GarmentEditorViewModel(
         const val KEY_NAME = "name"
         const val KEY_DESCRIPTION = "description"
         const val KEY_CATEGORIES = "categoryIds"
-        const val KEY_COLOUR = "colour"
+        const val KEY_COLOURS = "colours"
         const val KEY_PHOTO = "photo"
         const val KEY_ORIGINAL_PHOTO = "originalPhoto"
     }

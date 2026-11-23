@@ -22,9 +22,21 @@ class OutfitEditingTest {
     }
 
     @Test
-    fun `bringing a garment to the front draws it last`() {
-        assertEquals(listOf(shoes, top), board.broughtToFront(1))
-        assertEquals(board, board.broughtToFront(99))
+    fun `a garment moves one layer at a time, and stops at the front and the back`() {
+        val hat = OutfitItem(garmentId = 3, x = 0.5f, y = 0.1f, scale = 0.2f)
+        val three = listOf(top, shoes, hat) // hat in front
+        assertEquals(listOf(shoes, top, hat), three.movedLayer(1, steps = 1))
+        assertEquals(listOf(top, hat, shoes), three.movedLayer(3, steps = -1))
+        assertEquals(three, three.movedLayer(3, steps = 1))
+        assertEquals(three, three.movedLayer(1, steps = -1))
+        assertEquals(three, three.movedLayer(99, steps = 1))
+    }
+
+    @Test
+    fun `locking toggles only that garment`() {
+        val locked = board.lockToggled(2)
+        assertEquals(listOf(false, true), locked.map { it.locked })
+        assertEquals(board, locked.lockToggled(2))
     }
 
     @Test

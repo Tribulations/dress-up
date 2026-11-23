@@ -13,6 +13,7 @@ import com.dressup.core.data.photo.FilePhotoStorage
 import com.dressup.core.data.photo.opaqueBounds
 import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentAspect
+import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.GarmentDraft
 import com.dressup.core.model.MAX_DESCRIPTION_LENGTH
 import com.dressup.core.model.MAX_GARMENT_NAME_LENGTH
@@ -82,7 +83,7 @@ internal class RoomGarmentRepository(
                     GarmentEntity(
                         name = name,
                         description = description,
-                        colourKey = draft.colour?.key,
+                        colourKeys = GarmentColour.keysOf(draft.colours),
                         photoFileName = draft.photoFileName,
                         ratingHalfStars = null,
                         liked = false,
@@ -96,7 +97,7 @@ internal class RoomGarmentRepository(
         val previous = dao.get(existingId)
         val photoChanged = previous != null && previous.photoFileName != draft.photoFileName
         database.withTransaction {
-            dao.updateDetails(existingId, name, description, draft.colour?.key, draft.photoFileName)
+            dao.updateDetails(existingId, name, description, GarmentColour.keysOf(draft.colours), draft.photoFileName)
             dao.deleteCategories(existingId)
             dao.insertCategories(links(existingId, draft.categoryIds))
             if (photoChanged) dao.setCutout(existingId, null)

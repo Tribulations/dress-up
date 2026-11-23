@@ -123,6 +123,8 @@ fun OutfitEditorRoute(data: DressUpData, outfitId: Long?, onDone: (savedOutfitId
                 is OutfitEditorAction.Transform -> viewModel.transform(action.garmentId, action.dx, action.dy, action.zoom, action.rotation)
                 is OutfitEditorAction.Resize -> viewModel.resize(action.garmentId, action.scale)
                 is OutfitEditorAction.Rotate -> viewModel.rotate(action.garmentId, action.degrees)
+                is OutfitEditorAction.MoveLayer -> viewModel.moveLayer(action.steps)
+                OutfitEditorAction.ToggleLock -> viewModel.toggleLock()
                 is OutfitEditorAction.SetBackgroundColour -> viewModel.setBackgroundColour(action.colour)
                 OutfitEditorAction.BackgroundFailedShown -> viewModel.backgroundFailedShown()
                 OutfitEditorAction.BackgroundFromCamera -> {
@@ -153,6 +155,9 @@ sealed interface OutfitEditorAction {
     data class Transform(val garmentId: Long, val dx: Float, val dy: Float, val zoom: Float, val rotation: Float) : OutfitEditorAction
     data class Resize(val garmentId: Long, val scale: Float) : OutfitEditorAction
     data class Rotate(val garmentId: Long, val degrees: Float) : OutfitEditorAction
+    /** 1: one layer to the front; -1: one to the back. */
+    data class MoveLayer(val steps: Int) : OutfitEditorAction
+    data object ToggleLock : OutfitEditorAction
     data class SetBackgroundColour(val colour: BoardColour?) : OutfitEditorAction
     data object BackgroundFromCamera : OutfitEditorAction
     data object BackgroundFromGallery : OutfitEditorAction
@@ -231,6 +236,11 @@ fun OutfitEditorScreen(state: OutfitEditorUiState, onAction: (OutfitEditorAction
                 stringResource(R.string.outfits_board_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            LayerStrip(
+                pieces = state.pieces,
+                selectedGarmentId = state.selectedGarmentId,
+                onSelect = { onAction(OutfitEditorAction.Select(it)) },
             )
             SelectedPieceControls(state, onAction)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -342,29 +352,51 @@ private val BoardColour.labelRes: Int
 @Composable
 private fun SelectedPieceControls(state: OutfitEditorUiState, onAction: (OutfitEditorAction) -> Unit) {
     val piece = state.selectedPiece ?: return
+    val item = piece.item
+    val layer = state.pieces.indexOf(piece)
     Column {
         Text(piece.title, style = MaterialTheme.typography.titleSmall)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.outfits_size), style = MaterialTheme.typography.bodyMedium)
-            Slider(
-                value = piece.item.scale,
-                onValueChange = { onAction(OutfitEditorAction.Resize(piece.item.garmentId, it)) },
-                valueRange = OutfitItem.MIN_SCALE..OutfitItem.MAX_SCALE,
-                modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
-            )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { onAction(OutfitEditorAction.MoveLayer(1)) }, enabled = layer < state.pieces.lastIndex) {
+                Text(stringResource(R.string.outfits_layer_forward))
+            }
+            OutlinedButton(onClick = { onAction(OutfitEditorAction.MoveLayer(-1)) }, enabled = layer > 0) {
+                Text(stringResource(R.string.outfits_layer_back))
+            }
+            OutlinedButton(onClick = { onAction(OutfitEditorAction.ToggleLock) }) {
+                Text(stringResource(if (item.locked) R.string.outfits_unlock else R.string.outfits_lock))
+            }
             OutlinedButton(onClick = { onAction(OutfitEditorAction.RemoveSelected) }) {
                 Text(stringResource(R.string.outfits_remove_piece))
             }
         }
+        if (item.locked) {
+            Text(
+                stringResource(R.string.outfits_locked_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            return@Column
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.outfits_size), style = MaterialTheme.typography.bodyMedium)
+            Slider(
+                value = item.scale,
+                onValueChange = { onAction(OutfitEditorAction.Resize(item.garmentId, it)) },
+                valueRange = OutfitItem.MIN_SCALE..OutfitItem.MAX_SCALE,
+                modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+            )
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.outfits_rotate), style = MaterialTheme.typography.bodyMedium)
             Slider(
-                value = piece.item.rotation,
-                onValueChange = { onAction(OutfitEditorAction.Rotate(piece.item.garmentId, it)) },
+                value = item.rotation,
+                onValueChange = { onAction(OutfitEditorAction.Rotate(item.garmentId, it)) },
                 valueRange = -180f..180f,
                 modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
             )
-            TextButton(onClick = { onAction(OutfitEditorAction.Rotate(piece.item.garmentId, 0f)) }, enabled = piece.item.rotation != 0f) {
+            TextButton(onClick = { onAction(OutfitEditorAction.Rotate(item.garmentId, 0f)) }, enabled = item.rotation != 0f) {
                 Text(stringResource(R.string.outfits_straighten))
             }
         }

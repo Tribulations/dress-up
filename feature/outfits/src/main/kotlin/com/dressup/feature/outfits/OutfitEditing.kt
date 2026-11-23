@@ -29,10 +29,20 @@ internal fun List<OutfitItem>.rotated(garmentId: Long, degrees: Float): List<Out
     if (item.garmentId == garmentId) item.copy(rotation = normalizedRotation(degrees)) else item
 }
 
-/** Draws [garmentId] last, i.e. on top of the others. */
-internal fun List<OutfitItem>.broughtToFront(garmentId: Long): List<OutfitItem> {
-    val item = firstOrNull { it.garmentId == garmentId } ?: return this
-    return this - item + item
+/**
+ * Moves [garmentId] one layer towards the front ([steps] 1) or the back (-1). The list is the drawing order, so the
+ * last item is the front one. At the front or the back already, nothing changes.
+ */
+internal fun List<OutfitItem>.movedLayer(garmentId: Long, steps: Int): List<OutfitItem> {
+    val from = indexOfFirst { it.garmentId == garmentId }
+    if (from < 0) return this
+    val to = (from + steps).coerceIn(0, lastIndex)
+    if (to == from) return this
+    return toMutableList().apply { add(to, removeAt(from)) }
+}
+
+internal fun List<OutfitItem>.lockToggled(garmentId: Long): List<OutfitItem> = map { item ->
+    if (item.garmentId == garmentId) item.copy(locked = !item.locked) else item
 }
 
 /**

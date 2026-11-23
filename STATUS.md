@@ -8,23 +8,25 @@ Update this file whenever work starts, finishes or is verified.
 An item only counts as **tested** when it has been verified through automated tests,
 on a real device, or both. Record how it was tested.
 
-_Last updated: 2026-11-19_
+_Last updated: 2026-11-23_
 
 ---
 
 ## 🚧 Currently working on
 
-_Nothing. v0.2.1 (cut-outs that fill, turning and backgrounds on outfits, sorting by wear, import on the first start) is released; M3 is next._
+_Nothing. v0.2.2 (layers, lock and easier gestures in the outfit editor, several colours per garment) is released; M3 is next._
 
 ## 🧪 Implemented, not yet tested
 
-- **Everything in v0.1.0–v0.2.1 on the user's phone (Galaxy S20).** Only tested on the emulator so far (below). Things
+- **Everything in v0.1.0–v0.2.2 on the user's phone (Galaxy S20).** Only tested on the emulator so far (below). Things
   worth checking on the real phone: the Samsung camera app returns the photo, portrait photos are upright, the grid
   with real photos, **Remove background on real photos** (the emulator only had flat, made-up pictures, and its model
   download is the first one on that phone), pinching on the outfit board with real fingers, **export to and import
   from Google Drive** (the emulator only had Downloads), and an export of a large real wardrobe (time and size).
 - **The outfit board's pinch-to-resize and two-finger turn** were not tested (the emulator's scripted input can't use
-  two fingers); dragging and the Size and Turn sliders were.
+  two fingers); dragging and the Size and Turn sliders were. Since v0.2.2 the gesture logic is the board's own
+  (pinching with fingers on other garments should still move only the selected one): worth trying on the phone with a
+  crowded outfit.
 - **A background photo taken with the camera** (only one from the gallery was tested), and the first-start import's
   error message (unit-tested only).
 - **Leaving the Profiles screen while the test user is being reset or created** now lets the fill finish
@@ -34,6 +36,23 @@ _Nothing. v0.2.1 (cut-outs that fill, turning and backgrounds on outfits, sortin
   editing an existing entry were covered by unit tests only, not tapped through on the emulator.
 
 ## ✅ Done & tested
+
+- **v0.2.2 – outfit editor layers, lock and gestures; several colours per garment (2026-11-23).** Unit tests: 102 JVM
+  tests pass, 9 of them new or rewritten (colour lists stored and read back, old single colours, the filter with
+  several colours, the editor's colour toggles and saved state, colours and lock in `profile.yaml` and old files, the
+  touch test `topmostAt` incl. turned and locked garments, layer moves, lock toggling, a locked garment ignoring
+  moves). Manual tests on the emulator (Medium_Phone_API_36, Android 16), **release build** (R8, release key, SHA-256
+  checked):
+  - **Update from v0.2.1** with data: auto-migration 4 → 5, the oxford's old colour (blue) kept.
+  - Garment editor: added White and Red to the oxford → its page shows all three; the **Red** filter shows it with
+    the red garments.
+  - Test user created fresh: Sunday walk's coat is locked (padlock in the strip). Tapping the coat on the board selects
+    nothing; tapping the scarf selects it; a drag starting **on the jeans** moved the scarf and left the jeans. With
+    nothing selected, a drag on the jeans selected and moved them (and they kept their layer). **Forward** ×2 brought
+    the scarf to the front of the strip and the board; selecting the coat in the strip shows **Unlock** and hides the
+    sliders. Saved, reopened: the layer order and the lock kept.
+  - Export: `colours: [white, navy]` for the Breton, `locked: true` on the coat; imported as "Test user (2)": the
+    **Navy** filter shows the Breton (its second colour) and the coat is still locked. Zips deleted afterwards.
 
 - **v0.2.1 – fill, turn, backgrounds, sort by wear, import on the first start (2026-11-19).** Unit tests: 93 JVM tests
   pass, 10 of them new (rotation normalising and adding up, the editor's turn and background in its saved state and
