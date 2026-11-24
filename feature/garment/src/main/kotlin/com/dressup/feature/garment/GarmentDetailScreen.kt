@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -32,7 +31,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,8 +57,9 @@ import com.dressup.core.ui.OverallRating
 import com.dressup.core.ui.ReviewBlock
 import com.dressup.core.ui.WearHistory
 import com.dressup.core.ui.label
-import java.text.DateFormat
-import java.util.Date
+import com.dressup.core.ui.ConfirmDeleteDialog
+import com.dressup.core.ui.SnackbarMessage
+import com.dressup.core.ui.formatDate
 
 @Composable
 fun GarmentDetailRoute(
@@ -114,13 +113,7 @@ fun GarmentDetailScreen(state: GarmentDetailUiState, onBack: () -> Unit, onActio
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     val message = (state as? GarmentDetailUiState.Loaded)?.message
-    val messageText = message?.let { stringResource(it.textRes) }
-    LaunchedEffect(message) {
-        if (messageText != null) {
-            snackbar.showSnackbar(messageText)
-            onAction(DetailAction.MessageShown)
-        }
-    }
+    SnackbarMessage(snackbar, message?.let { stringResource(it.textRes) }) { onAction(DetailAction.MessageShown) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -152,18 +145,11 @@ fun GarmentDetailScreen(state: GarmentDetailUiState, onBack: () -> Unit, onActio
         }
     }
     if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text(stringResource(R.string.garment_delete_title)) },
-            text = { Text(stringResource(R.string.garment_delete_message)) },
-            confirmButton = {
-                TextButton(onClick = { confirmDelete = false; onAction(DetailAction.Delete) }) {
-                    Text(stringResource(R.string.garment_delete_confirm), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.garment_cancel)) }
-            },
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.garment_delete_title),
+            message = stringResource(R.string.garment_delete_message),
+            onConfirm = { confirmDelete = false; onAction(DetailAction.Delete) },
+            onDismiss = { confirmDelete = false },
         )
     }
 }
@@ -251,5 +237,3 @@ private val DetailMessage.textRes: Int
         DetailMessage.UNAVAILABLE -> R.string.garment_cutout_unavailable
         DetailMessage.FAILED -> R.string.garment_cutout_failed
     }
-
-private fun formatDate(millis: Long): String = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(millis))

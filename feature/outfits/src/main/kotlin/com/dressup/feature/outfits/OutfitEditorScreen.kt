@@ -69,6 +69,8 @@ import com.dressup.core.data.DressUpData
 import com.dressup.core.model.OutfitItem
 import com.dressup.core.ui.GarmentGallery
 import com.dressup.core.ui.OutfitBoard
+import com.dressup.core.ui.ConfirmDeleteDialog
+import com.dressup.core.ui.SnackbarMessage
 
 /**
  * Makes a new outfit when [outfitId] is null, otherwise edits it. [onDone]: saved (with the outfit's id), or deleted or
@@ -170,19 +172,11 @@ fun OutfitEditorScreen(state: OutfitEditorUiState, onAction: (OutfitEditorAction
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     var choosingBackground by rememberSaveable { mutableStateOf(false) }
-    val failedText = stringResource(R.string.outfits_save_failed)
-    LaunchedEffect(state.saveFailed) {
-        if (state.saveFailed) {
-            snackbar.showSnackbar(failedText)
-            onAction(OutfitEditorAction.SaveFailedShown)
-        }
+    SnackbarMessage(snackbar, stringResource(R.string.outfits_save_failed).takeIf { state.saveFailed }) {
+        onAction(OutfitEditorAction.SaveFailedShown)
     }
-    val backgroundFailedText = stringResource(R.string.outfits_background_failed)
-    LaunchedEffect(state.backgroundFailed) {
-        if (state.backgroundFailed) {
-            snackbar.showSnackbar(backgroundFailedText)
-            onAction(OutfitEditorAction.BackgroundFailedShown)
-        }
+    SnackbarMessage(snackbar, stringResource(R.string.outfits_background_failed).takeIf { state.backgroundFailed }) {
+        onAction(OutfitEditorAction.BackgroundFailedShown)
     }
     Scaffold(
         topBar = {
@@ -263,16 +257,11 @@ fun OutfitEditorScreen(state: OutfitEditorUiState, onAction: (OutfitEditorAction
         )
     }
     if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text(stringResource(R.string.outfits_delete_title)) },
-            text = { Text(stringResource(R.string.outfits_delete_message)) },
-            confirmButton = {
-                TextButton(onClick = { confirmDelete = false; onAction(OutfitEditorAction.Delete) }) {
-                    Text(stringResource(R.string.outfits_delete), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.outfits_cancel)) } },
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.outfits_delete_title),
+            message = stringResource(R.string.outfits_delete_message),
+            onConfirm = { confirmDelete = false; onAction(OutfitEditorAction.Delete) },
+            onDismiss = { confirmDelete = false },
         )
     }
 }

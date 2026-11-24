@@ -22,7 +22,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -31,7 +30,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,6 +56,7 @@ import com.dressup.core.ui.RatingBar
 import com.dressup.core.ui.SectionLabel
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import com.dressup.core.ui.ConfirmDeleteDialog
 
 @Composable
 fun DiaryEntryRoute(
@@ -125,16 +124,11 @@ fun DiaryEntryScreen(
         }
     }
     if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text(stringResource(R.string.diary_delete_title)) },
-            text = { Text(stringResource(R.string.diary_delete_message)) },
-            confirmButton = {
-                TextButton(onClick = { confirmDelete = false; onDelete() }) {
-                    Text(stringResource(R.string.diary_delete), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.diary_cancel)) } },
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.diary_delete_title),
+            message = stringResource(R.string.diary_delete_message),
+            onConfirm = { confirmDelete = false; onDelete() },
+            onDismiss = { confirmDelete = false },
         )
     }
 }

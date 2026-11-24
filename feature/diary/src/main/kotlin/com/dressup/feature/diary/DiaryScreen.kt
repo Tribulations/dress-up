@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,6 +50,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import com.dressup.core.ui.EmptyMessage
 
 /** The Diary tab: every logged wear as a list, newest first, by month (ARCHITECTURE.md §7.7). */
 @Composable
@@ -113,8 +113,8 @@ fun DiaryScreen(
         Box(Modifier.padding(padding).fillMaxSize()) {
             when {
                 state !is DiaryUiState.Loaded -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                !state.hasGarments && state.isEmpty -> Message(stringResource(R.string.diary_no_garments))
-                state.isEmpty -> Message(stringResource(R.string.diary_empty))
+                !state.hasGarments && state.isEmpty -> EmptyMessage(stringResource(R.string.diary_no_garments))
+                state.isEmpty -> EmptyMessage(stringResource(R.string.diary_empty))
                 else -> DiaryList(state.months, onOpenEntry)
             }
         }
@@ -184,12 +184,5 @@ private fun DiaryRowItem(row: DiaryRow, onClick: () -> Unit) {
                 }
             }
         }
-    }
-}
-
-@Composable
-internal fun Message(text: String) {
-    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Text(text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
     }
 }

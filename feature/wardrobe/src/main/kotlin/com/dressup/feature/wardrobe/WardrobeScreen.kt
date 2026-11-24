@@ -47,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -59,6 +58,7 @@ import com.dressup.core.ui.ColourSwatch
 import com.dressup.core.ui.DressUpColors
 import com.dressup.core.ui.GarmentPhoto
 import com.dressup.core.ui.label
+import com.dressup.core.ui.EmptyMessage
 
 /** The app's start screen. */
 @Composable
@@ -158,13 +158,13 @@ fun WardrobeScreen(
 @Composable
 private fun LoadedWardrobe(state: WardrobeUiState.Loaded, onAction: (WardrobeAction) -> Unit) {
     if (state.totalCount == 0) {
-        Message(stringResource(R.string.wardrobe_empty))
+        EmptyMessage(stringResource(R.string.wardrobe_empty))
         return
     }
     Column(Modifier.fillMaxSize()) {
         FilterRow(state, onAction)
         if (state.tiles.isEmpty()) {
-            Message(stringResource(R.string.wardrobe_no_match)) {
+            EmptyMessage(stringResource(R.string.wardrobe_no_match)) {
                 TextButton(onClick = { onAction(WardrobeAction.ClearFilters) }) {
                     Text(stringResource(R.string.wardrobe_clear_filters))
                 }
@@ -292,20 +292,3 @@ private val WardrobeSort.labelRes: Int
         WardrobeSort.MOST_WORN -> R.string.wardrobe_sort_most_worn
         WardrobeSort.LEAST_WORN -> R.string.wardrobe_sort_least_worn
     }
-
-@Composable
-private fun Message(text: String, action: @Composable () -> Unit = {}) {
-    Column(
-        Modifier.fillMaxSize().padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        action()
-    }
-}

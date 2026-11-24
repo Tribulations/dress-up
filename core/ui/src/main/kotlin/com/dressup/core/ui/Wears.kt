@@ -32,9 +32,14 @@ import com.dressup.core.model.summary
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import java.time.Instant
+import java.time.ZoneId
 
 /** "24 Dec 2025" in the phone's language. */
 fun formatDate(date: LocalDate): String = date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+
+/** The same for a moment in time ([System.currentTimeMillis]), on the phone's own calendar. */
+fun formatDate(millis: Long): String = formatDate(Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate())
 
 /** "Worn 7 times · last 24 Dec 2025", or "Not worn yet". */
 @Composable

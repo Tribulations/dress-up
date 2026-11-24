@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -30,7 +29,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,6 +58,7 @@ import com.dressup.core.ui.ReviewBlock
 import com.dressup.core.ui.SectionLabel
 import com.dressup.core.ui.WearHistory
 import com.dressup.core.ui.label
+import com.dressup.core.ui.ConfirmDeleteDialog
 
 @Composable
 fun OutfitDetailRoute(
@@ -138,16 +137,11 @@ fun OutfitDetailScreen(state: OutfitDetailUiState, onBack: () -> Unit, onAction:
         }
     }
     if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text(stringResource(R.string.outfits_delete_title)) },
-            text = { Text(stringResource(R.string.outfits_delete_message)) },
-            confirmButton = {
-                TextButton(onClick = { confirmDelete = false; onAction(OutfitDetailAction.Delete) }) {
-                    Text(stringResource(R.string.outfits_delete), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.outfits_cancel)) } },
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.outfits_delete_title),
+            message = stringResource(R.string.outfits_delete_message),
+            onConfirm = { confirmDelete = false; onAction(OutfitDetailAction.Delete) },
+            onDismiss = { confirmDelete = false },
         )
     }
 }

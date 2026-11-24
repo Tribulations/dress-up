@@ -5,7 +5,6 @@
     <string name="garment_delete">Delete</string>
     <string name="garment_delete_title">Delete this garment?</string>
     <string name="garment_delete_message">The garment and its photo are removed from your wardrobe and from any outfit it is in. This can\'t be undone.</string>
-    <string name="garment_delete_confirm">Delete</string>
     <string name="garment_cancel">Cancel</string>
     <string name="garment_no_photo">No photo</string>
     <string name="garment_photo">Garment photo</string>

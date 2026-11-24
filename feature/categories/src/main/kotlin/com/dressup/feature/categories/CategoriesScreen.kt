@@ -26,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -39,6 +38,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.dressup.core.data.DressUpData
 import com.dressup.core.model.Category
 import com.dressup.core.ui.NameDialog
+import com.dressup.core.ui.SnackbarMessage
+import com.dressup.core.ui.ListHeader
 
 @Composable
 fun CategoriesRoute(data: DressUpData, onBack: () -> Unit) {
@@ -53,13 +54,7 @@ fun CategoriesRoute(data: DressUpData, onBack: () -> Unit) {
 @Composable
 private fun CategoriesScreen(state: CategoriesUiState, viewModel: CategoriesViewModel, onBack: () -> Unit) {
     val snackbar = remember { SnackbarHostState() }
-    val inUseText = stringResource(R.string.categories_in_use)
-    LaunchedEffect(state.message) {
-        if (state.message == CategoriesMessage.IN_USE) {
-            snackbar.showSnackbar(inUseText)
-            viewModel.messageShown()
-        }
-    }
+    SnackbarMessage(snackbar, stringResource(R.string.categories_in_use).takeIf { state.message == CategoriesMessage.IN_USE }, viewModel::messageShown)
 
     Scaffold(
         topBar = {
@@ -84,7 +79,7 @@ private fun CategoriesScreen(state: CategoriesUiState, viewModel: CategoriesView
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(bottom = 88.dp)) {
-            item { Header(stringResource(R.string.categories_own)) }
+            item { ListHeader(stringResource(R.string.categories_own)) }
             if (state.own.isEmpty()) {
                 item {
                     Text(
@@ -95,7 +90,7 @@ private fun CategoriesScreen(state: CategoriesUiState, viewModel: CategoriesView
                 }
             }
             items(state.own, key = { it.id }) { category -> OwnCategoryRow(category, viewModel) }
-            item { Header(stringResource(R.string.categories_built_in)) }
+            item { ListHeader(stringResource(R.string.categories_built_in)) }
             items(state.builtIn, key = { it.id }) { category ->
                 ListItem(
                     headlineContent = { Text(category.name) },
@@ -147,16 +142,6 @@ private fun OwnCategoryRow(category: Category, viewModel: CategoriesViewModel) {
                 }
             }
         },
-    )
-}
-
-@Composable
-private fun Header(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp),
     )
 }
 

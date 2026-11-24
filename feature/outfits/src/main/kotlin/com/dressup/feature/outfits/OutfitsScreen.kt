@@ -31,7 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,8 +42,8 @@ import com.dressup.core.model.Outfit
 import com.dressup.core.ui.OutfitBoard
 import com.dressup.core.ui.RatingBar
 import com.dressup.core.ui.DressUpColors
-import java.text.DateFormat
-import java.util.Date
+import com.dressup.core.ui.EmptyMessage
+import com.dressup.core.ui.formatDate
 
 /** The Outfits tab: every outfit as a small collage. */
 @Composable
@@ -107,8 +106,8 @@ fun OutfitsScreen(
         Box(Modifier.padding(padding).fillMaxSize()) {
             when {
                 state !is OutfitsUiState.Loaded -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                !state.hasGarments -> Message(stringResource(R.string.outfits_no_garments))
-                state.outfits.isEmpty() -> Message(stringResource(R.string.outfits_empty))
+                !state.hasGarments -> EmptyMessage(stringResource(R.string.outfits_no_garments))
+                state.outfits.isEmpty() -> EmptyMessage(stringResource(R.string.outfits_empty))
                 else -> OutfitGrid(state.outfits, onOpenOutfit)
             }
         }
@@ -149,16 +148,4 @@ private fun OutfitGrid(outfits: List<OutfitCard>, onOpen: (Long) -> Unit) {
 /** The outfit's name, or the date it was made. */
 @Composable
 internal fun outfitName(outfit: Outfit): String = outfit.name
-    ?: stringResource(R.string.outfits_unnamed, DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(outfit.createdAtMillis)))
-
-@Composable
-private fun Message(text: String) {
-    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Text(
-            text,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
+    ?: stringResource(R.string.outfits_unnamed, formatDate(outfit.createdAtMillis))

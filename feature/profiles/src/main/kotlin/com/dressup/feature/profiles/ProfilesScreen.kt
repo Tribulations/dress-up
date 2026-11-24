@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -50,6 +49,8 @@ import com.dressup.core.data.profile.ProfileRepository
 import com.dressup.core.model.Profile
 import com.dressup.core.ui.NameDialog
 import com.dressup.core.ui.displayName
+import com.dressup.core.ui.SnackbarMessage
+import com.dressup.core.ui.ListHeader
 
 @Composable
 fun ProfilesRoute(profiles: ProfileRepository, onBack: () -> Unit) {
@@ -62,13 +63,7 @@ fun ProfilesRoute(profiles: ProfileRepository, onBack: () -> Unit) {
 @Composable
 private fun ProfilesScreen(state: ProfilesUiState, viewModel: ProfilesViewModel, onBack: () -> Unit) {
     val snackbar = remember { SnackbarHostState() }
-    val messageText = state.message?.let { stringResource(it.textRes) }
-    LaunchedEffect(state.message) {
-        if (messageText != null) {
-            snackbar.showSnackbar(messageText)
-            viewModel.messageShown()
-        }
-    }
+    SnackbarMessage(snackbar, state.message?.let { stringResource(it.textRes) }, viewModel::messageShown)
 
     Scaffold(
         topBar = {
@@ -93,7 +88,7 @@ private fun ProfilesScreen(state: ProfilesUiState, viewModel: ProfilesViewModel,
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(bottom = 88.dp)) {
-            item { Header(stringResource(R.string.profiles_own)) }
+            item { ListHeader(stringResource(R.string.profiles_own)) }
             items(state.own, key = { it.id }) { profile ->
                 val active = profile.id == state.activeId
                 ProfileRow(
@@ -114,7 +109,7 @@ private fun ProfilesScreen(state: ProfilesUiState, viewModel: ProfilesViewModel,
                     }
                 }
             }
-            item { Header(stringResource(R.string.profiles_test_section)) }
+            item { ListHeader(stringResource(R.string.profiles_test_section)) }
             item { TestUserRow(state, viewModel) }
         }
     }
@@ -220,16 +215,6 @@ private fun Dialogs(state: ProfilesUiState, viewModel: ProfilesViewModel) {
             dismissButton = { TextButton(onClick = viewModel::cancelReset) { Text(stringResource(R.string.profiles_cancel)) } },
         )
     }
-}
-
-@Composable
-private fun Header(text: String) {
-    Text(
-        text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp),
-    )
 }
 
 private val ProfilesMessage.textRes: Int

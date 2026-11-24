@@ -69,6 +69,8 @@ import com.dressup.core.ui.OutfitBoard
 import com.dressup.core.ui.SectionLabel
 import com.dressup.core.ui.formatDate
 import java.time.LocalDate
+import com.dressup.core.ui.EmptyMessage
+import com.dressup.core.ui.SnackbarMessage
 
 private const val DAY_MILLIS = 24L * 60 * 60 * 1000
 
@@ -133,13 +135,7 @@ fun DiaryEditorScreen(
     onNote: (String) -> Unit,
 ) {
     val snackbar = remember { SnackbarHostState() }
-    val failedText = stringResource(R.string.diary_save_failed)
-    LaunchedEffect(state.saveFailed) {
-        if (state.saveFailed) {
-            snackbar.showSnackbar(failedText)
-            onSaveFailedShown()
-        }
-    }
+    SnackbarMessage(snackbar, stringResource(R.string.diary_save_failed).takeIf { state.saveFailed }, onSaveFailedShown)
     Scaffold(
         topBar = {
             TopAppBar(
@@ -279,7 +275,7 @@ private fun OutfitPicker(outfits: List<OutfitChoice>, onPick: (Long) -> Unit, on
         },
     ) { padding ->
         if (outfits.isEmpty()) {
-            Box(Modifier.padding(padding)) { Message(stringResource(R.string.diary_no_outfits)) }
+            Box(Modifier.padding(padding)) { EmptyMessage(stringResource(R.string.diary_no_outfits)) }
             return@Scaffold
         }
         LazyVerticalGrid(

@@ -63,6 +63,7 @@ import com.dressup.core.ui.ColourSwatch
 import com.dressup.core.ui.GarmentPhoto
 import com.dressup.core.ui.NameDialog
 import com.dressup.core.ui.label
+import com.dressup.core.ui.SnackbarMessage
 
 /** Adds a garment when [garmentId] is null, otherwise edits it. [onDone] gets the saved garment's id. */
 @Composable
@@ -143,13 +144,7 @@ sealed interface EditorAction {
 @Composable
 fun GarmentEditorScreen(state: GarmentEditorUiState, onAction: (EditorAction) -> Unit) {
     val snackbar = remember { SnackbarHostState() }
-    val messageText = state.message?.let { stringResource(it.textRes) }
-    LaunchedEffect(state.message) {
-        if (messageText != null) {
-            snackbar.showSnackbar(messageText)
-            onAction(EditorAction.MessageShown)
-        }
-    }
+    SnackbarMessage(snackbar, state.message?.let { stringResource(it.textRes) }) { onAction(EditorAction.MessageShown) }
 
     Scaffold(
         topBar = {
