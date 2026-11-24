@@ -10,7 +10,7 @@ import com.dressup.core.model.Outfit
 import com.dressup.core.ui.BoardBackground
 import com.dressup.core.ui.BoardPiece
 import com.dressup.core.ui.PieceFactory
-import kotlinx.coroutines.flow.SharingStarted
+import com.dressup.core.ui.WhileUiSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -35,9 +35,5 @@ class OutfitsViewModel(
                 outfits = allOutfits.map { OutfitCard(it, pieces.of(it.items), pieces.background(it.background)) },
                 hasGarments = allGarments.isNotEmpty(),
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), OutfitsUiState.Loading)
-
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
-    }
+        }.stateIn(viewModelScope, WhileUiSubscribed, OutfitsUiState.Loading)
 }

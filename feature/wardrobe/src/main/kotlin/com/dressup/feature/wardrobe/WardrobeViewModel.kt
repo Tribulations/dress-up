@@ -12,8 +12,8 @@ import com.dressup.core.model.DiaryEntry
 import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.garmentWears
 import com.dressup.core.ui.garmentTitle
+import com.dressup.core.ui.WhileUiSubscribed
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -49,7 +49,7 @@ class WardrobeViewModel(
     val uiState: StateFlow<WardrobeUiState> =
         combine(garments.garments, categories.categories, filter, diary.entries) { allGarments, allCategories, currentFilter, entries ->
             buildState(allGarments, allCategories, currentFilter, entries)
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), WardrobeUiState.Loading)
+        }.stateIn(viewModelScope, WhileUiSubscribed, WardrobeUiState.Loading)
 
     private fun buildState(garments: List<Garment>, categories: List<Category>, filter: WardrobeFilter, entries: List<DiaryEntry>): WardrobeUiState {
         val byId = categories.associateBy { it.id }
@@ -76,9 +76,6 @@ class WardrobeViewModel(
 
     fun clearFilters() = filter.update { WardrobeFilter(sort = it.sort) }
 
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
-    }
 }
 
 private fun <T> Set<T>.toggle(item: T): Set<T> = if (item in this) this - item else this + item

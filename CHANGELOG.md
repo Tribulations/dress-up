@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Code (no visible change):** export, import and the test user share one mapping between the database and
   `profile.yaml`; the test user is now filled through the importer, so every Reset also tests the import.
 - **Code:** garments and outfits share one ratings type (overall, aspects, review, like) from the model to the screens.
+- **Code:** the editors keep their unsaved inputs as one value (`SavedDraft`) instead of a key per field.
 
 ## [0.2.2] - 2026-11-23
 

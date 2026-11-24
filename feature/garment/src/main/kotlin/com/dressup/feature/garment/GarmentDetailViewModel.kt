@@ -14,8 +14,8 @@ import com.dressup.core.model.RatingChange
 import com.dressup.core.model.wearsOfGarment
 import com.dressup.core.ui.garmentSubtitle
 import com.dressup.core.ui.garmentTitle
+import com.dressup.core.ui.WhileUiSubscribed
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -75,7 +75,7 @@ class GarmentDetailViewModel(
                     wears = entries.wearsOfGarment(garmentId),
                 )
             }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GarmentDetailUiState.Loading)
+        }.stateIn(viewModelScope, WhileUiSubscribed, GarmentDetailUiState.Loading)
 
     fun rate(change: RatingChange<GarmentAspect>) {
         viewModelScope.launch { garments.rate(garmentId, change) }
@@ -105,9 +105,5 @@ class GarmentDetailViewModel(
     fun delete() {
         status.update { it.copy(deleted = true) }
         viewModelScope.launch { garments.delete(garmentId) }
-    }
-
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
     }
 }

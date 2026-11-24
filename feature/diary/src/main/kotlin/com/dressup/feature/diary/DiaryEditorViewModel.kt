@@ -8,22 +8,28 @@ import com.dressup.core.data.DiaryRepository
 import com.dressup.core.data.GarmentRepository
 import com.dressup.core.data.OutfitRepository
 import com.dressup.core.data.photo.PhotoStorage
+import com.dressup.core.model.Category
 import com.dressup.core.model.DiaryDraft
 import com.dressup.core.model.DiaryEntry
+import com.dressup.core.model.Garment
+import com.dressup.core.model.Outfit
 import com.dressup.core.model.MAX_NOTE_LENGTH
 import com.dressup.core.model.MAX_OCCASION_LENGTH
 import com.dressup.core.ui.BoardBackground
 import com.dressup.core.ui.BoardPiece
 import com.dressup.core.ui.GalleryTile
 import com.dressup.core.ui.PieceFactory
+import com.dressup.core.ui.SavedDraft
+import com.dressup.core.ui.WhileUiSubscribed
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import java.io.File
 import java.time.LocalDate
 
 /** Which picker covers the editor, if any. */
@@ -56,6 +62,8 @@ data class DiaryEditorUiState(
     val canSave: Boolean get() = loaded && hasSomethingWorn && !saving
 }
 
+/** The editor's inputs, kept as a [SavedDraft]. */
+@Serializable
 private data class EditorFields(
     val loaded: Boolean = false,
     val epochDay: Long,
@@ -85,20 +93,23 @@ class DiaryEditorViewModel(
     photos: PhotoStorage,
     private val today: () -> LocalDate = LocalDate::now,
 ) : ViewModel() {
-    private val fields = MutableStateFlow(restoreFields())
+    private val draft = SavedDraft(savedState, EditorFields.serializer()) { EditorFields(epochDay = today().toEpochDay()) }
     private val status = MutableStateFlow(EditorStatus())
 
     private val wardrobe = combine(garments.garments, categories.categories, outfits.outfits, diary.occasions) { g, c, o, occasions ->
-        Wardrobe(WornThings(g, c, o, photos::file), PieceFactory(g, c, photos::file), g.map { it.id }, o, occasions)
+        Wardrobe(g, c, o, occasions, photos::file)
     }
 
-    val uiState: StateFlow<DiaryEditorUiState> = combine(fields, status, wardrobe) { f, s, w ->
+    val uiState: StateFlow<DiaryEditorUiState> = combine(draft.flow, status, wardrobe, ::stateOf)
+        .stateIn(viewModelScope, WhileUiSubscribed, stateOf(EditorFields(epochDay = today().toEpochDay()), EditorStatus(), Wardrobe.EMPTY))
+
+    private fun stateOf(f: EditorFields, s: EditorStatus, w: Wardrobe): DiaryEditorUiState {
         val worn = if (f.outfitId != null || f.garmentIds.isNotEmpty()) {
             w.worn.of(DiaryEntry(0, LocalDate.ofEpochDay(f.epochDay), f.outfitId, f.garmentIds, null, null, 0))
         } else {
             null
         }
-        DiaryEditorUiState(
+        return DiaryEditorUiState(
             isNew = entryId == null,
             loaded = f.loaded,
             date = LocalDate.ofEpochDay(f.epochDay),
@@ -116,10 +127,10 @@ class DiaryEditorViewModel(
             done = s.done,
             saveFailed = s.saveFailed,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), initialState())
+    }
 
     init {
-        if (!fields.value.loaded) load()
+        if (!draft.value.loaded) load()
     }
 
     private fun load() {
@@ -136,39 +147,39 @@ class DiaryEditorViewModel(
                     )
                 }
                 presetOutfitId != null -> outfits.outfit(presetOutfitId).first()?.let { outfit ->
-                    fields.value.copy(loaded = true, outfitId = outfit.id, garmentIds = outfit.items.map { it.garmentId })
+                    draft.value.copy(loaded = true, outfitId = outfit.id, garmentIds = outfit.items.map { it.garmentId })
                 }
-                presetGarmentId != null -> fields.value.copy(loaded = true, garmentIds = listOf(presetGarmentId))
+                presetGarmentId != null -> draft.value.copy(loaded = true, garmentIds = listOf(presetGarmentId))
                 else -> null
             }
-            setFields { loaded ?: it.copy(loaded = true) }
+            draft.update { loaded ?: it.copy(loaded = true) }
         }
     }
 
-    fun setDate(date: LocalDate) = setFields { it.copy(epochDay = minOf(date, today()).toEpochDay()) }
+    fun setDate(date: LocalDate) = draft.update { it.copy(epochDay = minOf(date, today()).toEpochDay()) }
 
-    fun setOccasion(occasion: String) = setFields { it.copy(occasion = occasion.take(MAX_OCCASION_LENGTH)) }
+    fun setOccasion(occasion: String) = draft.update { it.copy(occasion = occasion.take(MAX_OCCASION_LENGTH)) }
 
-    fun setNote(note: String) = setFields { it.copy(note = note.take(MAX_NOTE_LENGTH)) }
+    fun setNote(note: String) = draft.update { it.copy(note = note.take(MAX_NOTE_LENGTH)) }
 
-    fun openPicker(picker: WornPicker) = setFields { it.copy(picker = picker) }
+    fun openPicker(picker: WornPicker) = draft.update { it.copy(picker = picker) }
 
-    fun closePicker() = setFields { it.copy(picker = WornPicker.NONE) }
+    fun closePicker() = draft.update { it.copy(picker = WornPicker.NONE) }
 
     /** Wearing an outfit means wearing its garments: they are copied in, so the entry keeps them if the outfit changes. */
     fun chooseOutfit(outfitId: Long) {
         viewModelScope.launch {
             val outfit = outfits.outfit(outfitId).first() ?: return@launch
-            setFields { it.copy(outfitId = outfit.id, garmentIds = outfit.items.map { item -> item.garmentId }, picker = WornPicker.NONE) }
+            draft.update { it.copy(outfitId = outfit.id, garmentIds = outfit.items.map { item -> item.garmentId }, picker = WornPicker.NONE) }
         }
     }
 
     /** Single garments instead of an outfit. */
     fun pickGarments(garmentIds: List<Long>) =
-        setFields { it.copy(outfitId = null, garmentIds = garmentIds, picker = WornPicker.NONE) }
+        draft.update { it.copy(outfitId = null, garmentIds = garmentIds, picker = WornPicker.NONE) }
 
     fun save() {
-        val f = fields.value
+        val f = draft.value
         if (!f.loaded || (f.outfitId == null && f.garmentIds.isEmpty())) return
         status.update { it.copy(saving = true, saveFailed = false) }
         viewModelScope.launch {
@@ -182,65 +193,21 @@ class DiaryEditorViewModel(
 
     fun saveFailedShown() = status.update { it.copy(saveFailed = false) }
 
-    private fun setFields(change: (EditorFields) -> EditorFields) {
-        val updated = change(fields.value)
-        fields.value = updated
-        savedState[KEY_LOADED] = updated.loaded
-        savedState[KEY_DAY] = updated.epochDay
-        savedState[KEY_OUTFIT] = updated.outfitId ?: NO_ID
-        savedState[KEY_GARMENTS] = updated.garmentIds.toLongArray()
-        savedState[KEY_OCCASION] = updated.occasion
-        savedState[KEY_NOTE] = updated.note
-        savedState[KEY_PICKER] = updated.picker.name
-    }
-
-    private fun restoreFields() = EditorFields(
-        loaded = savedState[KEY_LOADED] ?: false,
-        epochDay = savedState[KEY_DAY] ?: today().toEpochDay(),
-        outfitId = savedState.get<Long>(KEY_OUTFIT)?.takeIf { it != NO_ID },
-        garmentIds = savedState.get<LongArray>(KEY_GARMENTS)?.toList().orEmpty(),
-        occasion = savedState[KEY_OCCASION] ?: "",
-        note = savedState[KEY_NOTE] ?: "",
-        picker = savedState.get<String>(KEY_PICKER)?.let { name -> WornPicker.entries.firstOrNull { it.name == name } } ?: WornPicker.NONE,
-    )
-
-    private fun initialState() = DiaryEditorUiState(
-        isNew = entryId == null,
-        loaded = false,
-        date = today(),
-        today = today(),
-        outfitId = null,
-        garmentIds = emptyList(),
-        occasion = "",
-        note = "",
-        worn = null,
-        suggestions = emptyList(),
-        picker = WornPicker.NONE,
-        outfits = emptyList(),
-        gallery = emptyList(),
-        saving = false,
-        done = false,
-        saveFailed = false,
-    )
-
+    /** Everything the editor shows besides its own inputs. */
     private class Wardrobe(
-        val worn: WornThings,
-        val pieces: PieceFactory,
-        val garmentIds: List<Long>,
-        val outfits: List<com.dressup.core.model.Outfit>,
+        garments: List<Garment>,
+        categories: List<Category>,
+        val outfits: List<Outfit>,
         val occasions: List<String>,
-    )
+        pictureFile: (String) -> File,
+    ) {
+        val worn = WornThings(garments, categories, outfits, pictureFile)
+        val pieces = PieceFactory(garments, categories, pictureFile)
+        val garmentIds = garments.map { it.id }
 
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
-        const val NO_ID = -1L
-        const val KEY_LOADED = "loaded"
-        const val KEY_DAY = "epochDay"
-        const val KEY_OUTFIT = "outfitId"
-        const val KEY_GARMENTS = "garmentIds"
-        const val KEY_OCCASION = "occasion"
-        const val KEY_NOTE = "note"
-        const val KEY_PICKER = "picker"
+        companion object {
+            val EMPTY = Wardrobe(emptyList(), emptyList(), emptyList(), emptyList()) { File(it) }
+        }
     }
 }
 

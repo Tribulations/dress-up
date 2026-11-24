@@ -10,8 +10,8 @@ import com.dressup.core.data.photo.PhotoStorage
 import com.dressup.core.model.DiaryEntry
 import com.dressup.core.ui.GalleryTile
 import com.dressup.core.ui.PieceFactory
+import com.dressup.core.ui.WhileUiSubscribed
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -54,14 +54,10 @@ class DiaryEntryViewModel(
                     garments = entry.garmentIds.mapNotNull(pieces::tile),
                 )
             }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), DiaryEntryUiState.Loading)
+        }.stateIn(viewModelScope, WhileUiSubscribed, DiaryEntryUiState.Loading)
 
     fun delete() {
         deleted.value = true
         viewModelScope.launch { diary.delete(entryId) }
-    }
-
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
     }
 }

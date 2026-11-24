@@ -7,9 +7,9 @@ import com.dressup.core.data.profile.DeleteProfileResult
 import com.dressup.core.data.profile.ProfileNameResult
 import com.dressup.core.data.profile.ProfileRepository
 import com.dressup.core.model.Profile
+import com.dressup.core.ui.WhileUiSubscribed
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -60,7 +60,7 @@ class ProfilesViewModel(private val profiles: ProfileRepository) : ViewModel() {
             confirmReset = o.confirmReset,
             message = o.message,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), ProfilesUiState())
+    }.stateIn(viewModelScope, WhileUiSubscribed, ProfilesUiState())
 
     fun select(profile: Profile) {
         if (overlay.value.busy != null || profile.id == profiles.state.value.activeId) return
@@ -134,6 +134,5 @@ class ProfilesViewModel(private val profiles: ProfileRepository) : ViewModel() {
 
     private companion object {
         const val TAG = "Profiles"
-        const val STOP_TIMEOUT_MS = 5_000L
     }
 }

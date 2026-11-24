@@ -177,6 +177,8 @@ Never losing work or photos:
 
 - The editor's inputs live in `SavedStateHandle`, and the pending camera URI in `rememberSaveable`, so if Android
   stops dress-up while the camera is open, the editor comes back with the category, colours and new photo.
+  All three editors (garment, outfit, diary) keep their inputs as one `@Serializable` draft class in a `SavedDraft`
+  (`core:ui`, JSON under one key), so a field added to the draft is saved with it.
 - On edit, the old photo file is deleted only **after** the database points at the new one.
 - A photo taken in the editor and then replaced before saving is deleted at once. A photo from an editor that was left
   without saving is removed by `DressUpData.cleanUpUnusedPhotos()`, which runs only on a **fresh** app start (not when

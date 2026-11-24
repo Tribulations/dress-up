@@ -6,8 +6,8 @@ import com.dressup.core.data.CategoryNameResult
 import com.dressup.core.data.CategoryRepository
 import com.dressup.core.data.DeleteCategoryResult
 import com.dressup.core.model.Category
+import com.dressup.core.ui.WhileUiSubscribed
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -46,7 +46,7 @@ class CategoriesViewModel(private val categories: CategoryRepository) : ViewMode
             confirmDelete = o.confirmDelete,
             message = o.message,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), CategoriesUiState())
+    }.stateIn(viewModelScope, WhileUiSubscribed, CategoriesUiState())
 
     fun setHidden(category: Category, hidden: Boolean) {
         viewModelScope.launch { categories.setHidden(category.id, hidden) }
@@ -86,8 +86,4 @@ class CategoriesViewModel(private val categories: CategoryRepository) : ViewMode
     }
 
     fun messageShown() = overlay.update { it.copy(message = null) }
-
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
-    }
 }

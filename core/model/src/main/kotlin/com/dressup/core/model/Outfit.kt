@@ -1,5 +1,6 @@
 package com.dressup.core.model
 
+import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -18,10 +19,13 @@ data class Outfit(
 )
 
 /** What an outfit's board shows behind the garments: one of the palette's colours, or the user's own image. */
+@Serializable
 sealed interface OutfitBackground {
+    @Serializable
     data class Colour(val colour: BoardColour) : OutfitBackground
 
     /** A picture in the profile's photo folder, imported like a garment photo. */
+    @Serializable
     data class Image(val fileName: String) : OutfitBackground
 }
 
@@ -54,6 +58,7 @@ enum class BoardColour(val key: String, val argb: Long) {
  * (0..1); [scale] is its width as a fraction of the board's width; [rotation] turns it clockwise, in degrees
  * (-180..180).
  */
+@Serializable
 data class OutfitItem(
     val garmentId: Long,
     val x: Float,

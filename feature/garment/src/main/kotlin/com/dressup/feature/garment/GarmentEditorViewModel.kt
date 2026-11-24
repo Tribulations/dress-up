@@ -13,17 +13,20 @@ import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.GarmentDraft
 import com.dressup.core.model.MAX_DESCRIPTION_LENGTH
 import com.dressup.core.model.MAX_GARMENT_NAME_LENGTH
+import com.dressup.core.ui.SavedDraft
+import com.dressup.core.ui.WhileUiSubscribed
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import java.io.File
 
-/** The editor's inputs. Kept in [SavedStateHandle], so a camera trip that kills the app doesn't lose them. */
+/** The editor's inputs, kept as a [SavedDraft], so a camera trip that kills the app doesn't lose them. */
+@Serializable
 private data class EditorFields(
     val loaded: Boolean,
     val name: String = "",
@@ -33,6 +36,8 @@ private data class EditorFields(
     /** In the order picked: the first is the main colour. */
     val colours: List<GarmentColour> = emptyList(),
     val photoFileName: String? = null,
+    /** The photo the garment had when the editor opened; never deleted here, only replaced on save. */
+    val originalPhoto: String? = null,
 )
 
 private data class EditorStatus(
@@ -77,45 +82,41 @@ class GarmentEditorViewModel(
     private val categories: CategoryRepository,
     private val photos: PhotoStorage,
 ) : ViewModel() {
-    private val fields = MutableStateFlow(restoreFields())
+    private val draft = SavedDraft(savedState, EditorFields.serializer()) { EditorFields(loaded = false) }
     private val status = MutableStateFlow(EditorStatus())
 
-    /** The photo the garment had when the editor opened; never deleted here, only replaced on save. */
-    private var originalPhoto: String? = savedState[KEY_ORIGINAL_PHOTO]
-
     val uiState: StateFlow<GarmentEditorUiState> =
-        combine(fields, status, categories.categories) { f, s, allCategories ->
-            GarmentEditorUiState(
-                isNew = garmentId == null,
-                loaded = f.loaded,
-                categories = allCategories.filter { !it.hidden || it.id in f.categoryIds },
-                name = f.name,
-                description = f.description,
-                selectedCategoryIds = f.categoryIds,
-                colours = f.colours,
-                photo = f.photoFileName?.let(photos::file),
-                importingPhoto = s.importingPhoto,
-                saving = s.saving,
-                savedGarmentId = s.savedGarmentId,
-                message = s.message,
-                categoryDialog = s.categoryDialog,
-            )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), initialState())
+        combine(draft.flow, status, categories.categories, ::stateOf)
+            .stateIn(viewModelScope, WhileUiSubscribed, stateOf(EditorFields(loaded = false), EditorStatus(), emptyList()))
+
+    private fun stateOf(f: EditorFields, s: EditorStatus, allCategories: List<Category>) = GarmentEditorUiState(
+        isNew = garmentId == null,
+        loaded = f.loaded,
+        categories = allCategories.filter { !it.hidden || it.id in f.categoryIds },
+        name = f.name,
+        description = f.description,
+        selectedCategoryIds = f.categoryIds,
+        colours = f.colours,
+        photo = f.photoFileName?.let(photos::file),
+        importingPhoto = s.importingPhoto,
+        saving = s.saving,
+        savedGarmentId = s.savedGarmentId,
+        message = s.message,
+        categoryDialog = s.categoryDialog,
+    )
 
     init {
-        if (!fields.value.loaded) loadExisting()
+        if (!draft.value.loaded) loadExisting()
     }
 
     private fun loadExisting() {
         if (garmentId == null) {
-            setFields { it.copy(loaded = true) }
+            draft.update { it.copy(loaded = true) }
             return
         }
         viewModelScope.launch {
             val garment = garments.garment(garmentId).first()
-            originalPhoto = garment?.photoFileName
-            savedState[KEY_ORIGINAL_PHOTO] = originalPhoto
-            setFields {
+            draft.update {
                 EditorFields(
                     loaded = true,
                     name = garment?.name.orEmpty(),
@@ -123,26 +124,27 @@ class GarmentEditorViewModel(
                     categoryIds = garment?.categoryIds.orEmpty(),
                     colours = garment?.colours.orEmpty(),
                     photoFileName = garment?.photoFileName,
+                    originalPhoto = garment?.photoFileName,
                 )
             }
         }
     }
 
     /** Picks or unpicks a category. A garment can have several; the first picked is its main one. */
-    fun toggleCategory(id: Long) = setFields {
+    fun toggleCategory(id: Long) = draft.update {
         it.copy(categoryIds = if (id in it.categoryIds) it.categoryIds - id else it.categoryIds + id)
     }
 
-    fun setName(name: String) = setFields { it.copy(name = name.take(MAX_GARMENT_NAME_LENGTH)) }
+    fun setName(name: String) = draft.update { it.copy(name = name.take(MAX_GARMENT_NAME_LENGTH)) }
 
-    fun setDescription(description: String) = setFields { it.copy(description = description.take(MAX_DESCRIPTION_LENGTH)) }
+    fun setDescription(description: String) = draft.update { it.copy(description = description.take(MAX_DESCRIPTION_LENGTH)) }
 
     /** Tapping a colour adds it, or takes it away again. */
-    fun toggleColour(colour: GarmentColour) = setFields {
+    fun toggleColour(colour: GarmentColour) = draft.update {
         it.copy(colours = if (colour in it.colours) it.colours - colour else it.colours + colour)
     }
 
-    fun clearColours() = setFields { it.copy(colours = emptyList()) }
+    fun clearColours() = draft.update { it.copy(colours = emptyList()) }
 
     fun newCaptureUri(): Uri = photos.newCaptureUri()
 
@@ -162,16 +164,16 @@ class GarmentEditorViewModel(
     fun removePhoto() = replacePhoto(null)
 
     private fun replacePhoto(newName: String?) {
-        val previous = fields.value.photoFileName
-        setFields { it.copy(photoFileName = newName) }
+        val previous = draft.value.photoFileName
+        draft.update { it.copy(photoFileName = newName) }
         // A photo taken in this editor and replaced before saving is never used: delete it now.
-        if (previous != null && previous != originalPhoto && previous != newName) {
+        if (previous != null && previous != draft.value.originalPhoto && previous != newName) {
             viewModelScope.launch { photos.delete(previous) }
         }
     }
 
     fun save() {
-        val current = fields.value
+        val current = draft.value
         if (current.categoryIds.isEmpty()) return
         status.update { it.copy(saving = true) }
         viewModelScope.launch {
@@ -204,7 +206,7 @@ class GarmentEditorViewModel(
         viewModelScope.launch {
             when (val result = categories.add(name)) {
                 is CategoryNameResult.Saved -> {
-                    if (result.id !in fields.value.categoryIds) toggleCategory(result.id)
+                    if (result.id !in draft.value.categoryIds) toggleCategory(result.id)
                     closeCategoryDialog()
                 }
                 CategoryNameResult.Blank -> setDialogError(CategoryNameError.BLANK)
@@ -215,51 +217,4 @@ class GarmentEditorViewModel(
 
     private fun setDialogError(error: CategoryNameError) =
         status.update { it.copy(categoryDialog = CategoryDialogState(error)) }
-
-    private fun setFields(change: (EditorFields) -> EditorFields) {
-        val updated = change(fields.value)
-        fields.value = updated
-        savedState[KEY_LOADED] = updated.loaded
-        savedState[KEY_NAME] = updated.name
-        savedState[KEY_DESCRIPTION] = updated.description
-        savedState[KEY_CATEGORIES] = updated.categoryIds.toLongArray()
-        savedState[KEY_COLOURS] = GarmentColour.keysOf(updated.colours)
-        savedState[KEY_PHOTO] = updated.photoFileName
-    }
-
-    private fun restoreFields() = EditorFields(
-        loaded = savedState[KEY_LOADED] ?: false,
-        name = savedState[KEY_NAME] ?: "",
-        description = savedState[KEY_DESCRIPTION] ?: "",
-        categoryIds = savedState.get<LongArray>(KEY_CATEGORIES)?.toList().orEmpty(),
-        colours = GarmentColour.listFromKeys(savedState[KEY_COLOURS]),
-        photoFileName = savedState[KEY_PHOTO],
-    )
-
-    private fun initialState() = GarmentEditorUiState(
-        isNew = garmentId == null,
-        loaded = false,
-        categories = emptyList(),
-        name = "",
-        description = "",
-        selectedCategoryIds = emptyList(),
-        colours = emptyList(),
-        photo = null,
-        importingPhoto = false,
-        saving = false,
-        savedGarmentId = null,
-        message = null,
-        categoryDialog = null,
-    )
-
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
-        const val KEY_LOADED = "loaded"
-        const val KEY_NAME = "name"
-        const val KEY_DESCRIPTION = "description"
-        const val KEY_CATEGORIES = "categoryIds"
-        const val KEY_COLOURS = "colours"
-        const val KEY_PHOTO = "photo"
-        const val KEY_ORIGINAL_PHOTO = "originalPhoto"
-    }
 }

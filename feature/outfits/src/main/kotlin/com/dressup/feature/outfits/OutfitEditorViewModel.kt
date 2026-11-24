@@ -9,12 +9,13 @@ import com.dressup.core.data.GarmentRepository
 import com.dressup.core.data.OutfitRepository
 import com.dressup.core.data.photo.PhotoStorage
 import com.dressup.core.model.BoardColour
+import com.dressup.core.model.Category
+import com.dressup.core.model.Garment
 import com.dressup.core.model.MAX_OUTFIT_NAME_LENGTH
 import com.dressup.core.model.OutfitBackground
 import com.dressup.core.model.OutfitDraft
 import com.dressup.core.model.OutfitItem
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -25,6 +26,9 @@ import com.dressup.core.ui.BoardBackground
 import com.dressup.core.ui.BoardPiece
 import com.dressup.core.ui.GalleryTile
 import com.dressup.core.ui.PieceFactory
+import com.dressup.core.ui.SavedDraft
+import com.dressup.core.ui.WhileUiSubscribed
+import kotlinx.serialization.Serializable
 
 data class OutfitEditorUiState(
     val isNew: Boolean,
@@ -50,7 +54,8 @@ data class OutfitEditorUiState(
     val selectedPiece: BoardPiece? get() = pieces.firstOrNull { it.item.garmentId == selectedGarmentId }
 }
 
-/** The editor's inputs. Kept in [SavedStateHandle], so nothing is lost if Android stops the app in the background. */
+/** The editor's inputs, kept as a [SavedDraft]. */
+@Serializable
 private data class OutfitFields(
     val loaded: Boolean,
     val name: String = "",
@@ -80,43 +85,46 @@ class OutfitEditorViewModel(
     categories: CategoryRepository,
     private val photos: PhotoStorage,
 ) : ViewModel() {
-    private val fields = MutableStateFlow(restoreFields())
+    private val draft = SavedDraft(savedState, OutfitFields.serializer()) { OutfitFields(loaded = false) }
     private val status = MutableStateFlow(OutfitStatus())
 
     val uiState: StateFlow<OutfitEditorUiState> =
-        combine(fields, status, garments.garments, categories.categories) { f, s, allGarments, allCategories ->
-            val pieces = PieceFactory(allGarments, allCategories, photos::file)
-            OutfitEditorUiState(
-                isNew = outfitId == null,
-                loaded = f.loaded,
-                name = f.name,
-                pieces = pieces.of(f.items),
-                selectedGarmentId = s.selectedGarmentId,
-                galleryOpen = f.galleryOpen,
-                gallery = allGarments.map(pieces::tile),
-                saving = s.saving,
-                done = s.done,
-                savedId = s.savedId,
-                saveFailed = s.saveFailed,
-                background = f.background,
-                boardBackground = pieces.background(f.background),
-                importingBackground = s.importingBackground,
-                backgroundFailed = s.backgroundFailed,
-            )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), initialState())
+        combine(draft.flow, status, garments.garments, categories.categories, ::stateOf)
+            .stateIn(viewModelScope, WhileUiSubscribed, stateOf(OutfitFields(loaded = false), OutfitStatus(), emptyList(), emptyList()))
+
+    private fun stateOf(f: OutfitFields, s: OutfitStatus, allGarments: List<Garment>, allCategories: List<Category>): OutfitEditorUiState {
+        val pieces = PieceFactory(allGarments, allCategories, photos::file)
+        return OutfitEditorUiState(
+            isNew = outfitId == null,
+            loaded = f.loaded,
+            name = f.name,
+            pieces = pieces.of(f.items),
+            selectedGarmentId = s.selectedGarmentId,
+            galleryOpen = f.galleryOpen,
+            gallery = allGarments.map(pieces::tile),
+            saving = s.saving,
+            done = s.done,
+            savedId = s.savedId,
+            saveFailed = s.saveFailed,
+            background = f.background,
+            boardBackground = pieces.background(f.background),
+            importingBackground = s.importingBackground,
+            backgroundFailed = s.backgroundFailed,
+        )
+    }
 
     init {
-        if (!fields.value.loaded) load()
+        if (!draft.value.loaded) load()
     }
 
     private fun load() {
         if (outfitId == null) {
-            setFields { it.copy(loaded = true, galleryOpen = true) } // a new outfit starts by picking garments
+            draft.update { it.copy(loaded = true, galleryOpen = true) } // a new outfit starts by picking garments
             return
         }
         viewModelScope.launch {
             val outfit = outfits.outfit(outfitId).first()
-            setFields {
+            draft.update {
                 OutfitFields(
                     loaded = true,
                     name = outfit?.name.orEmpty(),
@@ -128,15 +136,15 @@ class OutfitEditorViewModel(
         }
     }
 
-    fun setName(name: String) = setFields { it.copy(name = name.take(MAX_OUTFIT_NAME_LENGTH)) }
+    fun setName(name: String) = draft.update { it.copy(name = name.take(MAX_OUTFIT_NAME_LENGTH)) }
 
-    fun openGallery() = setFields { it.copy(galleryOpen = true) }
+    fun openGallery() = draft.update { it.copy(galleryOpen = true) }
 
-    fun closeGallery() = setFields { it.copy(galleryOpen = false) }
+    fun closeGallery() = draft.update { it.copy(galleryOpen = false) }
 
     /** The garments picked in the gallery become the outfit's. */
     fun pickGarments(garmentIds: List<Long>) {
-        setFields { it.copy(items = it.items.withGarments(garmentIds), galleryOpen = false) }
+        draft.update { it.copy(items = it.items.withGarments(garmentIds), galleryOpen = false) }
         if (status.value.selectedGarmentId !in garmentIds) select(null)
     }
 
@@ -149,27 +157,27 @@ class OutfitEditorViewModel(
     /** A locked garment is never moved, whatever the gesture. */
     fun transform(garmentId: Long, dx: Float, dy: Float, zoom: Float, rotation: Float = 0f) {
         if (isLocked(garmentId)) return
-        setFields { it.copy(items = it.items.transformed(garmentId, dx, dy, zoom, rotation)) }
+        draft.update { it.copy(items = it.items.transformed(garmentId, dx, dy, zoom, rotation)) }
     }
 
     /** The rotation slider: turns the garment to [degrees]. */
     fun rotate(garmentId: Long, degrees: Float) {
         if (isLocked(garmentId)) return
-        setFields { it.copy(items = it.items.rotated(garmentId, degrees)) }
+        draft.update { it.copy(items = it.items.rotated(garmentId, degrees)) }
     }
 
     /** Moves the selected garment one layer to the front ([steps] 1) or the back (-1). */
     fun moveLayer(steps: Int) {
         val id = status.value.selectedGarmentId ?: return
-        setFields { it.copy(items = it.items.movedLayer(id, steps)) }
+        draft.update { it.copy(items = it.items.movedLayer(id, steps)) }
     }
 
     fun toggleLock() {
         val id = status.value.selectedGarmentId ?: return
-        setFields { it.copy(items = it.items.lockToggled(id)) }
+        draft.update { it.copy(items = it.items.lockToggled(id)) }
     }
 
-    private fun isLocked(garmentId: Long) = fields.value.items.any { it.garmentId == garmentId && it.locked }
+    private fun isLocked(garmentId: Long) = draft.value.items.any { it.garmentId == garmentId && it.locked }
 
     /** A palette colour, or null for no background. */
     fun setBackgroundColour(colour: BoardColour?) = replaceBackground(colour?.let(OutfitBackground::Colour))
@@ -191,26 +199,26 @@ class OutfitEditorViewModel(
 
     /** An image picked in this editor and then replaced was never saved, so its file goes at once. */
     private fun replaceBackground(background: OutfitBackground?) {
-        val previous = (fields.value.background as? OutfitBackground.Image)?.fileName
-        setFields { it.copy(background = background) }
-        if (previous != null && previous != fields.value.savedBackgroundFile && previous != (background as? OutfitBackground.Image)?.fileName) {
+        val previous = (draft.value.background as? OutfitBackground.Image)?.fileName
+        draft.update { it.copy(background = background) }
+        if (previous != null && previous != draft.value.savedBackgroundFile && previous != (background as? OutfitBackground.Image)?.fileName) {
             viewModelScope.launch { photos.delete(previous) }
         }
     }
 
     fun resize(garmentId: Long, scale: Float) {
         if (isLocked(garmentId)) return
-        setFields { it.copy(items = it.items.resized(garmentId, scale)) }
+        draft.update { it.copy(items = it.items.resized(garmentId, scale)) }
     }
 
     fun removeSelected() {
         val id = status.value.selectedGarmentId ?: return
-        setFields { f -> f.copy(items = f.items.filterNot { it.garmentId == id }) }
+        draft.update { f -> f.copy(items = f.items.filterNot { it.garmentId == id }) }
         select(null)
     }
 
     fun save() {
-        val current = fields.value
+        val current = draft.value
         if (current.items.isEmpty()) return
         status.update { it.copy(saving = true, saveFailed = false) }
         viewModelScope.launch {
@@ -228,71 +236,5 @@ class OutfitEditorViewModel(
             outfits.delete(id)
             status.update { it.copy(done = true) }
         }
-    }
-
-    private fun setFields(change: (OutfitFields) -> OutfitFields) {
-        val updated = change(fields.value)
-        fields.value = updated
-        savedState[KEY_LOADED] = updated.loaded
-        savedState[KEY_NAME] = updated.name
-        savedState[KEY_GALLERY] = updated.galleryOpen
-        savedState[KEY_IDS] = updated.items.map { it.garmentId }.toLongArray()
-        savedState[KEY_XS] = updated.items.map { it.x }.toFloatArray()
-        savedState[KEY_YS] = updated.items.map { it.y }.toFloatArray()
-        savedState[KEY_SCALES] = updated.items.map { it.scale }.toFloatArray()
-        savedState[KEY_ROTATIONS] = updated.items.map { it.rotation }.toFloatArray()
-        savedState[KEY_LOCKS] = updated.items.map { it.locked }.toBooleanArray()
-        savedState[KEY_BG_COLOUR] = (updated.background as? OutfitBackground.Colour)?.colour?.key
-        savedState[KEY_BG_IMAGE] = (updated.background as? OutfitBackground.Image)?.fileName
-        savedState[KEY_BG_SAVED] = updated.savedBackgroundFile
-    }
-
-    private fun restoreFields(): OutfitFields {
-        val ids = savedState.get<LongArray>(KEY_IDS) ?: LongArray(0)
-        val xs = savedState.get<FloatArray>(KEY_XS) ?: FloatArray(0)
-        val ys = savedState.get<FloatArray>(KEY_YS) ?: FloatArray(0)
-        val scales = savedState.get<FloatArray>(KEY_SCALES) ?: FloatArray(0)
-        val rotations = savedState.get<FloatArray>(KEY_ROTATIONS) ?: FloatArray(0)
-        val locks = savedState.get<BooleanArray>(KEY_LOCKS) ?: BooleanArray(0)
-        val count = minOf(ids.size, xs.size, ys.size, scales.size)
-        val image = savedState.get<String>(KEY_BG_IMAGE)?.let(OutfitBackground::Image)
-        val colour = BoardColour.fromKeyOrNull(savedState.get<String>(KEY_BG_COLOUR))?.let(OutfitBackground::Colour)
-        return OutfitFields(
-            loaded = savedState[KEY_LOADED] ?: false,
-            name = savedState[KEY_NAME] ?: "",
-            items = (0 until count).map { OutfitItem(ids[it], xs[it], ys[it], scales[it], rotations.getOrElse(it) { 0f }, locks.getOrElse(it) { false }) },
-            galleryOpen = savedState[KEY_GALLERY] ?: false,
-            background = image ?: colour,
-            savedBackgroundFile = savedState[KEY_BG_SAVED],
-        )
-    }
-
-    private fun initialState() = OutfitEditorUiState(
-        isNew = outfitId == null,
-        loaded = false,
-        name = "",
-        pieces = emptyList(),
-        selectedGarmentId = null,
-        galleryOpen = false,
-        gallery = emptyList(),
-        saving = false,
-        done = false,
-        saveFailed = false,
-    )
-
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
-        const val KEY_LOADED = "loaded"
-        const val KEY_NAME = "name"
-        const val KEY_GALLERY = "galleryOpen"
-        const val KEY_IDS = "garmentIds"
-        const val KEY_XS = "xs"
-        const val KEY_YS = "ys"
-        const val KEY_SCALES = "scales"
-        const val KEY_ROTATIONS = "rotations"
-        const val KEY_LOCKS = "locks"
-        const val KEY_BG_COLOUR = "backgroundColour"
-        const val KEY_BG_IMAGE = "backgroundImage"
-        const val KEY_BG_SAVED = "savedBackgroundImage"
     }
 }

@@ -16,8 +16,8 @@ import com.dressup.core.ui.BoardBackground
 import com.dressup.core.ui.BoardPiece
 import com.dressup.core.ui.GalleryTile
 import com.dressup.core.ui.PieceFactory
+import com.dressup.core.ui.WhileUiSubscribed
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -62,7 +62,7 @@ class OutfitDetailViewModel(
                     wears = entries.wearsOfOutfit(outfitId),
                 )
             }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), OutfitDetailUiState.Loading)
+        }.stateIn(viewModelScope, WhileUiSubscribed, OutfitDetailUiState.Loading)
 
     fun rate(change: RatingChange<OutfitAspect>) {
         viewModelScope.launch { outfits.rate(outfitId, change) }
@@ -71,9 +71,5 @@ class OutfitDetailViewModel(
     fun delete() {
         deleted.value = true
         viewModelScope.launch { outfits.delete(outfitId) }
-    }
-
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
     }
 }
