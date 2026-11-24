@@ -2,24 +2,22 @@ package com.dressup.core.data
 
 import androidx.room.withTransaction
 import com.dressup.core.data.db.DressUpDatabase
-import com.dressup.core.data.db.OutfitAspectRatingEntity
 import com.dressup.core.data.db.OutfitEntity
 import com.dressup.core.data.db.OutfitItemEntity
 import com.dressup.core.model.MAX_OUTFIT_NAME_LENGTH
-import com.dressup.core.model.MAX_REVIEW_LENGTH
 import com.dressup.core.model.Outfit
 import com.dressup.core.data.photo.PhotoStorage
 import com.dressup.core.model.OutfitAspect
 import com.dressup.core.model.OutfitBackground
 import com.dressup.core.model.OutfitDraft
-import com.dressup.core.model.Rating
+import com.dressup.core.model.RatingChange
 import com.dressup.core.model.cleanText
 import com.dressup.core.model.normalizedRotation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /** Outfits: garments put together on a collage board (ARCHITECTURE.md §5.2). */
-interface OutfitRepository {
+interface OutfitRepository : RatingStore<OutfitAspect> {
     /** Newest first. */
     val outfits: Flow<List<Outfit>>
 
@@ -30,15 +28,6 @@ interface OutfitRepository {
      * background image file is deleted.
      */
     suspend fun save(draft: OutfitDraft): Long
-
-    suspend fun setRating(id: Long, rating: Rating?)
-
-    suspend fun setAspectRating(id: Long, aspect: OutfitAspect, rating: Rating?)
-
-    /** A blank review removes it. */
-    suspend fun setReview(id: Long, review: String?)
-
-    suspend fun setLiked(id: Long, liked: Boolean)
 
     /**
      * Deletes the outfit (and its background image) only; its garments stay in the wardrobe, and its diary entries keep
@@ -53,6 +42,7 @@ internal class RoomOutfitRepository(
     private val clock: () -> Long = System::currentTimeMillis,
 ) : OutfitRepository {
     private val dao = database.outfitDao()
+    private val ratings = RoomRatingStore<OutfitAspect>(dao)
 
     override val outfits: Flow<List<Outfit>> = dao.observeAll().map { list -> list.map { it.toModel() } }
 
@@ -79,19 +69,7 @@ internal class RoomOutfitRepository(
         return id
     }
 
-    override suspend fun setRating(id: Long, rating: Rating?) = dao.setRating(id, rating?.halfStars)
-
-    override suspend fun setAspectRating(id: Long, aspect: OutfitAspect, rating: Rating?) {
-        if (rating == null) {
-            dao.deleteAspectRating(id, aspect.key)
-        } else {
-            dao.upsertAspectRating(OutfitAspectRatingEntity(id, aspect.key, rating.halfStars))
-        }
-    }
-
-    override suspend fun setReview(id: Long, review: String?) = dao.setReview(id, cleanText(review, MAX_REVIEW_LENGTH))
-
-    override suspend fun setLiked(id: Long, liked: Boolean) = dao.setLiked(id, liked)
+    override suspend fun rate(id: Long, change: RatingChange<OutfitAspect>) = ratings.rate(id, change)
 
     override suspend fun delete(id: Long) {
         val image = dao.get(id)?.backgroundFileName

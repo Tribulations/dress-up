@@ -51,7 +51,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.dressup.core.data.DressUpData
 import com.dressup.core.model.GarmentAspect
-import com.dressup.core.model.Rating
+import com.dressup.core.model.RatingChange
 import com.dressup.core.ui.ColourSwatch
 import com.dressup.core.ui.GarmentPhoto
 import com.dressup.core.ui.AspectRatings
@@ -86,10 +86,7 @@ fun GarmentDetailRoute(
             when (action) {
                 DetailAction.Edit -> onEdit(garmentId)
                 DetailAction.Delete -> viewModel.delete()
-                is DetailAction.Rate -> viewModel.setRating(action.rating)
-                is DetailAction.RateAspect -> viewModel.setAspectRating(action.aspect, action.rating)
-                is DetailAction.Like -> viewModel.setLiked(action.liked)
-                is DetailAction.SaveReview -> viewModel.setReview(action.review)
+                is DetailAction.Rate -> viewModel.rate(action.change)
                 DetailAction.CutOut -> viewModel.cutOut()
                 DetailAction.UseOriginalPhoto -> viewModel.useOriginalPhoto()
                 DetailAction.MessageShown -> viewModel.messageShown()
@@ -103,10 +100,7 @@ fun GarmentDetailRoute(
 sealed interface DetailAction {
     data object Edit : DetailAction
     data object Delete : DetailAction
-    data class Rate(val rating: Rating?) : DetailAction
-    data class RateAspect(val aspect: GarmentAspect, val rating: Rating?) : DetailAction
-    data class Like(val liked: Boolean) : DetailAction
-    data class SaveReview(val review: String) : DetailAction
+    data class Rate(val change: RatingChange<GarmentAspect>) : DetailAction
     data object CutOut : DetailAction
     data object UseOriginalPhoto : DetailAction
     data object MessageShown : DetailAction
@@ -198,12 +192,8 @@ private fun GarmentDetails(state: GarmentDetailUiState.Loaded, onAction: (Detail
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(4.dp))
-            OverallRating(
-                rating = state.garment.rating,
-                liked = state.garment.liked,
-                onRate = { onAction(DetailAction.Rate(it)) },
-                onLike = { onAction(DetailAction.Like(it)) },
-            )
+            val rate = { change: RatingChange<GarmentAspect> -> onAction(DetailAction.Rate(change)) }
+            OverallRating(state.garment.ratings, onChange = rate)
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
             WearHistory(
                 wears = state.wears,
@@ -211,17 +201,9 @@ private fun GarmentDetails(state: GarmentDetailUiState.Loaded, onAction: (Detail
                 onOpenEntry = { onAction(DetailAction.OpenEntry(it)) },
             )
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
-            AspectRatings(
-                aspects = GarmentAspect.entries.map { it to state.garment.aspectRatings[it] },
-                label = { it.label() },
-                onRate = { aspect, rating -> onAction(DetailAction.RateAspect(aspect, rating)) },
-            )
+            AspectRatings(state.garment.ratings, GarmentAspect.entries, label = { it.label() }, onChange = rate)
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
-            ReviewBlock(
-                review = state.garment.review,
-                hint = stringResource(R.string.garment_review_hint),
-                onSave = { onAction(DetailAction.SaveReview(it)) },
-            )
+            ReviewBlock(state.garment.ratings, hint = stringResource(R.string.garment_review_hint), onChange = rate)
         }
     }
 }

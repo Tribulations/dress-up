@@ -190,6 +190,11 @@ On the garment page: tap or drag across the stars (half steps); tapping the curr
 is a separate toggle. Under **Rate the details**, each aspect (§5) has its own smaller star bar that works the same way.
 **Your review** opens a text dialog; saving it empty removes the review. Everything saves immediately.
 
+In the code, garments and outfits share it all: `Garment.ratings` and `Outfit.ratings` are a `Ratings<A>` (overall,
+aspects, review, like) with `GarmentAspect` or `OutfitAspect` as `A`; the detail pages send a `RatingChange` (the
+`core:ui` blocks `OverallRating`, `AspectRatings`, `ReviewBlock`), and both repositories are a `RatingStore`
+(`RoomRatingStore` over each table's DAO). Anything else that gets ratings (e.g. wishlist items) reuses these.
+
 ### 7.3 Browse the wardrobe (built in v0.1.0)
 
 A grid of 2:3 photo tiles (adaptive, about three columns on a phone), newest first. Filter chips: **Liked**, then

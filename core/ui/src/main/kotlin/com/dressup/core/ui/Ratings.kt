@@ -22,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dressup.core.model.MAX_REVIEW_LENGTH
-import com.dressup.core.model.Rating
+import com.dressup.core.model.Aspect
+import com.dressup.core.model.RatingChange
+import com.dressup.core.model.Ratings
 
 /*
  * The rating blocks of the garment and outfit pages (ARCHITECTURE.md §8): the same look and behaviour for both.
@@ -37,29 +39,35 @@ fun SectionLabel(text: String) {
 
 /** "Your rating": big stars and the heart. */
 @Composable
-fun OverallRating(rating: Rating?, liked: Boolean, onRate: (Rating?) -> Unit, onLike: (Boolean) -> Unit) {
+fun <A : Aspect> OverallRating(ratings: Ratings<A>, onChange: (RatingChange<A>) -> Unit) {
     SectionLabel(stringResource(R.string.core_ui_your_rating))
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        RatingBar(rating = rating, starSize = 40.dp, onRatingChange = onRate)
-        LikeButton(liked = liked, onLikedChange = onLike)
+        RatingBar(rating = ratings.overall, starSize = 40.dp, onRatingChange = { onChange(RatingChange.Overall(it)) })
+        LikeButton(liked = ratings.liked, onLikedChange = { onChange(RatingChange.Liked(it)) })
     }
 }
 
-/** "Rate the details": one row of stars per aspect, [aspects] as (label, rating). */
+/** "Rate the details": one row of stars for each of [aspects], in that order. */
 @Composable
-fun <A> AspectRatings(aspects: List<Pair<A, Rating?>>, label: @Composable (A) -> String, onRate: (A, Rating?) -> Unit) {
+fun <A : Aspect> AspectRatings(
+    ratings: Ratings<A>,
+    aspects: List<A>,
+    label: @Composable (A) -> String,
+    onChange: (RatingChange<A>) -> Unit,
+) {
     SectionLabel(stringResource(R.string.core_ui_aspects))
-    aspects.forEach { (aspect, rating) ->
+    aspects.forEach { aspect ->
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Text(label(aspect), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            RatingBar(rating = rating, starSize = 28.dp, onRatingChange = { onRate(aspect, it) })
+            RatingBar(rating = ratings.aspects[aspect], starSize = 28.dp, onRatingChange = { onChange(RatingChange.OfAspect(aspect, it)) })
         }
     }
 }
 
 /** "Your review": the text, and a button that opens the editor. Saving it empty removes the review. */
 @Composable
-fun ReviewBlock(review: String?, hint: String, onSave: (String) -> Unit) {
+fun <A : Aspect> ReviewBlock(ratings: Ratings<A>, hint: String, onChange: (RatingChange<A>) -> Unit) {
+    val review = ratings.review
     var editing by rememberSaveable { mutableStateOf(false) }
     SectionLabel(stringResource(R.string.core_ui_review))
     if (review != null) Text(review, style = MaterialTheme.typography.bodyLarge)
@@ -74,7 +82,7 @@ fun ReviewBlock(review: String?, hint: String, onSave: (String) -> Unit) {
             initialText = review.orEmpty(),
             maxLength = MAX_REVIEW_LENGTH,
             placeholder = hint,
-            onConfirm = { editing = false; onSave(it) },
+            onConfirm = { editing = false; onChange(RatingChange.Review(it)) },
             onDismiss = { editing = false },
         )
     }

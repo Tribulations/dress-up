@@ -10,7 +10,7 @@ import com.dressup.core.data.photo.PhotoStorage
 import com.dressup.core.model.DiaryEntry
 import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentAspect
-import com.dressup.core.model.Rating
+import com.dressup.core.model.RatingChange
 import com.dressup.core.model.wearsOfGarment
 import com.dressup.core.ui.garmentSubtitle
 import com.dressup.core.ui.garmentTitle
@@ -77,20 +77,8 @@ class GarmentDetailViewModel(
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GarmentDetailUiState.Loading)
 
-    fun setRating(rating: Rating?) {
-        viewModelScope.launch { garments.setRating(garmentId, rating) }
-    }
-
-    fun setAspectRating(aspect: GarmentAspect, rating: Rating?) {
-        viewModelScope.launch { garments.setAspectRating(garmentId, aspect, rating) }
-    }
-
-    fun setReview(review: String) {
-        viewModelScope.launch { garments.setReview(garmentId, review) }
-    }
-
-    fun setLiked(liked: Boolean) {
-        viewModelScope.launch { garments.setLiked(garmentId, liked) }
+    fun rate(change: RatingChange<GarmentAspect>) {
+        viewModelScope.launch { garments.rate(garmentId, change) }
     }
 
     fun cutOut() {

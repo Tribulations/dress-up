@@ -5,10 +5,11 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
+import com.dressup.core.data.RatingColumns
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-internal interface GarmentDao {
+internal interface GarmentDao : RatingColumns {
     @Transaction
     @Query("SELECT * FROM garments ORDER BY createdAtMillis DESC, id DESC")
     fun observeAll(): Flow<List<GarmentWithDetails>>
@@ -33,13 +34,13 @@ internal interface GarmentDao {
     suspend fun setCutout(id: Long, fileName: String?)
 
     @Query("UPDATE garments SET ratingHalfStars = :halfStars WHERE id = :id")
-    suspend fun setRating(id: Long, halfStars: Int?)
+    override suspend fun setRating(id: Long, halfStars: Int?)
 
     @Query("UPDATE garments SET review = :review WHERE id = :id")
-    suspend fun setReview(id: Long, review: String?)
+    override suspend fun setReview(id: Long, review: String?)
 
     @Query("UPDATE garments SET liked = :liked WHERE id = :id")
-    suspend fun setLiked(id: Long, liked: Boolean)
+    override suspend fun setLiked(id: Long, liked: Boolean)
 
     @Query("DELETE FROM garments WHERE id = :id")
     suspend fun delete(id: Long)
@@ -63,6 +64,10 @@ internal interface GarmentDao {
 
     @Query("DELETE FROM garment_aspect_ratings WHERE garmentId = :garmentId AND aspectKey = :aspectKey")
     suspend fun deleteAspectRating(garmentId: Long, aspectKey: String)
+
+    override suspend fun setAspectRating(id: Long, aspectKey: String, halfStars: Int?) {
+        if (halfStars == null) deleteAspectRating(id, aspectKey) else upsertAspectRating(AspectRatingEntity(id, aspectKey, halfStars))
+    }
 
     /** Everything, for an export. */
     @Transaction
@@ -113,7 +118,7 @@ internal interface CategoryDao {
 }
 
 @Dao
-internal interface OutfitDao {
+internal interface OutfitDao : RatingColumns {
     @Transaction
     @Query("SELECT * FROM outfits ORDER BY createdAtMillis DESC, id DESC")
     fun observeAll(): Flow<List<OutfitWithItems>>
@@ -144,19 +149,23 @@ internal interface OutfitDao {
     suspend fun delete(id: Long)
 
     @Query("UPDATE outfits SET ratingHalfStars = :halfStars WHERE id = :id")
-    suspend fun setRating(id: Long, halfStars: Int?)
+    override suspend fun setRating(id: Long, halfStars: Int?)
 
     @Query("UPDATE outfits SET review = :review WHERE id = :id")
-    suspend fun setReview(id: Long, review: String?)
+    override suspend fun setReview(id: Long, review: String?)
 
     @Query("UPDATE outfits SET liked = :liked WHERE id = :id")
-    suspend fun setLiked(id: Long, liked: Boolean)
+    override suspend fun setLiked(id: Long, liked: Boolean)
 
     @Upsert
     suspend fun upsertAspectRating(rating: OutfitAspectRatingEntity)
 
     @Query("DELETE FROM outfit_aspect_ratings WHERE outfitId = :outfitId AND aspectKey = :aspectKey")
     suspend fun deleteAspectRating(outfitId: Long, aspectKey: String)
+
+    override suspend fun setAspectRating(id: Long, aspectKey: String, halfStars: Int?) {
+        if (halfStars == null) deleteAspectRating(id, aspectKey) else upsertAspectRating(OutfitAspectRatingEntity(id, aspectKey, halfStars))
+    }
 
     @Upsert
     suspend fun upsertAspectRatings(ratings: List<OutfitAspectRatingEntity>)

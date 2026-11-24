@@ -45,7 +45,7 @@ internal class WornThings(garments: List<Garment>, categories: List<Category>, o
         if (outfit != null) {
             // The outfit's board as it is now, but only with what was actually worn that day.
             val board = outfit.items.filter { it.garmentId in entry.garmentIds }
-            return WornThing(outfit.name, isOutfit = true, emptyList(), pieces.of(board), outfit.rating, outfit.liked, pieces.background(outfit.background))
+            return WornThing(outfit.name, isOutfit = true, emptyList(), pieces.of(board), outfit.ratings.overall, outfit.ratings.liked, pieces.background(outfit.background))
         }
         val worn = entry.garmentIds.mapNotNull(garmentsById::get)
         val single = worn.singleOrNull()
@@ -54,8 +54,8 @@ internal class WornThings(garments: List<Garment>, categories: List<Category>, o
             isOutfit = false,
             garmentTitles = worn.map(pieces::title),
             pieces = pieces.of(collageLayout(worn.map { it.id })),
-            rating = single?.rating,
-            liked = single?.liked ?: false,
+            rating = single?.ratings?.overall,
+            liked = single?.ratings?.liked ?: false,
         )
     }
 

@@ -3,7 +3,6 @@ package com.dressup.core.data
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.room.withTransaction
-import com.dressup.core.data.db.AspectRatingEntity
 import com.dressup.core.data.db.DressUpDatabase
 import com.dressup.core.data.db.GarmentCategoryEntity
 import com.dressup.core.data.db.GarmentEntity
@@ -17,15 +16,14 @@ import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.GarmentDraft
 import com.dressup.core.model.MAX_DESCRIPTION_LENGTH
 import com.dressup.core.model.MAX_GARMENT_NAME_LENGTH
-import com.dressup.core.model.MAX_REVIEW_LENGTH
-import com.dressup.core.model.Rating
+import com.dressup.core.model.RatingChange
 import com.dressup.core.model.cleanText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-interface GarmentRepository {
+interface GarmentRepository : RatingStore<GarmentAspect> {
     val garments: Flow<List<Garment>>
 
     fun garment(id: Long): Flow<Garment?>
@@ -35,15 +33,6 @@ interface GarmentRepository {
      * A replaced photo file is deleted, and so is the old photo's cut-out.
      */
     suspend fun save(draft: GarmentDraft): Long
-
-    suspend fun setRating(id: Long, rating: Rating?)
-
-    suspend fun setAspectRating(id: Long, aspect: GarmentAspect, rating: Rating?)
-
-    /** A blank review removes it. */
-    suspend fun setReview(id: Long, review: String?)
-
-    suspend fun setLiked(id: Long, liked: Boolean)
 
     /** Whether this build can remove backgrounds at all ([BackgroundRemover.isAvailable]). */
     val canCutOut: Boolean
@@ -67,6 +56,7 @@ internal class RoomGarmentRepository(
     private val clock: () -> Long = System::currentTimeMillis,
 ) : GarmentRepository {
     private val dao = database.garmentDao()
+    private val ratings = RoomRatingStore<GarmentAspect>(dao)
 
     override val garments: Flow<List<Garment>> = dao.observeAll().map { list -> list.map { it.toModel() } }
 
@@ -113,19 +103,7 @@ internal class RoomGarmentRepository(
     private fun links(garmentId: Long, categoryIds: List<Long>) =
         categoryIds.distinct().mapIndexed { position, categoryId -> GarmentCategoryEntity(garmentId, categoryId, position) }
 
-    override suspend fun setRating(id: Long, rating: Rating?) = dao.setRating(id, rating?.halfStars)
-
-    override suspend fun setAspectRating(id: Long, aspect: GarmentAspect, rating: Rating?) {
-        if (rating == null) {
-            dao.deleteAspectRating(id, aspect.key)
-        } else {
-            dao.upsertAspectRating(AspectRatingEntity(id, aspect.key, rating.halfStars))
-        }
-    }
-
-    override suspend fun setReview(id: Long, review: String?) = dao.setReview(id, cleanText(review, MAX_REVIEW_LENGTH))
-
-    override suspend fun setLiked(id: Long, liked: Boolean) = dao.setLiked(id, liked)
+    override suspend fun rate(id: Long, change: RatingChange<GarmentAspect>) = ratings.rate(id, change)
 
     override val canCutOut: Boolean get() = backgroundRemover.isAvailable
 

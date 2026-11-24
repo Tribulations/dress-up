@@ -9,6 +9,7 @@ import com.dressup.core.data.photo.PhotoStorage
 import com.dressup.core.model.Category
 import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.Rating
+import com.dressup.core.model.RatingChange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -81,15 +82,15 @@ class GarmentDetailViewModelTest {
     fun `aspect ratings and the review are saved and can be cleared`() = runTest {
         garments.items.value = listOf(testGarment(1, listOf(SWEATER.id)))
         val page = detail()
-        page.vm.setAspectRating(GarmentAspect.FIT, Rating(8))
-        page.vm.setReview("  Warm and soft  ")
-        assertEquals(Rating(8), page.loaded().garment.aspectRatings[GarmentAspect.FIT])
-        assertEquals("Warm and soft", page.loaded().garment.review)
+        page.vm.rate(RatingChange.OfAspect(GarmentAspect.FIT, Rating(8)))
+        page.vm.rate(RatingChange.Review("  Warm and soft  "))
+        assertEquals(Rating(8), page.loaded().garment.ratings.aspects[GarmentAspect.FIT])
+        assertEquals("Warm and soft", page.loaded().garment.ratings.review)
 
-        page.vm.setAspectRating(GarmentAspect.FIT, null)
-        page.vm.setReview("   ")
-        assertTrue(page.loaded().garment.aspectRatings.isEmpty())
-        assertNull(page.loaded().garment.review)
+        page.vm.rate(RatingChange.OfAspect(GarmentAspect.FIT, null))
+        page.vm.rate(RatingChange.Review("   "))
+        assertTrue(page.loaded().garment.ratings.aspects.isEmpty())
+        assertNull(page.loaded().garment.ratings.review)
     }
 
     @Test

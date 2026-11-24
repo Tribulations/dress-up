@@ -4,6 +4,7 @@ import com.dressup.core.model.Category
 import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentColour
 import com.dressup.core.model.Rating
+import com.dressup.core.model.Ratings
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import com.dressup.core.model.WearSummary
@@ -32,10 +33,7 @@ class WardrobeFilterTest {
         colours = listOfNotNull(colour) + moreColours,
         photoFileName = null,
         cutoutFileName = null,
-        rating = Rating.fromHalfStarsOrNull(rating),
-        aspectRatings = emptyMap(),
-        review = null,
-        liked = liked,
+        ratings = Ratings(overall = Rating.fromHalfStarsOrNull(rating), liked = liked),
         createdAtMillis = id * 1000,
     )
 

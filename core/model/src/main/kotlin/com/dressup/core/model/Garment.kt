@@ -16,10 +16,7 @@ data class Garment(
     val colours: List<GarmentColour>,
     val photoFileName: String?,
     val cutoutFileName: String?,
-    val rating: Rating?,
-    val aspectRatings: Map<GarmentAspect, Rating>,
-    val review: String?,
-    val liked: Boolean,
+    val ratings: Ratings<GarmentAspect>,
     val createdAtMillis: Long,
 ) {
     /** The cut-out when there is one, otherwise the photo. */

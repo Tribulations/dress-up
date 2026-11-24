@@ -133,10 +133,10 @@ private fun OutfitGrid(outfits: List<OutfitCard>, onOpen: (Long) -> Unit) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (card.outfit.rating != null || card.outfit.liked) {
+                if (card.outfit.ratings.overall != null || card.outfit.ratings.liked) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        card.outfit.rating?.let { RatingBar(it, starSize = 14.dp) }
-                        if (card.outfit.liked) {
+                        card.outfit.ratings.overall?.let { RatingBar(it, starSize = 14.dp) }
+                        if (card.outfit.ratings.liked) {
                             Icon(Icons.Filled.Favorite, contentDescription = null, tint = DressUpColors.Rose, modifier = Modifier.size(14.dp))
                         }
                     }

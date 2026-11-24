@@ -50,7 +50,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.dressup.core.data.DressUpData
 import com.dressup.core.model.OutfitAspect
-import com.dressup.core.model.Rating
+import com.dressup.core.model.RatingChange
 import com.dressup.core.ui.AspectRatings
 import com.dressup.core.ui.GalleryTile
 import com.dressup.core.ui.GarmentPhoto
@@ -89,10 +89,7 @@ fun OutfitDetailRoute(
                 OutfitDetailAction.LogWear -> onLogWear(outfitId)
                 is OutfitDetailAction.OpenGarment -> onOpenGarment(action.garmentId)
                 is OutfitDetailAction.OpenEntry -> onOpenEntry(action.entryId)
-                is OutfitDetailAction.Rate -> viewModel.setRating(action.rating)
-                is OutfitDetailAction.RateAspect -> viewModel.setAspectRating(action.aspect, action.rating)
-                is OutfitDetailAction.Like -> viewModel.setLiked(action.liked)
-                is OutfitDetailAction.SaveReview -> viewModel.setReview(action.review)
+                is OutfitDetailAction.Rate -> viewModel.rate(action.change)
             }
         },
     )
@@ -104,10 +101,7 @@ sealed interface OutfitDetailAction {
     data object LogWear : OutfitDetailAction
     data class OpenGarment(val garmentId: Long) : OutfitDetailAction
     data class OpenEntry(val entryId: Long) : OutfitDetailAction
-    data class Rate(val rating: Rating?) : OutfitDetailAction
-    data class RateAspect(val aspect: OutfitAspect, val rating: Rating?) : OutfitDetailAction
-    data class Like(val liked: Boolean) : OutfitDetailAction
-    data class SaveReview(val review: String) : OutfitDetailAction
+    data class Rate(val change: RatingChange<OutfitAspect>) : OutfitDetailAction
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -172,12 +166,8 @@ private fun OutfitDetails(state: OutfitDetailUiState.Loaded, onAction: (OutfitDe
             Text(outfitName(outfit), style = MaterialTheme.typography.headlineMedium)
             GarmentStrip(state.garments, onOpen = { onAction(OutfitDetailAction.OpenGarment(it)) })
             Spacer(Modifier.height(4.dp))
-            OverallRating(
-                rating = outfit.rating,
-                liked = outfit.liked,
-                onRate = { onAction(OutfitDetailAction.Rate(it)) },
-                onLike = { onAction(OutfitDetailAction.Like(it)) },
-            )
+            val rate = { change: RatingChange<OutfitAspect> -> onAction(OutfitDetailAction.Rate(change)) }
+            OverallRating(outfit.ratings, onChange = rate)
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
             WearHistory(
                 wears = state.wears,
@@ -185,17 +175,9 @@ private fun OutfitDetails(state: OutfitDetailUiState.Loaded, onAction: (OutfitDe
                 onOpenEntry = { onAction(OutfitDetailAction.OpenEntry(it)) },
             )
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
-            AspectRatings(
-                aspects = OutfitAspect.entries.map { it to outfit.aspectRatings[it] },
-                label = { it.label() },
-                onRate = { aspect, rating -> onAction(OutfitDetailAction.RateAspect(aspect, rating)) },
-            )
+            AspectRatings(outfit.ratings, OutfitAspect.entries, label = { it.label() }, onChange = rate)
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
-            ReviewBlock(
-                review = outfit.review,
-                hint = stringResource(R.string.outfits_review_hint),
-                onSave = { onAction(OutfitDetailAction.SaveReview(it)) },
-            )
+            ReviewBlock(outfit.ratings, hint = stringResource(R.string.outfits_review_hint), onChange = rate)
         }
     }
 }

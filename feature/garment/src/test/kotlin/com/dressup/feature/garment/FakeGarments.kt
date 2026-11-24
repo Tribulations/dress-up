@@ -8,7 +8,8 @@ import com.dressup.core.model.DiaryEntry
 import com.dressup.core.model.Garment
 import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.GarmentDraft
-import com.dressup.core.model.Rating
+import com.dressup.core.model.RatingChange
+import com.dressup.core.model.Ratings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -22,10 +23,7 @@ internal fun testGarment(id: Long, categoryIds: List<Long>, photo: String? = nul
     colours = emptyList(),
     photoFileName = photo,
     cutoutFileName = cutout,
-    rating = null,
-    aspectRatings = emptyMap(),
-    review = null,
-    liked = false,
+    ratings = Ratings(),
     createdAtMillis = 0,
 )
 
@@ -40,12 +38,17 @@ internal class FakeGarments : GarmentRepository {
         savedDrafts += draft
         return draft.id ?: savedDrafts.size.toLong()
     }
-    override suspend fun setRating(id: Long, rating: Rating?) = change(id) { it.copy(rating = rating) }
-    override suspend fun setAspectRating(id: Long, aspect: GarmentAspect, rating: Rating?) = change(id) {
-        it.copy(aspectRatings = if (rating == null) it.aspectRatings - aspect else it.aspectRatings + (aspect to rating))
+    override suspend fun rate(id: Long, change: RatingChange<GarmentAspect>) = change(id) { garment ->
+        val r = garment.ratings
+        garment.copy(
+            ratings = when (change) {
+                is RatingChange.Overall -> r.copy(overall = change.rating)
+                is RatingChange.OfAspect -> r.copy(aspects = change.rating?.let { r.aspects + (change.aspect to it) } ?: (r.aspects - change.aspect))
+                is RatingChange.Review -> r.copy(review = change.text.trim().ifEmpty { null })
+                is RatingChange.Liked -> r.copy(liked = change.liked)
+            },
+        )
     }
-    override suspend fun setReview(id: Long, review: String?) = change(id) { it.copy(review = review?.trim()?.ifEmpty { null }) }
-    override suspend fun setLiked(id: Long, liked: Boolean) = change(id) { it.copy(liked = liked) }
     override suspend fun cutOut(id: Long): CutoutResult {
         if (cutoutResult == CutoutResult.DONE) change(id) { it.copy(cutoutFileName = "cutout.webp") }
         return cutoutResult

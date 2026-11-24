@@ -5,6 +5,7 @@ import com.dressup.core.data.db.DiaryEntryWithGarments
 import com.dressup.core.data.db.GarmentWithDetails
 import com.dressup.core.data.db.OutfitWithItems
 import com.dressup.core.data.db.OutfitEntity
+import com.dressup.core.model.Aspect
 import com.dressup.core.model.BoardColour
 import com.dressup.core.model.Category
 import com.dressup.core.model.DiaryEntry
@@ -16,6 +17,7 @@ import com.dressup.core.model.OutfitAspect
 import com.dressup.core.model.OutfitBackground
 import com.dressup.core.model.OutfitItem
 import com.dressup.core.model.Rating
+import com.dressup.core.model.Ratings
 import java.time.LocalDate
 
 internal fun GarmentWithDetails.toModel() = Garment(
@@ -26,14 +28,7 @@ internal fun GarmentWithDetails.toModel() = Garment(
     colours = GarmentColour.listFromKeys(garment.colourKeys),
     photoFileName = garment.photoFileName,
     cutoutFileName = garment.cutoutFileName,
-    rating = Rating.fromHalfStarsOrNull(garment.ratingHalfStars),
-    aspectRatings = aspectRatings.mapNotNull { row ->
-        val aspect = GarmentAspect.fromKeyOrNull(row.aspectKey) ?: return@mapNotNull null
-        val rating = Rating.fromHalfStarsOrNull(row.halfStars) ?: return@mapNotNull null
-        aspect to rating
-    }.toMap(),
-    review = garment.review,
-    liked = garment.liked,
+    ratings = ratings(garment.ratingHalfStars, aspectRatings.map { it.aspectKey to it.halfStars }, GarmentAspect::fromKeyOrNull, garment.review, garment.liked),
     createdAtMillis = garment.createdAtMillis,
 )
 
@@ -41,16 +36,26 @@ internal fun OutfitWithItems.toModel() = Outfit(
     id = outfit.id,
     name = outfit.name,
     items = items.sortedBy { it.position }.map { OutfitItem(it.garmentId, it.x, it.y, it.scale, it.rotation, it.locked) },
-    rating = Rating.fromHalfStarsOrNull(outfit.ratingHalfStars),
-    aspectRatings = aspectRatings.mapNotNull { row ->
-        val aspect = OutfitAspect.fromKeyOrNull(row.aspectKey) ?: return@mapNotNull null
-        val rating = Rating.fromHalfStarsOrNull(row.halfStars) ?: return@mapNotNull null
-        aspect to rating
-    }.toMap(),
-    review = outfit.review,
-    liked = outfit.liked,
+    ratings = ratings(outfit.ratingHalfStars, aspectRatings.map { it.aspectKey to it.halfStars }, OutfitAspect::fromKeyOrNull, outfit.review, outfit.liked),
     background = outfit.background(),
     createdAtMillis = outfit.createdAtMillis,
+)
+
+/** [aspectRows] are (aspect key, half stars); unknown keys and invalid ratings are dropped. */
+private fun <A : Aspect> ratings(
+    halfStars: Int?,
+    aspectRows: List<Pair<String, Int>>,
+    aspectOf: (String) -> A?,
+    review: String?,
+    liked: Boolean,
+) = Ratings(
+    overall = Rating.fromHalfStarsOrNull(halfStars),
+    aspects = aspectRows.mapNotNull { (key, stars) ->
+        val aspect = aspectOf(key) ?: return@mapNotNull null
+        Rating.fromHalfStarsOrNull(stars)?.let { aspect to it }
+    }.toMap(),
+    review = review,
+    liked = liked,
 )
 
 internal fun OutfitEntity.background(): OutfitBackground? =

@@ -16,7 +16,7 @@ class GarmentTextTest {
 
     @Test
     fun `a cut-out is shown instead of the photo when there is one`() {
-        val garment = Garment(1, null, null, listOf(1), emptyList(), "photo.jpg", null, null, emptyMap(), null, false, 0)
+        val garment = Garment(1, null, null, listOf(1), emptyList(), "photo.jpg", null, Ratings(), 0)
         assertEquals("photo.jpg", garment.pictureFileName)
         assertEquals("cutout.webp", garment.copy(cutoutFileName = "cutout.webp").pictureFileName)
     }

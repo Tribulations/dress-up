@@ -20,7 +20,8 @@ import com.dressup.core.model.Outfit
 import com.dressup.core.model.OutfitAspect
 import com.dressup.core.model.OutfitDraft
 import com.dressup.core.model.OutfitItem
-import com.dressup.core.model.Rating
+import com.dressup.core.model.RatingChange
+import com.dressup.core.model.Ratings
 import com.dressup.core.ui.BOARD_ASPECT_RATIO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -187,24 +188,18 @@ class DiaryEditorViewModelTest {
         override val outfits: Flow<List<Outfit>> = items
         override fun outfit(id: Long): Flow<Outfit?> = items.map { list -> list.firstOrNull { it.id == id } }
         override suspend fun save(draft: OutfitDraft) = 0L
-        override suspend fun setRating(id: Long, rating: Rating?) = Unit
-        override suspend fun setAspectRating(id: Long, aspect: OutfitAspect, rating: Rating?) = Unit
-        override suspend fun setReview(id: Long, review: String?) = Unit
-        override suspend fun setLiked(id: Long, liked: Boolean) = Unit
+        override suspend fun rate(id: Long, change: RatingChange<OutfitAspect>) = Unit
         override suspend fun delete(id: Long) = Unit
     }
 
     private object FakeGarments : GarmentRepository {
         private fun garment(id: Long, name: String) = Garment(
-            id, name, null, listOf(PANTS.id), emptyList(), "p$id.jpg", null, null, emptyMap(), null, false, 0,
+            id, name, null, listOf(PANTS.id), emptyList(), "p$id.jpg", null, Ratings(), 0,
         )
         override val garments: Flow<List<Garment>> = MutableStateFlow(listOf(garment(1, "Oxford"), garment(2, "Chinos"), garment(3, "Jeans")))
         override fun garment(id: Long): Flow<Garment?> = garments.map { list -> list.firstOrNull { it.id == id } }
         override suspend fun save(draft: GarmentDraft) = 0L
-        override suspend fun setRating(id: Long, rating: Rating?) = Unit
-        override suspend fun setAspectRating(id: Long, aspect: GarmentAspect, rating: Rating?) = Unit
-        override suspend fun setReview(id: Long, review: String?) = Unit
-        override suspend fun setLiked(id: Long, liked: Boolean) = Unit
+        override suspend fun rate(id: Long, change: RatingChange<GarmentAspect>) = Unit
         override val canCutOut = false
         override suspend fun cutOut(id: Long) = CutoutResult.UNAVAILABLE
         override suspend fun removeCutout(id: Long) = Unit

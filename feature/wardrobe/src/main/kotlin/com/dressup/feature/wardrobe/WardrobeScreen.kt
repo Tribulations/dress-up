@@ -249,7 +249,7 @@ private fun GarmentTile(tile: WardrobeTile, onClick: () -> Unit) {
             isCutout = tile.isCutout,
             modifier = Modifier.fillMaxSize(),
         )
-        if (tile.garment.liked) {
+        if (tile.garment.ratings.liked) {
             Icon(
                 Icons.Filled.Favorite,
                 contentDescription = stringResource(R.string.wardrobe_liked),

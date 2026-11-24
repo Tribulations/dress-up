@@ -32,14 +32,14 @@ internal fun applyFilter(
     val shown = garments.filter { garment ->
         (filter.categoryIds.isEmpty() || garment.categoryIds.any { it in filter.categoryIds }) &&
             (filter.colours.isEmpty() || garment.colours.any { it in filter.colours }) &&
-            (!filter.likedOnly || garment.liked)
+            (!filter.likedOnly || garment.ratings.liked)
     }
     val newestFirst = compareByDescending<Garment> { it.createdAtMillis }.thenByDescending { it.id }
     val comparator = when (filter.sort) {
         WardrobeSort.NEWEST -> newestFirst
         WardrobeSort.OLDEST -> compareBy<Garment> { it.createdAtMillis }.thenBy { it.id }
         // Unrated garments last.
-        WardrobeSort.RATING -> compareByDescending<Garment> { it.rating?.halfStars ?: 0 }.then(newestFirst)
+        WardrobeSort.RATING -> compareByDescending<Garment> { it.ratings.overall?.halfStars ?: 0 }.then(newestFirst)
         WardrobeSort.CATEGORY -> {
             val position = categories.withIndex().associate { (index, category) -> category.id to index }
             compareBy<Garment> { position[it.categoryIds.firstOrNull()] ?: Int.MAX_VALUE }.then(newestFirst)
