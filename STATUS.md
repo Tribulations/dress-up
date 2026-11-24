@@ -8,7 +8,7 @@ Update this file whenever work starts, finishes or is verified.
 An item only counts as **tested** when it has been verified through automated tests,
 on a real device, or both. Record how it was tested.
 
-_Last updated: 2026-11-23_
+_Last updated: 2026-11-24_
 
 ---
 
@@ -37,6 +37,17 @@ _Nothing. v0.2.2 (layers, lock and easier gestures in the outfit editor, several
 
 ## ✅ Done & tested
 
+- **Refactor for readability and extensibility (2026-11-24, unreleased, no visible change).** Four commits:
+  one mapping between database rows and `profile.yaml` (`backup/ProfileMapping.kt`), with the test user filled
+  through the importer; one `Ratings`/`RatingChange`/`RatingStore` for garments and outfits; editors keep one
+  `SavedDraft` (JSON) instead of a key per field, and every ViewModel shares `WhileUiSubscribed`; shared `core:ui`
+  delete dialog, snackbar message, empty message, list header and `formatDate(millis)`. Unit tests: 105 JVM tests, 0
+  failures (new: the test wardrobe as an export file round-trips through YAML and links up; `SavedDraft` restores a
+  draft and ignores a broken one). **Emulator** (Medium_Phone_API_36, Android 16), **release** build (R8): Reset of
+  the test user (now through the importer) brought back pictures, cut-outs, likes, ratings, aspects, reviews, the
+  locked coat and the diary; on the white tee, overall stars, like, an aspect and the review saved; the shared
+  delete dialog showed and cancelled; in the outfit editor a renamed draft with a layer change came back after the
+  app's process was killed in the background, and Cancel left the outfit unchanged.
 - **v0.2.2 – outfit editor layers, lock and gestures; several colours per garment (2026-11-23).** Unit tests: 102 JVM
   tests pass, 9 of them new or rewritten (colour lists stored and read back, old single colours, the filter with
   several colours, the editor's colour toggles and saved state, colours and lock in `profile.yaml` and old files, the
