@@ -3,35 +3,12 @@ package com.dressup.core.data.backup
 import androidx.room.withTransaction
 import com.dressup.core.data.DressUpData
 import com.dressup.core.data.cleanName
-import com.dressup.core.data.db.AspectRatingEntity
 import com.dressup.core.data.db.CategoryEntity
-import com.dressup.core.data.db.DiaryEntryEntity
 import com.dressup.core.data.db.DiaryEntryGarmentEntity
 import com.dressup.core.data.db.GarmentCategoryEntity
-import com.dressup.core.data.db.GarmentEntity
-import com.dressup.core.data.db.OutfitAspectRatingEntity
-import com.dressup.core.data.db.OutfitEntity
-import com.dressup.core.data.db.OutfitItemEntity
-import com.dressup.core.model.BoardColour
-import com.dressup.core.model.GarmentAspect
-import com.dressup.core.model.GarmentColour
-import com.dressup.core.model.MAX_DESCRIPTION_LENGTH
-import com.dressup.core.model.MAX_GARMENT_NAME_LENGTH
-import com.dressup.core.model.MAX_NOTE_LENGTH
-import com.dressup.core.model.MAX_OCCASION_LENGTH
-import com.dressup.core.model.MAX_OUTFIT_NAME_LENGTH
-import com.dressup.core.model.MAX_REVIEW_LENGTH
-import com.dressup.core.model.OutfitAspect
-import com.dressup.core.model.OutfitItem
-import com.dressup.core.model.Rating
-import com.dressup.core.model.cleanText
-import com.dressup.core.model.normalizedRotation
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.time.Instant
-import java.time.LocalDate
 import java.util.zip.ZipInputStream
-import kotlin.math.roundToInt
 
 /**
  * Reads an export into a fresh, empty profile's [DressUpData] (ARCHITECTURE.md §7.8). Blocking: call off the main thread.
@@ -78,83 +55,47 @@ internal object ProfileImporter {
         return fill(data, file, pictures, now)
     }
 
-    private suspend fun fill(data: DressUpData, file: ProfileFile, pictures: Map<String, String>, now: Long): Outcome.Read {
+    /**
+     * Adds everything in [file] to the profile in [data], in one transaction. [pictures] maps a picture's path in the
+     * zip (`images/…`) to the file it was stored as. Also how the test user is filled
+     * ([com.dressup.core.data.testuser.TestWardrobe]).
+     */
+    suspend fun fill(data: DressUpData, file: ProfileFile, pictures: Map<String, String>, now: Long): Outcome.Read {
         val db = data.database
         val garmentDao = db.garmentDao()
-        val categoryDao = db.categoryDao()
         val outfitDao = db.outfitDao()
         val diaryDao = db.diaryDao()
+        val picture = { path: String -> pictures[picturePath(path)] }
         return db.withTransaction {
             val categoryIds = importCategories(data, file.categories)
-            val fallbackCategory = categoryDao.getAll().let { all -> all.firstOrNull { it.builtInKey == FALLBACK_CATEGORY } ?: all.first() }.id
+            val fallbackCategory = db.categoryDao().getAll().let { all -> all.firstOrNull { it.builtInKey == FALLBACK_CATEGORY } ?: all.first() }.id
 
+            // The file's ids only link things inside it: each gets a new one here.
             val garmentIds = HashMap<Long, Long>()
             file.garments.forEach { g ->
-                val id = garmentDao.insert(
-                    GarmentEntity(
-                        name = cleanText(g.name, MAX_GARMENT_NAME_LENGTH),
-                        description = cleanText(g.description, MAX_DESCRIPTION_LENGTH),
-                        colourKeys = colourKeys(g),
-                        photoFileName = g.photo?.let { pictures[picturePath(it)] },
-                        cutoutFileName = g.cutout?.let { pictures[picturePath(it)] },
-                        ratingHalfStars = halfStars(g.rating),
-                        review = cleanText(g.review, MAX_REVIEW_LENGTH),
-                        liked = g.liked,
-                        createdAtMillis = millis(g.added) ?: now,
-                    ),
-                )
+                val id = garmentDao.insert(g.toEntity(picture, now))
                 if (g.id !in garmentIds) garmentIds[g.id] = id
                 val categories = g.categories.mapNotNull(categoryIds::get).distinct().ifEmpty { listOf(fallbackCategory) }
                 garmentDao.insertCategories(categories.mapIndexed { position, c -> GarmentCategoryEntity(id, c, position) })
-                g.aspects.forEach { (key, stars) ->
-                    val aspect = GarmentAspect.fromKeyOrNull(key) ?: return@forEach
-                    halfStars(stars)?.let { garmentDao.upsertAspectRating(AspectRatingEntity(id, aspect.key, it)) }
-                }
+                g.aspectEntities(id).forEach { garmentDao.upsertAspectRating(it) }
             }
 
             val outfitIds = HashMap<Long, Long>()
             file.outfits.forEach { o ->
-                val id = outfitDao.insert(
-                    OutfitEntity(
-                        name = cleanText(o.name, MAX_OUTFIT_NAME_LENGTH),
-                        createdAtMillis = millis(o.created) ?: now,
-                        ratingHalfStars = halfStars(o.rating),
-                        review = cleanText(o.review, MAX_REVIEW_LENGTH),
-                        liked = o.liked,
-                        backgroundColourKey = BoardColour.fromKeyOrNull(o.backgroundColour)?.key,
-                        backgroundFileName = o.backgroundImage?.let { pictures[picturePath(it)] },
-                    ),
-                )
+                val id = outfitDao.insert(o.toEntity(picture, now))
                 if (o.id !in outfitIds) outfitIds[o.id] = id
                 val items = o.items.mapNotNull { item -> garmentIds[item.garment]?.let { item to it } }.distinctBy { it.second }
-                outfitDao.insertItems(
-                    items.mapIndexed { position, (item, garmentId) ->
-                        OutfitItemEntity(id, garmentId, position, fraction(item.x), fraction(item.y), scale(item.scale), normalizedRotation(item.rotation), item.locked)
-                    },
-                )
-                outfitDao.upsertAspectRatings(
-                    o.aspects.mapNotNull { (key, stars) ->
-                        val aspect = OutfitAspect.fromKeyOrNull(key) ?: return@mapNotNull null
-                        halfStars(stars)?.let { OutfitAspectRatingEntity(id, aspect.key, it) }
-                    },
-                )
+                outfitDao.insertItems(items.mapIndexed { position, (item, garmentId) -> item.toEntity(id, garmentId, position) })
+                outfitDao.upsertAspectRatings(o.aspectEntities(id))
             }
 
             var diaryEntries = 0
             file.diary.forEach { e ->
-                val date = runCatching { LocalDate.parse(e.date) }.getOrNull() ?: return@forEach
                 val outfitId = e.outfit?.let(outfitIds::get)
                 val worn = e.garments.mapNotNull(garmentIds::get).distinct()
                 if (outfitId == null && worn.isEmpty()) return@forEach
-                val id = diaryDao.insert(
-                    DiaryEntryEntity(
-                        dateEpochDay = date.toEpochDay(),
-                        outfitId = outfitId,
-                        occasion = cleanText(e.occasion, MAX_OCCASION_LENGTH),
-                        note = cleanText(e.note, MAX_NOTE_LENGTH),
-                        createdAtMillis = millis(e.logged) ?: now,
-                    ),
-                )
+                val entry = e.toEntity(outfitId, now) ?: return@forEach
+                val id = diaryDao.insert(entry)
                 diaryDao.insertGarments(worn.mapIndexed { position, garmentId -> DiaryEntryGarmentEntity(id, garmentId, position) })
                 diaryEntries++
             }
@@ -199,20 +140,6 @@ internal object ProfileImporter {
             out.write(buffer, 0, read)
         }
     }
-
-    /** The garment's colours as stored, from the list or (in older files) the single colour; unknown keys dropped. */
-    internal fun colourKeys(garment: GarmentFile): String? =
-        GarmentColour.keysOf((garment.colours + listOfNotNull(garment.colour)).mapNotNull(GarmentColour::fromKeyOrNull))
-
-    internal fun halfStars(stars: Double?): Int? =
-        stars?.takeIf { it.isFinite() }?.let { Rating.fromHalfStarsOrNull((it * 2).roundToInt()) }?.halfStars
-
-    private fun millis(iso: String?): Long? = iso?.let { runCatching { Instant.parse(it).toEpochMilli() }.getOrNull() }
-
-    private fun fraction(value: Float): Float = if (value.isFinite()) value.coerceIn(0f, 1f) else 0.5f
-
-    private fun scale(value: Float): Float =
-        if (value.isFinite()) value.coerceIn(OutfitItem.MIN_SCALE, OutfitItem.MAX_SCALE) else OutfitItem.DEFAULT_SCALE
 
     private val SAFE_NAME = Regex("[A-Za-z0-9][A-Za-z0-9._-]{0,99}")
     private const val FALLBACK_CATEGORY = "accessory"

@@ -65,10 +65,10 @@ class ProfileFileTest {
         val garment = ProfileYaml.decode(old).garments.first()
         assertEquals("beige", garment.colour)
         assertEquals(emptyList<String>(), garment.colours)
-        assertEquals("beige", ProfileImporter.colourKeys(garment))
-        assertEquals("beige,navy", ProfileImporter.colourKeys(file.garments.first()))
-        assertEquals("red", ProfileImporter.colourKeys(GarmentFile(1, categories = listOf(1), colours = listOf("teal", "red"))))
-        assertNull(ProfileImporter.colourKeys(file.garments[1]))
+        assertEquals("beige", colourKeys(garment))
+        assertEquals("beige,navy", colourKeys(file.garments.first()))
+        assertEquals("red", colourKeys(GarmentFile(1, categories = listOf(1), colours = listOf("teal", "red"))))
+        assertNull(colourKeys(file.garments[1]))
     }
 
     @Test
@@ -78,14 +78,14 @@ class ProfileFileTest {
 
     @Test
     fun `stars become half stars, out of range ones are dropped`() {
-        assertEquals(9, ProfileImporter.halfStars(4.5))
-        assertEquals(10, ProfileImporter.halfStars(5.0))
-        assertEquals(1, ProfileImporter.halfStars(0.5))
-        assertEquals(7, ProfileImporter.halfStars(3.4)) // rounded to the nearest half
-        assertNull(ProfileImporter.halfStars(0.0))
-        assertNull(ProfileImporter.halfStars(7.0))
-        assertNull(ProfileImporter.halfStars(Double.NaN))
-        assertNull(ProfileImporter.halfStars(null))
+        assertEquals(9, halfStars(4.5))
+        assertEquals(10, halfStars(5.0))
+        assertEquals(1, halfStars(0.5))
+        assertEquals(7, halfStars(3.4)) // rounded to the nearest half
+        assertNull(halfStars(0.0))
+        assertNull(halfStars(7.0))
+        assertNull(halfStars(Double.NaN))
+        assertNull(halfStars(null))
     }
 
     @Test

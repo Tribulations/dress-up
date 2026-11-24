@@ -108,7 +108,8 @@ of outfit items).
   `files/profiles/<id>/photos/`.
 - The list (id, name, test-user flag) and the active id live in SharedPreferences, written synchronously.
 - **First start** (also the first start after updating from v0.1.0): "What's your name?" creates the `main` profile.
-- **Test user** (id `test`): made on first use by `TestWardrobe.fill`, which wipes that profile's data and inserts 32
+- **Test user** (id `test`): made on first use by `TestWardrobe.fill`, which wipes that profile's data and (since v0.2.3
+  as an export file, loaded by the importer, so each Reset also exercises the import, §7.8) inserts 32
   made-up garments (every built-in category, two own categories, ratings with halves, likes, some without photo or
   colour, dates over the past year; since v0.1.2 also names, descriptions, several categories, aspect ratings, reviews
   and drawn cut-outs for most of them) and three outfits (since v0.2.0 rated, with a diary of 13 wears over the past
@@ -294,6 +295,9 @@ chooses the place (Downloads, Google Drive, …) and the app needs no permission
   a higher `version` is refused with a message; bad values (an unknown category or colour, a rating out of range) are
   dropped or clamped. The profile is added to the list only once it's complete, so a failed import leaves nothing.
 - Editing the YAML by hand and importing it is supported, e.g. to fix many garments at once.
+- **In the code** (`core:data` `backup/`): `ProfileMapping.kt` is the one place that maps database rows to the file and
+  back (cleaning and clamping on the way in). A new field is added to `ProfileFile` and mapped there; the exporter,
+  the importer and the test user (§5.1) then all have it. The importer itself only handles the zip and the new ids.
 - **On the first start** (v0.2.1) the "What's your name?" screen also offers **Import a profile**: the same import,
   after which the imported profile becomes the active one, so a new phone starts with the old wardrobe. A failed
   import stays on the screen with its reason.

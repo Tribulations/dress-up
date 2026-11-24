@@ -1,12 +1,18 @@
 package com.dressup.core.data.testuser
 
 import com.dressup.core.data.DressUpData
-import com.dressup.core.data.db.AspectRatingEntity
-import com.dressup.core.data.db.CategoryEntity
-import com.dressup.core.data.db.GarmentCategoryEntity
-import com.dressup.core.data.db.GarmentEntity
-import com.dressup.core.data.db.OutfitEntity
-import com.dressup.core.data.db.OutfitItemEntity
+import com.dressup.core.data.backup.CategoryFile
+import com.dressup.core.data.backup.DiaryFile
+import com.dressup.core.data.backup.GarmentFile
+import com.dressup.core.data.backup.OutfitFile
+import com.dressup.core.data.backup.OutfitItemFile
+import com.dressup.core.data.backup.ProfileFile
+import com.dressup.core.data.backup.ProfileImporter
+import com.dressup.core.data.backup.ProfileInfo
+import com.dressup.core.data.backup.isoTime
+import com.dressup.core.data.backup.stars
+import com.dressup.core.data.backup.zipPath
+import com.dressup.core.data.db.BUILT_IN_CATEGORIES
 import com.dressup.core.data.photo.opaqueBounds
 import com.dressup.core.model.GarmentAspect
 import com.dressup.core.model.GarmentAspect.COMFORT
@@ -15,11 +21,9 @@ import com.dressup.core.model.GarmentAspect.FIT
 import com.dressup.core.model.GarmentAspect.QUALITY
 import com.dressup.core.model.GarmentAspect.STYLE
 import android.graphics.Bitmap
-import com.dressup.core.data.db.DiaryEntryEntity
-import com.dressup.core.data.db.DiaryEntryGarmentEntity
-import com.dressup.core.data.db.OutfitAspectRatingEntity
 import com.dressup.core.model.BoardColour
 import com.dressup.core.model.OutfitAspect
+import java.time.Instant
 import java.time.LocalDate
 import java.time.MonthDay
 import java.time.ZoneId
@@ -310,88 +314,103 @@ internal object TestWardrobe {
         TestDiaryEntry(monthDay = MonthDay.of(12, 24), outfit = "Sunday walk", occasion = "Christmas Eve", note = "Too warm by the fire, but worth it."),
     )
 
-    /** Replaces everything in [data] with the test wardrobe. Blocking: call off the main thread. */
+    /**
+     * Replaces everything in [data] with the test wardrobe. It is loaded like an import ([ProfileImporter.fill]), so
+     * every Reset also tries the import. Blocking: call off the main thread.
+     */
     suspend fun fill(data: DressUpData, now: Long = System.currentTimeMillis()) {
-        val garmentDao = data.database.garmentDao()
-        val categoryDao = data.database.categoryDao()
-        val outfitDao = data.database.outfitDao()
-        val diaryDao = data.database.diaryDao()
-        diaryDao.deleteAll()
-        outfitDao.deleteAll()
-        garmentDao.deleteAll()
-        categoryDao.deleteOwn()
-        categoryDao.showAll()
+        val db = data.database
+        db.diaryDao().deleteAll()
+        db.outfitDao().deleteAll()
+        db.garmentDao().deleteAll()
+        db.categoryDao().deleteOwn()
+        db.categoryDao().showAll()
         data.photos.deleteAllExcept(emptySet())
 
-        OWN_CATEGORIES.forEach { categoryDao.insert(CategoryEntity(name = it, builtInKey = null, hidden = false, sortOrder = 0)) }
-        val categoryIds = categoryDao.getAll().associate { (it.builtInKey ?: it.name) to it.id }
-
-        // Oldest first, so the ids follow the dates like a wardrobe built up over time.
-        val garmentIds = HashMap<String, Long>()
-        garments.sortedByDescending { it.daysAgo }.forEach { garment ->
-            val id = insertGarment(data, garment, categoryIds, now)
-            garment.key?.let { garmentIds[it] = id }
-        }
-        val outfitIds = HashMap<String, Long>()
-        outfits.forEach { outfit ->
-            val id = outfitDao.insert(
-                OutfitEntity(
-                    name = outfit.name,
-                    createdAtMillis = now - outfit.daysAgo * DAY_MILLIS,
-                    ratingHalfStars = outfit.halfStars,
-                    review = outfit.review,
-                    liked = outfit.liked,
-                    backgroundColourKey = outfit.background?.key,
-                ),
-            )
-            outfitIds[outfit.name] = id
-            outfitDao.insertItems(
-                outfit.garments.mapIndexed { position, item ->
-                    OutfitItemEntity(id, garmentIds.getValue(item.key), position, item.x, item.y, item.scale, item.rotation, item.locked)
-                },
-            )
-            outfitDao.upsertAspectRatings(outfit.aspects.map { (aspect, halfStars) -> OutfitAspectRatingEntity(id, aspect.key, halfStars) })
-        }
-        val today = java.time.Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate()
-        diary.forEach { entry ->
-            val keys = entry.outfit?.let { name -> outfits.first { it.name == name }.garments.map { it.key } } ?: entry.garments
-            val id = diaryDao.insert(
-                DiaryEntryEntity(
-                    dateEpochDay = entry.date(today).toEpochDay(),
-                    outfitId = entry.outfit?.let(outfitIds::getValue),
-                    occasion = entry.occasion,
-                    note = entry.note,
-                    createdAtMillis = now,
-                ),
-            )
-            diaryDao.insertGarments(keys.mapIndexed { position, key -> DiaryEntryGarmentEntity(id, garmentIds.getValue(key), position) })
-        }
+        val pictures = garments.map { paintPictures(data, it) }
+        val today = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).toLocalDate()
+        val file = toProfileFile(pictures, today, now)
+        val stored = pictures.flatMap { listOfNotNull(it.photo, it.cutout) }.associateBy(::zipPath)
+        ProfileImporter.fill(data, file, stored, now)
     }
 
-    private suspend fun insertGarment(data: DressUpData, garment: TestGarment, categoryIds: Map<String, Long>, now: Long): Long {
-        val garmentDao = data.database.garmentDao()
-        val photo = garment.picture?.let { picture -> TestPicturePainter.paint(picture).saveWith(data.photoFiles::save) }
-        val cutout = garment.picture?.takeIf { garment.cutout }?.let { picture ->
-            cropped(TestPicturePainter.paintCutout(picture)).saveWith(data.photoFiles::saveCutout)
-        }
-        val id = garmentDao.insert(
-            GarmentEntity(
+    /** The pictures drawn for one garment, as the files they were saved as. */
+    internal data class Pictures(val photo: String? = null, val cutout: String? = null)
+
+    /**
+     * The test wardrobe as an export file. [pictures] are the [garments]' pictures, in the same order. The garments
+     * come oldest first, so their ids follow the dates like a wardrobe built up over time.
+     */
+    internal fun toProfileFile(pictures: List<Pictures>, today: LocalDate, now: Long): ProfileFile {
+        val builtIn = BUILT_IN_CATEGORIES.toMap()
+        val categoryIds = (BUILT_IN_CATEGORIES.map { it.first } + OWN_CATEGORIES).withIndex().associate { (index, key) -> key to index + 1L }
+        val categories = categoryIds.map { (key, id) -> CategoryFile(id, builtIn[key] ?: key, builtIn = key.takeIf { it in builtIn }) }
+
+        val ordered = garments.zip(pictures).sortedByDescending { (garment, _) -> garment.daysAgo }
+        val garmentIds = HashMap<String, Long>()
+        val garmentFiles = ordered.mapIndexed { index, (garment, picture) ->
+            val id = index + 1L
+            garment.key?.let { garmentIds[it] = id }
+            GarmentFile(
+                id = id,
                 name = garment.name,
                 description = garment.description,
-                colourKeys = GarmentColour.keysOf(garment.colours),
-                photoFileName = photo,
-                cutoutFileName = cutout,
-                ratingHalfStars = garment.halfStars,
+                categories = garment.categories.map(categoryIds::getValue),
+                colours = garment.colours.map { it.key },
+                photo = picture.photo?.let(::zipPath),
+                cutout = picture.cutout?.let(::zipPath),
+                rating = stars(garment.halfStars),
+                aspects = garment.aspects.map { (aspect, halfStars) -> aspect.key to stars(halfStars)!! }.toMap(),
                 review = garment.review,
                 liked = garment.liked,
-                createdAtMillis = now - garment.daysAgo * DAY_MILLIS,
-            ),
+                added = isoTime(now - garment.daysAgo * DAY_MILLIS),
+            )
+        }
+
+        val outfitIds = outfits.withIndex().associate { (index, outfit) -> outfit.name to index + 1L }
+        val outfitFiles = outfits.map { outfit ->
+            OutfitFile(
+                id = outfitIds.getValue(outfit.name),
+                name = outfit.name,
+                rating = stars(outfit.halfStars),
+                aspects = outfit.aspects.map { (aspect, halfStars) -> aspect.key to stars(halfStars)!! }.toMap(),
+                review = outfit.review,
+                liked = outfit.liked,
+                created = isoTime(now - outfit.daysAgo * DAY_MILLIS),
+                backgroundColour = outfit.background?.key,
+                items = outfit.garments.map { OutfitItemFile(garmentIds.getValue(it.key), it.x, it.y, it.scale, it.rotation, it.locked) },
+            )
+        }
+
+        val diaryFiles = diary.map { entry ->
+            val keys = entry.outfit?.let { name -> outfits.first { it.name == name }.garments.map { it.key } } ?: entry.garments
+            DiaryFile(
+                date = entry.date(today).toString(),
+                outfit = entry.outfit?.let(outfitIds::getValue),
+                garments = keys.map(garmentIds::getValue),
+                occasion = entry.occasion,
+                note = entry.note,
+                logged = isoTime(now),
+            )
+        }
+
+        return ProfileFile(
+            format = ProfileFile.FORMAT,
+            version = ProfileFile.VERSION,
+            profile = ProfileInfo(TEST_USER_NAME),
+            categories = categories,
+            garments = garmentFiles,
+            outfits = outfitFiles,
+            diary = diaryFiles,
         )
-        garmentDao.insertCategories(
-            garment.categories.mapIndexed { position, key -> GarmentCategoryEntity(id, categoryIds.getValue(key), position) },
+    }
+
+    private fun paintPictures(data: DressUpData, garment: TestGarment): Pictures {
+        val picture = garment.picture ?: return Pictures()
+        return Pictures(
+            photo = TestPicturePainter.paint(picture).saveWith(data.photoFiles::save),
+            cutout = if (garment.cutout) cropped(TestPicturePainter.paintCutout(picture)).saveWith(data.photoFiles::saveCutout) else null,
         )
-        garment.aspects.forEach { (aspect, halfStars) -> garmentDao.upsertAspectRating(AspectRatingEntity(id, aspect.key, halfStars)) }
-        return id
     }
 
     /** Crops a drawn cut-out the same way a real one is cropped (RoomGarmentRepository). */
@@ -406,5 +425,6 @@ internal object TestWardrobe {
 
     private fun colour(colour: GarmentColour): Int = colour.argb.toInt()
 
+    private const val TEST_USER_NAME = "Test user"
     private const val DAY_MILLIS = 24L * 60 * 60 * 1000
 }

@@ -2,11 +2,8 @@ package com.dressup.core.data.backup
 
 import androidx.room.withTransaction
 import com.dressup.core.data.DressUpData
-import com.dressup.core.model.GarmentColour
-import com.dressup.core.model.Rating
 import java.io.OutputStream
 import java.time.Instant
-import java.time.LocalDate
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -51,53 +48,11 @@ internal object ProfileExporter {
                 app = appVersion,
                 exportedAt = now.toString(),
                 profile = ProfileInfo(profileName),
-                categories = categories.map { CategoryFile(it.id, it.name, it.builtInKey, it.hidden) },
-                garments = garments.map { row ->
-                    val g = row.garment
-                    GarmentFile(
-                        id = g.id,
-                        name = g.name,
-                        description = g.description,
-                        categories = row.categories.sortedBy { it.position }.map { it.categoryId },
-                        colours = GarmentColour.listFromKeys(g.colourKeys).map { it.key },
-                        photo = g.photoFileName?.let { IMAGES_DIR + it },
-                        cutout = g.cutoutFileName?.let { IMAGES_DIR + it },
-                        rating = stars(g.ratingHalfStars),
-                        aspects = row.aspectRatings.sortedBy { it.aspectKey }.mapNotNull { a -> stars(a.halfStars)?.let { a.aspectKey to it } }.toMap(),
-                        review = g.review,
-                        liked = g.liked,
-                        added = Instant.ofEpochMilli(g.createdAtMillis).toString(),
-                    )
-                },
-                outfits = outfits.map { row ->
-                    val o = row.outfit
-                    OutfitFile(
-                        id = o.id,
-                        name = o.name,
-                        rating = stars(o.ratingHalfStars),
-                        aspects = row.aspectRatings.sortedBy { it.aspectKey }.mapNotNull { a -> stars(a.halfStars)?.let { a.aspectKey to it } }.toMap(),
-                        review = o.review,
-                        liked = o.liked,
-                        created = Instant.ofEpochMilli(o.createdAtMillis).toString(),
-                        backgroundColour = o.backgroundColourKey.takeIf { o.backgroundFileName == null },
-                        backgroundImage = o.backgroundFileName?.let { IMAGES_DIR + it },
-                        items = row.items.sortedBy { it.position }.map { OutfitItemFile(it.garmentId, it.x, it.y, it.scale, it.rotation, it.locked) },
-                    )
-                },
-                diary = diary.map { row ->
-                    val e = row.entry
-                    DiaryFile(
-                        date = LocalDate.ofEpochDay(e.dateEpochDay).toString(),
-                        outfit = e.outfitId,
-                        garments = row.garments.sortedBy { it.position }.map { it.garmentId },
-                        occasion = e.occasion,
-                        note = e.note,
-                        logged = Instant.ofEpochMilli(e.createdAtMillis).toString(),
-                    )
-                },
+                categories = categories.map { it.toFile() },
+                garments = garments.map { it.toFile() },
+                outfits = outfits.map { it.toFile() },
+                diary = diary.map { it.toFile() },
             )
         }
     }
-
-    private fun stars(halfStars: Int?): Double? = Rating.fromHalfStarsOrNull(halfStars)?.let { it.halfStars / 2.0 }
 }

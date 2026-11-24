@@ -1,5 +1,7 @@
 package com.dressup.core.data.testuser
 
+import com.dressup.core.data.backup.ProfileYaml
+import com.dressup.core.data.backup.halfStars
 import com.dressup.core.data.db.BUILT_IN_CATEGORIES
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -81,5 +83,23 @@ class TestWardrobeTest {
         assertEquals(LocalDate.of(2025, 12, 24), christmasEve.date(LocalDate.of(2026, 11, 19)))
         assertEquals(LocalDate.of(2026, 12, 24), christmasEve.date(LocalDate.of(2026, 12, 24)))
         assertEquals(LocalDate.of(2026, 11, 16), TestDiaryEntry(daysAgo = 3).date(LocalDate.of(2026, 11, 19)))
+    }
+
+    @Test
+    fun `as an export file, everything links up, reads back the same and keeps its ratings`() {
+        val pictures = garments.mapIndexed { i, g -> TestWardrobe.Pictures(g.picture?.let { "p$i.jpg" }, "c$i.png".takeIf { g.cutout }) }
+        val file = TestWardrobe.toProfileFile(pictures, today = LocalDate.of(2026, 11, 24), now = 1_800_000_000_000)
+
+        assertEquals(file, ProfileYaml.decode(ProfileYaml.encode(file)))
+        assertEquals(garments.size, file.garments.size)
+        assertEquals(garments.sortedByDescending { it.daysAgo }.map { it.name }, file.garments.map { it.name }) // oldest first
+        val categoryIds = file.categories.map { it.id }.toSet()
+        val garmentIds = file.garments.map { it.id }.toSet()
+        file.garments.forEach { g -> assertTrue(g.categories.all { it in categoryIds }) }
+        file.outfits.forEach { o -> assertTrue(o.items.all { it.garment in garmentIds }) }
+        file.diary.forEach { e -> assertTrue(e.garments.isNotEmpty() && e.garments.all { it in garmentIds }) }
+        assertEquals(garments.map { it.halfStars }.sortedBy { it }, file.garments.map { halfStars(it.rating) }.sortedBy { it })
+        assertTrue(file.outfits.any { o -> o.items.any { it.locked } })
+        assertTrue(file.garments.any { it.colours.size > 1 })
     }
 }
